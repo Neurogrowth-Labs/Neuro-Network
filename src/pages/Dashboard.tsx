@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import CardPreview from "../components/CardPreview";
 import CardPDFDownload from "../components/CardPDFDownload";
 import UsageBar from "../components/UsageBar";
 import PlanBadge from "../components/PlanBadge";
 import ProximityWidget from "../components/ProximityWidget";
-import { QrCode, Share2, ScanLine, ArrowUpRight, Copy } from "lucide-react";
+import { QRCodeDisplay } from "../components/QRCodeDisplay";
+import { QrCode, Share2, ScanLine, ArrowUpRight, Copy, X, Mail, MessageCircle, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "../lib/UserContext";
 
@@ -25,13 +26,30 @@ export const MY_CARD = {
 export default function Dashboard() {
   const { profile } = useUser();
   const cardData = profile || MY_CARD;
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  
+  const cardUrl = `${window.location.origin}/card-view`;
 
   const copyLink = () => {
+    navigator.clipboard.writeText(cardUrl);
     toast.success("Profile link copied!");
   };
 
+  const shareViaWhatsApp = () => {
+    window.open(`https://wa.me/?text=Check out my digital business card: ${cardUrl}`, '_blank');
+  };
+
+  const shareViaEmail = () => {
+    window.location.href = `mailto:?subject=My Digital Business Card&body=Here is my digital business card: ${cardUrl}`;
+  };
+
+  const shareViaSMS = () => {
+    window.location.href = `sms:?&body=Check out my digital business card: ${cardUrl}`;
+  };
+
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-6 space-y-8 relative">
       {/* Header section */}
       <div className="flex items-center justify-between">
         <div>
@@ -63,13 +81,19 @@ export default function Dashboard() {
             Copy Link
           </span>
         </button>
-        <button className="group flex flex-col items-center justify-center py-6 bg-white/[0.02] border border-white/5 hover:bg-cyan-500/5 hover:border-cyan-500/30 rounded-xl transition-all">
+        <button 
+          onClick={() => setShowQRModal(true)}
+          className="group flex flex-col items-center justify-center py-6 bg-white/[0.02] border border-white/5 hover:bg-cyan-500/5 hover:border-cyan-500/30 rounded-xl transition-all"
+        >
           <QrCode className="w-5 h-5 text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
           <span className="text-[10px] font-black uppercase tracking-widest text-white/60 group-hover:text-white transition-colors">
             Show QR
           </span>
         </button>
-        <button className="group flex flex-col items-center justify-center py-6 bg-white/[0.02] border border-white/5 hover:bg-cyan-500/5 hover:border-cyan-500/30 rounded-xl transition-all">
+        <button 
+          onClick={() => setShowShareModal(true)}
+          className="group flex flex-col items-center justify-center py-6 bg-white/[0.02] border border-white/5 hover:bg-cyan-500/5 hover:border-cyan-500/30 rounded-xl transition-all"
+        >
           <Share2 className="w-5 h-5 text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
           <span className="text-[10px] font-black uppercase tracking-widest text-white/60 group-hover:text-white transition-colors">
             Share App
@@ -134,6 +158,87 @@ export default function Dashboard() {
           />
         </div>
       </div>
+
+      {/* QR Modal */}
+      {showQRModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#12121a] p-6 rounded-2xl w-full max-w-sm border border-white/10 space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-medium tracking-tight text-white">
+                Share via QR Code
+              </h2>
+              <button
+                onClick={() => setShowQRModal(false)}
+                className="text-white/40 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex justify-center p-4">
+              <QRCodeDisplay value={cardUrl} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#12121a] p-6 rounded-2xl w-full max-w-sm border border-white/10 space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-medium tracking-tight text-white">
+                Share App
+              </h2>
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="text-white/40 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="grid grid-cols-1 gap-3">
+              <button 
+                onClick={shareViaWhatsApp}
+                className="flex items-center gap-3 p-4 rounded-xl border border-[#25D366]/20 bg-[#25D366]/5 hover:bg-[#25D366]/10 transition-all text-left"
+              >
+                <div className="w-10 h-10 rounded-full bg-[#25D366]/20 flex items-center justify-center">
+                  <MessageCircle className="w-5 h-5 text-[#25D366]" />
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-white">WhatsApp</div>
+                  <div className="text-xs text-white/40">Send to a contact directly</div>
+                </div>
+              </button>
+              
+              <button 
+                onClick={shareViaEmail}
+                className="flex items-center gap-3 p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all text-left"
+              >
+                <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-cyan-400" />
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-white">Email</div>
+                  <div className="text-xs text-white/40">Share via email client</div>
+                </div>
+              </button>
+
+              <button 
+                onClick={shareViaSMS}
+                className="flex items-center gap-3 p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all text-left"
+              >
+                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                  <MessageSquare className="w-5 h-5 text-blue-400" />
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-white">SMS</div>
+                  <div className="text-xs text-white/40">Send a text message</div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

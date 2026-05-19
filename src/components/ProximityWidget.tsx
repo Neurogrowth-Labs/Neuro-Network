@@ -95,7 +95,7 @@ export default function ProximityWidget({ user }: any) {
           </h2>
         </div>
         <Link
-          to="/ProximityAlerts"
+          to="/alerts"
           className="text-[10px] font-black uppercase tracking-widest text-cyan-400 hover:text-cyan-300"
         >
           Full View →
@@ -191,7 +191,7 @@ export default function ProximityWidget({ user }: any) {
                 })}
               </p>
               <button
-                onClick={() => navigate("/ProximityAlerts")}
+                onClick={() => navigate("/alerts")}
                 className="text-[10px] uppercase font-black tracking-widest text-cyan-400 hover:text-cyan-300"
               >
                 Quick Connect →

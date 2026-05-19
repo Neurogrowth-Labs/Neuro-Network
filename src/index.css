@@ -20,6 +20,22 @@
   html {
     @apply font-sans;
   }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+    background: transparent;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
 }
 
 @layer utilities {
@@ -39,6 +55,9 @@
   }
   .animate-scan {
     animation: scan 2s linear infinite;
+  }
+  .animate-spin-slow {
+    animation: spin 3s linear infinite;
   }
 }
 
