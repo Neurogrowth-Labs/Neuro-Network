@@ -1,0 +1,238 @@
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Link,
+  useLocation,
+} from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "sonner";
+import {
+  BrainCircuit,
+  Contact,
+  QrCode,
+  Zap,
+  Bell,
+  User as UserIcon,
+  Settings as SettingsIcon,
+  MessageCircle,
+} from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { UserProvider, useUser } from "./lib/UserContext";
+
+// Pages
+import Dashboard from "./pages/Dashboard";
+import Vault from "./pages/Vault";
+import Editor from "./pages/Editor";
+import Admin from "./pages/Admin";
+import AINetworking from "./pages/AINetworking";
+import Analytics from "./pages/Analytics";
+import CardBuilder from "./pages/CardBuilder";
+import CardView from "./pages/CardView";
+import Checkout from "./pages/Checkout";
+import ContactVault from "./pages/ContactVault";
+import CRMIntegration from "./pages/CRMIntegration";
+import GeoMap from "./pages/GeoMap";
+import Landing from "./pages/Landing";
+import MyCards from "./pages/MyCards";
+import Pricing from "./pages/Pricing";
+import ProximityAlerts from "./pages/ProximityAlerts";
+import Scanner from "./pages/Scanner";
+import Settings from "./pages/Settings";
+import Team from "./pages/Team";
+import Templates from "./pages/Templates";
+
+const queryClient = new QueryClient();
+
+function Navbar() {
+  const location = useLocation();
+  const tabs = [
+    { path: "/", icon: QrCode, label: "Dashboard" },
+    { path: "/vault", icon: Contact, label: "Vault" },
+    { path: "/editor", icon: Zap, label: "AI Studio" },
+  ];
+
+  return (
+    <div className="fixed bottom-0 w-full md:w-[400px] bg-[#0a0a0c]/90 backdrop-blur-xl border-t border-white/5 z-50">
+      <div className="flex items-center justify-around p-3 pb-8 md:pb-4">
+        {tabs.map((t) => {
+          const active = location.pathname === t.path;
+          return (
+            <Link
+              key={t.path}
+              to={t.path}
+              className={`flex flex-col items-center gap-1.5 transition-colors ${active ? "text-cyan-400" : "text-white/40 hover:text-cyan-400"}`}
+            >
+              <t.icon
+                className={`w-5 h-5 ${active ? "drop-shadow-[0_0_12px_rgba(34,211,238,0.8)]" : ""}`}
+              />
+              <span className="text-[9px] font-black tracking-widest uppercase">
+                {t.label}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function TopNav() {
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const { profile } = useUser();
+  const [notifications, setNotifications] = useState([
+    { id: 1, type: "message", text: "Sarah Jenkins connected with you.", time: "10m ago" },
+    { id: 2, type: "system", text: "Your profile visibility was updated.", time: "1h ago" },
+  ]);
+
+  useEffect(() => {
+    // Simulate incoming real-time notifications
+    const timer = setTimeout(() => {
+      setNotifications(prev => [
+        { id: Date.now(), type: "message", text: "David Chen left a comment on your card.", time: "Just now" },
+        ...prev
+      ]);
+    }, 15000); // 15 seconds after load
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="fixed top-0 w-full md:w-[400px] h-16 bg-[#0a0a0c]/90 backdrop-blur-xl border-b border-white/5 z-50 flex items-center justify-between px-6">
+      <div className="flex items-center gap-2">
+        <div className="w-6 h-6 bg-cyan-400 rounded flex items-center justify-center">
+          <div className="w-3 h-3 bg-[#0a0a0c] rounded-full"></div>
+        </div>
+        <span className="font-bold text-sm tracking-tighter uppercase text-white">
+          Neuro NetWorks
+        </span>
+      </div>
+
+      <div className="flex items-center gap-4 relative">
+        <div className="relative">
+          <button 
+            onClick={() => {
+              setShowNotifications(!showNotifications);
+              setShowProfileMenu(false);
+            }} 
+            className="relative text-white/50 hover:text-white transition-colors"
+          >
+            <Bell className="w-5 h-5" />
+            {notifications.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#0a0a0c]"></span>
+            )}
+          </button>
+          
+          {showNotifications && (
+            <div className="absolute right-0 top-12 w-64 bg-[#12121a] border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50">
+              <div className="p-3 border-b border-white/5 flex justify-between items-center">
+                <span className="text-xs font-bold text-white uppercase tracking-widest">Notifications</span>
+                <span className="text-[10px] text-cyan-400 cursor-pointer" onClick={() => setNotifications([])}>Mark all read</span>
+              </div>
+              <div className="max-h-64 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-xs text-white/40">No new notifications</div>
+                ) : (
+                  notifications.map(n => (
+                    <div key={n.id} className="p-3 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer flex gap-3">
+                      <div className="mt-1">
+                        {n.type === "message" ? <MessageCircle className="w-4 h-4 text-cyan-400" /> : <Bell className="w-4 h-4 text-white/40" />}
+                      </div>
+                      <div>
+                        <div className="text-xs text-white/80 font-medium">{n.text}</div>
+                        <div className="text-[9px] text-white/30 uppercase tracking-widest mt-1">{n.time}</div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="relative">
+          <div
+            onClick={() => {
+              setShowProfileMenu(!showProfileMenu);
+              setShowNotifications(false);
+            }}
+            className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-black text-[10px] text-white/50 tracking-widest uppercase hover:bg-cyan-500/20 hover:text-cyan-400 hover:border-cyan-500/30 transition-all cursor-pointer"
+          >
+            {profile.full_name ? profile.full_name.substring(0, 2).toUpperCase() : 'ME'}
+          </div>
+
+          {showProfileMenu && (
+            <div className="absolute right-0 top-12 w-48 bg-[#12121a] border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50">
+              <div className="p-2 flex flex-col gap-1">
+                <Link
+                  to="/settings"
+                  onClick={() => setShowProfileMenu(false)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  <UserIcon className="w-4 h-4" /> Edit Profile
+                </Link>
+                <Link
+                  to="/my-cards"
+                  onClick={() => setShowProfileMenu(false)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  <Contact className="w-4 h-4" /> Edit Cards
+                </Link>
+                <Link
+                  to="/settings"
+                  onClick={() => setShowProfileMenu(false)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  <SettingsIcon className="w-4 h-4" /> Settings
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <UserProvider>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <div className="min-h-screen bg-[#0a0a0c] text-white flex justify-center">
+            {/* Mobile frame container */}
+            <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative bg-[#0a0a0c] shadow-2xl">
+              <TopNav />
+              <div className="h-full overflow-y-auto pt-16 pb-24 scrollbar-hide">
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/vault" element={<Vault />} />
+                  <Route path="/editor" element={<Editor />} />
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/ai-networking" element={<AINetworking />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/card-builder" element={<CardBuilder />} />
+                  <Route path="/card-view" element={<CardView />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/contact-vault" element={<ContactVault />} />
+                  <Route path="/crm-integration" element={<CRMIntegration />} />
+                  <Route path="/map" element={<GeoMap />} />
+                  <Route path="/welcome" element={<Landing />} />
+                  <Route path="/my-cards" element={<MyCards />} />
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/alerts" element={<ProximityAlerts />} />
+                  <Route path="/scanner" element={<Scanner />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/team" element={<Team />} />
+                  <Route path="/templates" element={<Templates />} />
+                </Routes>
+              </div>
+              <Navbar />
+            </div>
+          </div>
+          <Toaster theme="dark" position="top-center" />
+        </Router>
+      </QueryClientProvider>
+    </UserProvider>
+  );
+}

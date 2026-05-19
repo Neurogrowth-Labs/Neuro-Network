@@ -1,0 +1,6 @@
+{
+  "name": "Neuro NetWorks",
+  "description": "AI-powered networking platform and digital business cards app with smart vault and messaging integrations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
