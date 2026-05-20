@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { QRCodeDisplay } from "../components/QRCodeDisplay";
 import { Share2, Link as LinkIcon, Mail, X, QrCode } from "lucide-react";
+import { toast } from "sonner";
 
 export default function CardView() {
   const [showShareModal, setShowShareModal] = useState(false);
@@ -45,7 +46,9 @@ export default function CardView() {
             </div>
 
             <div className="grid grid-cols-1 gap-3">
-              <button className="flex items-center gap-3 p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all text-left">
+              <button 
+                onClick={() => setShowShareModal(false)}
+                className="flex items-center gap-3 p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all text-left">
                 <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center">
                   <QrCode className="w-5 h-5 text-cyan-400" />
                 </div>
@@ -62,7 +65,7 @@ export default function CardView() {
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(cardUrl);
-                  alert("Link copied!");
+                  toast.success("Link copied!");
                 }}
                 className="flex items-center gap-3 p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all text-left"
               >

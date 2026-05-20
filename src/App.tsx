@@ -16,6 +16,8 @@ import {
   User as UserIcon,
   Settings as SettingsIcon,
   MessageCircle,
+  Menu,
+  X
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { UserProvider, useUser } from "./lib/UserContext";
@@ -41,50 +43,26 @@ import Scanner from "./pages/Scanner";
 import Settings from "./pages/Settings";
 import Team from "./pages/Team";
 import Templates from "./pages/Templates";
+import VoiceCall from "./pages/VoiceCall";
 
 const queryClient = new QueryClient();
-
-function Navbar() {
-  const location = useLocation();
-  const tabs = [
-    { path: "/", icon: QrCode, label: "Dashboard" },
-    { path: "/vault", icon: Contact, label: "Vault" },
-    { path: "/editor", icon: Zap, label: "AI Studio" },
-  ];
-
-  return (
-    <div className="fixed bottom-0 w-full md:w-[400px] bg-[#0a0a0c]/90 backdrop-blur-xl border-t border-white/5 z-50">
-      <div className="flex items-center justify-around p-3 pb-8 md:pb-4">
-        {tabs.map((t) => {
-          const active = location.pathname === t.path;
-          return (
-            <Link
-              key={t.path}
-              to={t.path}
-              className={`flex flex-col items-center gap-1.5 transition-colors ${active ? "text-cyan-400" : "text-white/40 hover:text-cyan-400"}`}
-            >
-              <t.icon
-                className={`w-5 h-5 ${active ? "drop-shadow-[0_0_12px_rgba(34,211,238,0.8)]" : ""}`}
-              />
-              <span className="text-[9px] font-black tracking-widest uppercase">
-                {t.label}
-              </span>
-            </Link>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 function TopNav() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const location = useLocation();
   const { profile } = useUser();
   const [notifications, setNotifications] = useState([
     { id: 1, type: "message", text: "Sarah Jenkins connected with you.", time: "10m ago" },
     { id: 2, type: "system", text: "Your profile visibility was updated.", time: "1h ago" },
   ]);
+
+  const tabs = [
+    { path: "/", icon: QrCode, label: "Dashboard" },
+    { path: "/vault", icon: Contact, label: "Vault" },
+    { path: "/editor", icon: Zap, label: "AI Studio" },
+  ];
 
   useEffect(() => {
     // Simulate incoming real-time notifications
@@ -98,17 +76,50 @@ function TopNav() {
   }, []);
 
   return (
-    <div className="fixed top-0 w-full md:w-[400px] h-16 bg-[#0a0a0c]/90 backdrop-blur-xl border-b border-white/5 z-50 flex items-center justify-between px-6">
-      <div className="flex items-center gap-2">
-        <div className="w-6 h-6 bg-cyan-400 rounded flex items-center justify-center">
-          <div className="w-3 h-3 bg-[#0a0a0c] rounded-full"></div>
+    <div className="fixed top-0 w-full md:w-[400px] h-16 bg-[#0a0a0c]/90 backdrop-blur-xl border-b border-white/5 z-50 flex items-center justify-between px-4">
+      <div className="flex items-center gap-3">
+        <button 
+          onClick={() => {
+            setShowMobileMenu(!showMobileMenu);
+            setShowNotifications(false);
+            setShowProfileMenu(false);
+          }}
+          className="text-white/50 hover:text-white transition-colors p-1"
+        >
+          {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 bg-cyan-400 rounded flex items-center justify-center">
+            <div className="w-3 h-3 bg-[#0a0a0c] rounded-full"></div>
+          </div>
+          <span className="font-bold text-sm tracking-tighter uppercase text-white truncate max-w-[100px] sm:max-w-none">
+            Neuro NetWorks
+          </span>
         </div>
-        <span className="font-bold text-sm tracking-tighter uppercase text-white">
-          Neuro NetWorks
-        </span>
       </div>
 
-      <div className="flex items-center gap-4 relative">
+      {showMobileMenu && (
+        <div className="absolute left-4 top-16 w-48 bg-[#12121a] border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50">
+          <div className="p-2 flex flex-col gap-1">
+            {tabs.map((t) => {
+              const active = location.pathname === t.path;
+              return (
+                <Link
+                  key={t.path}
+                  to={t.path}
+                  onClick={() => setShowMobileMenu(false)}
+                  className={`flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors ${active ? "bg-cyan-500/10 text-cyan-400 font-medium" : "text-white/60 hover:text-white hover:bg-white/5"}`}
+                >
+                  <t.icon className={`w-4 h-4 ${active ? "drop-shadow-[0_0_12px_rgba(34,211,238,0.8)]" : ""}`} />
+                  {t.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center gap-3 relative">
         <div className="relative">
           <button 
             onClick={() => {
@@ -203,7 +214,7 @@ export default function App() {
             {/* Mobile frame container */}
             <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative bg-[#0a0a0c] shadow-2xl">
               <TopNav />
-              <div className="h-full overflow-y-auto pt-16 pb-24 scrollbar-hide">
+              <div className="h-full overflow-y-auto pt-16 pb-6 scrollbar-hide">
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/vault" element={<Vault />} />
@@ -225,9 +236,9 @@ export default function App() {
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/team" element={<Team />} />
                   <Route path="/templates" element={<Templates />} />
+                  <Route path="/voice-call" element={<VoiceCall />} />
                 </Routes>
               </div>
-              <Navbar />
             </div>
           </div>
           <Toaster theme="dark" position="top-center" />

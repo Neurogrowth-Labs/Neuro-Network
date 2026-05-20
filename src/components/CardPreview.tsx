@@ -231,7 +231,7 @@ export default function CardPreview({ card, compact = false }: any) {
                 key={i}
                 href={s.value}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className={`w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10 hover:bg-cyan-400 hover:border-cyan-400 hover:text-[#0a0a0c] transition-all group ${textColor}`}
               >
                 <s.icon

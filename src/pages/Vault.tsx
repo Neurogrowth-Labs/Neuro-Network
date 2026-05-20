@@ -8,6 +8,7 @@ import {
   ExternalLink,
   ChevronDown,
   ChevronUp,
+  Phone,
 } from "lucide-react";
 import { MY_CARD } from "./Dashboard";
 import AddToCalendarButton from "../components/AddToCalendarButton";
@@ -135,11 +136,21 @@ export default function Vault() {
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <AddToCalendarButton contact={c} />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-white/40">
-                      Add to Calendar
-                    </span>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <AddToCalendarButton contact={c} />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-white/40">
+                        Add to Calendar
+                      </span>
+                    </div>
+                    
+                    <button 
+                      onClick={() => window.location.href = "/voice-call"} 
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 transition-all text-cyan-400 group"
+                    >
+                      <Phone className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Call Contact</span>
+                    </button>
                   </div>
 
                   <div className="pt-5 border-t border-white/5">

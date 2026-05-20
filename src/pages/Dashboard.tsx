@@ -5,6 +5,7 @@ import UsageBar from "../components/UsageBar";
 import PlanBadge from "../components/PlanBadge";
 import ProximityWidget from "../components/ProximityWidget";
 import { QRCodeDisplay } from "../components/QRCodeDisplay";
+import { useNavigate } from "react-router-dom";
 import { QrCode, Share2, ScanLine, ArrowUpRight, Copy, X, Mail, MessageCircle, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "../lib/UserContext";
@@ -28,6 +29,7 @@ export default function Dashboard() {
   const cardData = profile || MY_CARD;
   const [showQRModal, setShowQRModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const navigate = useNavigate();
   
   const cardUrl = `${window.location.origin}/card-view`;
 
@@ -99,7 +101,9 @@ export default function Dashboard() {
             Share App
           </span>
         </button>
-        <button className="group flex flex-col items-center justify-center py-6 bg-cyan-500/5 border border-cyan-500/20 hover:bg-cyan-500/10 hover:border-cyan-400/50 rounded-xl transition-all">
+        <button 
+          onClick={() => navigate("/alerts")}
+          className="group flex flex-col items-center justify-center py-6 bg-cyan-500/5 border border-cyan-500/20 hover:bg-cyan-500/10 hover:border-cyan-400/50 rounded-xl transition-all">
           <ScanLine className="w-5 h-5 text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
           <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400 group-hover:text-cyan-300 transition-colors">
             Proximity Share
