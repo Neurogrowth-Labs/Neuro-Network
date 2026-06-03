@@ -70,7 +70,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           .eq('id', user.id)
           .single();
           
-        if (error && error.code !== 'PGRST116') throw error;
+        if (error && error.code !== 'PGRST116' && error.code !== '42501') {
+           console.error('Database query error:', error);
+        }
         
         if (data) {
           setProfile({
