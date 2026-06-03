@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from './supabase';
+import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 export const defaultUser = {
   full_name: "Alexander Vance",
@@ -17,27 +19,85 @@ export const defaultUser = {
   banner_url: "",
 };
 
-export type UserProfile = typeof defaultUser;
+export type UserProfile = typeof defaultUser & { id?: string };
 
 interface UserContextType {
   profile: UserProfile;
   setProfile: React.Dispatch<React.SetStateAction<UserProfile>>;
+  session: Session | null;
+  user: SupabaseUser | null;
+  loading: boolean;
+  logout: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const [profile, setProfile] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('user_profile');
-    return saved ? JSON.parse(saved) : defaultUser;
-  });
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [profile, setProfile] = useState<UserProfile>(defaultUser);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    localStorage.setItem('user_profile', JSON.stringify(profile));
-  }, [profile]);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    async function loadProfile() {
+      if (!user) {
+        setProfile(defaultUser);
+        setLoading(false);
+        return;
+      }
+      
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+          
+        if (error && error.code !== 'PGRST116') throw error;
+        
+        if (data) {
+          setProfile({
+            ...defaultUser,
+            ...data,
+            id: user.id,
+            email: user.email || defaultUser.email,
+          });
+        } else {
+          setProfile({ ...defaultUser, id: user.id, email: user.email || defaultUser.email });
+        }
+      } catch (error) {
+        console.error('Error loading user profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadProfile();
+  }, [user]);
+
+  const logout = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
-    <UserContext.Provider value={{ profile, setProfile }}>
+    <UserContext.Provider value={{ profile, setProfile, session, user, loading, logout }}>
       {children}
     </UserContext.Provider>
   );

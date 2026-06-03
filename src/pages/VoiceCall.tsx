@@ -18,6 +18,10 @@ import {
   Send,
   Signal,
   Loader2,
+  Disc,
+  Info,
+  Briefcase,
+  Building,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -34,6 +38,8 @@ export default function VoiceCall() {
   const [notesText, setNotesText] = useState("");
   const [networkQuality, setNetworkQuality] = useState<'good' | 'fair' | 'poor'>('good');
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [showContactOverlay, setShowContactOverlay] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -233,14 +239,51 @@ export default function VoiceCall() {
               alt="Sarah Jenkins" 
               className="w-32 h-32 rounded-full border border-white/10 shadow-2xl relative z-10"
             />
+            <button 
+              onClick={() => setShowContactOverlay(!showContactOverlay)}
+              className="absolute -right-2 top-0 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full p-2 z-20 hover:bg-white/20 transition-colors shadow-xl"
+            >
+              <Info className="w-5 h-5" />
+            </button>
           </div>
-          <div className="flex flex-col items-center space-y-1">
+          <div className="flex flex-col items-center space-y-1 relative">
             <h1 className="text-4xl font-semibold tracking-tight text-white drop-shadow-md">
               Sarah Jenkins
             </h1>
             <p className={`text-sm font-medium tracking-wide ${isConnected ? 'text-green-400' : 'text-cyan-400 opacity-80 animate-pulse'}`}>
               {isConnected ? formatDuration(duration) : callStatus}
             </p>
+            
+            {showContactOverlay && (
+              <div className="absolute top-full mt-4 bg-white/10 backdrop-blur-2xl border border-white/20 p-4 rounded-2xl shadow-2xl w-64 z-50 text-left">
+                 <div className="flex justify-between items-start mb-3">
+                   <h4 className="font-semibold text-white/90">Contact Card</h4>
+                   <button onClick={() => setShowContactOverlay(false)} className="text-white/40 hover:text-white">
+                     <X className="w-4 h-4"/>
+                   </button>
+                 </div>
+                 <div className="space-y-3">
+                   <div className="flex items-center gap-3">
+                     <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400">
+                       <Briefcase className="w-4 h-4" />
+                     </div>
+                     <div>
+                       <p className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Title</p>
+                       <p className="text-sm text-white/90 font-medium">VP of Partner Channels</p>
+                     </div>
+                   </div>
+                   <div className="flex items-center gap-3">
+                     <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400">
+                       <Building className="w-4 h-4" />
+                     </div>
+                     <div>
+                       <p className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Company</p>
+                       <p className="text-sm text-white/90 font-medium">Nexus Dynamics</p>
+                     </div>
+                   </div>
+                 </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -280,13 +323,18 @@ export default function VoiceCall() {
             </button>
 
             <button 
-              onClick={() => toast.info("More options menu opened")}
+              onClick={() => {
+                const newState = !isRecording;
+                setIsRecording(newState);
+                if (newState) toast.success("Recording started");
+                else toast.info("Recording stopped");
+              }}
               className="flex flex-col items-center gap-2 group"
             >
-              <div className="w-14 h-14 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-white/80 group-hover:bg-white/10 group-hover:text-white transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]">
-                <MoreVertical className="w-6 h-6" />
+              <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] ${isRecording ? 'bg-red-500 text-white animate-pulse' : 'bg-white/5 border border-white/5 text-white/80 group-hover:bg-white/10 group-hover:text-white'}`}>
+                <Disc className="w-6 h-6" />
               </div>
-              <span className="text-[11px] text-white/50 font-medium tracking-wide">More</span>
+              <span className="text-[11px] text-white/50 font-medium tracking-wide">Record</span>
             </button>
 
             <button 
@@ -311,9 +359,14 @@ export default function VoiceCall() {
 
           </div>
           
-          <div className="flex justify-center border-t border-white/5 pt-6">
+          <div className="flex justify-center border-t border-white/5 pt-6 relative z-10">
             <button 
-              onClick={() => navigate(-1)}
+              onClick={() => {
+                if (isRecording) {
+                  toast.success("Transcript notes saved to database successfully.");
+                }
+                navigate(-1);
+              }}
               className="flex items-center justify-center gap-3 w-full transform active:scale-95 transition-transform bg-[#EF4444] shadow-[0_8px_20px_rgba(239,68,68,0.3),inset_0_1px_1px_rgba(255,255,255,0.4)] text-white hover:bg-[#DC2626] rounded-full py-4 border border-[#F87171]/50"
             >
               <Phone className="w-5 h-5 rotate-[135deg]" />

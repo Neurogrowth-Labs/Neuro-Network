@@ -52,7 +52,7 @@ function TopNav() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const location = useLocation();
-  const { profile } = useUser();
+  const { profile, logout } = useUser();
   const [notifications, setNotifications] = useState([
     { id: 1, type: "message", text: "Sarah Jenkins connected with you.", time: "10m ago" },
     { id: 2, type: "system", text: "Your profile visibility was updated.", time: "1h ago" },
@@ -196,9 +196,76 @@ function TopNav() {
                 >
                   <SettingsIcon className="w-4 h-4" /> Settings
                 </Link>
+                <button
+                  onClick={async () => {
+                    await logout();
+                    setShowProfileMenu(false);
+                  }}
+                  className="flex items-center w-full gap-2 px-3 py-2 text-sm text-red-500/80 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors text-left"
+                >
+                  <Zap className="w-4 h-4" /> Sign Out
+                </button>
               </div>
             </div>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+import Auth from "./components/Auth";
+
+function AppContent() {
+  const { user, loading } = useUser();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0c] flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0c] text-white flex justify-center">
+        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative bg-[#0a0a0c] shadow-2xl">
+          <Auth />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0c] text-white flex justify-center">
+      {/* Mobile frame container */}
+      <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative bg-[#0a0a0c] shadow-2xl">
+        <TopNav />
+        <div className="h-full overflow-y-auto pt-16 pb-6 scrollbar-hide">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/vault" element={<Vault />} />
+            <Route path="/editor" element={<Editor />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/ai-networking" element={<AINetworking />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/card-builder" element={<CardBuilder />} />
+            <Route path="/card-view" element={<CardView />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/contact-vault" element={<ContactVault />} />
+            <Route path="/crm-integration" element={<CRMIntegration />} />
+            <Route path="/map" element={<GeoMap />} />
+            <Route path="/welcome" element={<Landing />} />
+            <Route path="/my-cards" element={<MyCards />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/alerts" element={<ProximityAlerts />} />
+            <Route path="/scanner" element={<Scanner />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/team" element={<Team />} />
+            <Route path="/templates" element={<Templates />} />
+            <Route path="/voice-call" element={<VoiceCall />} />
+          </Routes>
         </div>
       </div>
     </div>
@@ -210,37 +277,7 @@ export default function App() {
     <UserProvider>
       <QueryClientProvider client={queryClient}>
         <Router>
-          <div className="min-h-screen bg-[#0a0a0c] text-white flex justify-center">
-            {/* Mobile frame container */}
-            <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative bg-[#0a0a0c] shadow-2xl">
-              <TopNav />
-              <div className="h-full overflow-y-auto pt-16 pb-6 scrollbar-hide">
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/vault" element={<Vault />} />
-                  <Route path="/editor" element={<Editor />} />
-                  <Route path="/admin" element={<Admin />} />
-                  <Route path="/ai-networking" element={<AINetworking />} />
-                  <Route path="/analytics" element={<Analytics />} />
-                  <Route path="/card-builder" element={<CardBuilder />} />
-                  <Route path="/card-view" element={<CardView />} />
-                  <Route path="/checkout" element={<Checkout />} />
-                  <Route path="/contact-vault" element={<ContactVault />} />
-                  <Route path="/crm-integration" element={<CRMIntegration />} />
-                  <Route path="/map" element={<GeoMap />} />
-                  <Route path="/welcome" element={<Landing />} />
-                  <Route path="/my-cards" element={<MyCards />} />
-                  <Route path="/pricing" element={<Pricing />} />
-                  <Route path="/alerts" element={<ProximityAlerts />} />
-                  <Route path="/scanner" element={<Scanner />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/team" element={<Team />} />
-                  <Route path="/templates" element={<Templates />} />
-                  <Route path="/voice-call" element={<VoiceCall />} />
-                </Routes>
-              </div>
-            </div>
-          </div>
+          <AppContent />
           <Toaster theme="dark" position="top-center" />
         </Router>
       </QueryClientProvider>
