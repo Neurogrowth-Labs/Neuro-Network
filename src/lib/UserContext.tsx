@@ -43,6 +43,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+    }).catch(error => {
+      console.error("Supabase getSession error:", error);
     });
 
     // Listen for auth changes
@@ -96,6 +98,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     await supabase.auth.signOut();
+    import('./firebase').then(m => m.logout());
   };
 
   return (
