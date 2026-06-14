@@ -1,0 +1,88 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Information about a registered networking user in Neuro NetWorks",
+      "type": "object",
+      "properties": {
+        "full_name": { "type": "string" },
+        "job_title": { "type": "string" },
+        "company": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "website": { "type": "string" },
+        "bio": { "type": "string" },
+        "template": { "type": "string" },
+        "theme_color": { "type": "string" },
+        "linkedin": { "type": "string" },
+        "twitter": { "type": "string" },
+        "industry": { "type": "string" },
+        "avatar_url": { "type": "string" },
+        "updated_at": { "type": "string" }
+      },
+      "required": ["full_name", "email"]
+    },
+    "CardComment": {
+      "title": "Card Comment",
+      "description": "A communication comment posted on a digital business card",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "card_id": { "type": "string" },
+        "author_name": { "type": "string" },
+        "text": { "type": "string" },
+        "created_date": { "type": "string" }
+      },
+      "required": ["card_id", "author_name", "text"]
+    },
+    "ProximitySession": {
+      "title": "Proximity Session",
+      "description": "A discovery session for showing nearby digital business cards",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "user_email": { "type": "string" },
+        "location": { "type": "string" },
+        "active": { "type": "boolean" },
+        "created_date": { "type": "string" }
+      },
+      "required": ["user_email", "active"]
+    },
+    "BusinessCard": {
+      "title": "Business Card",
+      "description": "Settings for showing custom high-tech digital cards",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "user_id": { "type": "string" },
+        "full_name": { "type": "string" },
+        "job_title": { "type": "string" },
+        "company": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "logo_url": { "type": "string" },
+        "card_template": { "type": "string" },
+        "created_date": { "type": "string" }
+      },
+      "required": ["user_id", "full_name"]
+    }
+  },
+  "firestore": {
+    "/profiles/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile document path"
+    },
+    "/CardComment/{commentId}": {
+      "schema": "CardComment",
+      "description": "A comment left on any individual card"
+    },
+    "/ProximitySession/{sessionId}": {
+      "schema": "ProximitySession",
+      "description": "A geolocated or proximity active card session"
+    },
+    "/BusinessCard/{cardId}": {
+      "schema": "BusinessCard",
+      "description": "A structured business card metadata node"
+    }
+  }
+}

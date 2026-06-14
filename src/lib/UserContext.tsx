@@ -66,26 +66,43 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       
       setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-          
-        if (error && error.code !== 'PGRST116' && error.code !== '42501') {
-           console.error('Database query error:', error);
+        let supabaseProfile: any = null;
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+            
+          if (error && error.code !== 'PGRST116' && error.code !== '42501') {
+             console.error('Database query error:', error);
+          }
+          if (data) {
+            supabaseProfile = data;
+          }
+        } catch (e) {
+          console.error("Supabase load error:", e);
         }
-        
-        if (data) {
-          setProfile({
-            ...defaultUser,
-            ...data,
-            id: user.id,
-            email: user.email || defaultUser.email,
-          });
-        } else {
-          setProfile({ ...defaultUser, id: user.id, email: user.email || defaultUser.email });
+
+        let firestoreProfile: any = null;
+        try {
+          const { doc, getDoc } = await import('firebase/firestore');
+          const { db } = await import('./firebase');
+          const profileDoc = await getDoc(doc(db, 'profiles', user.id));
+          if (profileDoc.exists()) {
+            firestoreProfile = profileDoc.data();
+          }
+        } catch (e) {
+          console.error("Firestore load error:", e);
         }
+
+        setProfile({
+          ...defaultUser,
+          ...(supabaseProfile || {}),
+          ...(firestoreProfile || {}),
+          id: user.id,
+          email: user.email || defaultUser.email,
+        });
       } catch (error) {
         console.error('Error loading user profile:', error);
       } finally {
@@ -96,13 +113,71 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     loadProfile();
   }, [user]);
 
+  const saveToDatabases = async (nextProfile: UserProfile) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          full_name: nextProfile.full_name,
+          avatar_url: nextProfile.avatar_url || '',
+          updated_at: new Date().toISOString()
+        });
+      if (error && error.code !== '42501') {
+        console.error("Error upserting profile in Supabase:", error);
+      }
+    } catch (e) {
+      console.error("Supabase upsert failed:", e);
+    }
+
+    try {
+      const { doc, setDoc } = await import('firebase/firestore');
+      const { db } = await import('./firebase');
+      const profileDocRef = doc(db, 'profiles', user.id);
+      await setDoc(profileDocRef, {
+        full_name: nextProfile.full_name,
+        job_title: nextProfile.job_title,
+        company: nextProfile.company,
+        email: nextProfile.email,
+        phone: nextProfile.phone,
+        website: nextProfile.website,
+        bio: nextProfile.bio,
+        template: nextProfile.template,
+        theme_color: nextProfile.theme_color,
+        linkedin: nextProfile.linkedin,
+        twitter: nextProfile.twitter,
+        industry: nextProfile.industry,
+        avatar_url: nextProfile.avatar_url || '',
+        updated_at: new Date().toISOString()
+      }, { merge: true });
+      console.log("Successfully updated profile in Firestore!");
+    } catch (e) {
+      console.error("Firestore update failed:", e);
+    }
+  };
+
+  const updateProfile = async (updater: any) => {
+    if (typeof updater === 'function') {
+      setProfile((prev) => {
+        const nextProfile = updater(prev);
+        saveToDatabases(nextProfile);
+        return nextProfile;
+      });
+    } else {
+      setProfile(updater);
+      saveToDatabases(updater);
+    }
+  };
+
   const logout = async () => {
     await supabase.auth.signOut();
     import('./firebase').then(m => m.logout());
   };
 
   return (
-    <UserContext.Provider value={{ profile, setProfile, session, user, loading, logout }}>
+    <UserContext.Provider value={{ profile, setProfile: updateProfile, session, user, loading, logout }}>
       {children}
     </UserContext.Provider>
   );

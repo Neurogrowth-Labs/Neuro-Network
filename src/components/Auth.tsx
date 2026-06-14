@@ -17,6 +17,17 @@ export default function Auth() {
     setLoading(true);
     try {
       if (isSignUp) {
+        // 1. Firebase Auth Sign Up
+        try {
+          const { createUserWithEmailAndPassword } = await import('firebase/auth');
+          const { auth: firebaseAuth } = await import('../lib/firebase');
+          await createUserWithEmailAndPassword(firebaseAuth, email, password);
+          console.log("Successfully registered email in Firebase Auth");
+        } catch (fErr: any) {
+          console.warn("Firebase email signup info:", fErr.message);
+        }
+
+        // 2. Supabase Auth Sign Up
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -30,6 +41,17 @@ export default function Auth() {
         toast.success("Account created! You can now sign in.");
         setIsSignUp(false);
       } else {
+        // 1. Firebase Auth Sign In
+        try {
+          const { signInWithEmailAndPassword } = await import('firebase/auth');
+          const { auth: firebaseAuth } = await import('../lib/firebase');
+          await signInWithEmailAndPassword(firebaseAuth, email, password);
+          console.log("Successfully logged in to Firebase Auth");
+        } catch (fErr: any) {
+          console.warn("Firebase email login info:", fErr.message);
+        }
+
+        // 2. Supabase Auth Sign In
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
