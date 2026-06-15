@@ -70,6 +70,177 @@ async function startServer() {
     }
   });
 
+  // 1. AI Chat with Search / Maps Grounding
+  app.post("/api/ai/chat", async (req, res) => {
+    try {
+      if (!ai) {
+        throw new Error("GEMINI_API_KEY environment variable is missing.");
+      }
+      
+      const { history, prompt, systemInstruction, enableSearch, enableMaps, latLng } = req.body;
+      
+      // Map user content history to Gemini format
+      const contents: any[] = [];
+      if (history && Array.isArray(history)) {
+        history.forEach((msg: any) => {
+          contents.push({
+            role: msg.role === "user" ? "user" : "model",
+            parts: [{ text: msg.content }]
+          });
+        });
+      }
+      
+      // Append current user message
+      contents.push({
+        role: "user",
+        parts: [{ text: prompt }]
+      });
+      
+      const tools: any[] = [];
+      let toolConfig: any = undefined;
+      
+      if (enableMaps) {
+        tools.push({ googleMaps: {} });
+        if (latLng) {
+          toolConfig = {
+            routingConfig: {}, // blank default config is supported
+            retrievalConfig: {
+              latLng: {
+                latitude: Number(latLng.latitude),
+                longitude: Number(latLng.longitude)
+              }
+            }
+          };
+        }
+      } else if (enableSearch) {
+        tools.push({ googleSearch: {} });
+      }
+      
+      const config: any = {
+        systemInstruction: systemInstruction || "You are a helpful assistant.",
+      };
+      
+      if (tools.length > 0) {
+        config.tools = tools;
+      }
+      if (toolConfig) {
+        config.toolConfig = toolConfig;
+      }
+      
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents,
+        config
+      });
+      
+      // Extract search grounding chunks
+      const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || null;
+      
+      res.json({
+        text: response.text,
+        groundingChunks
+      });
+    } catch (err: any) {
+      console.error("AI Chat Error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // 2. AI Image Generation
+  app.post("/api/ai/image", async (req, res) => {
+    try {
+      if (!ai) {
+        throw new Error("GEMINI_API_KEY environment variable is missing.");
+      }
+      
+      const { prompt, aspectRatio, imageSize } = req.body;
+      
+      // Aspect ratio mapping to comply with API capabilities (1:1, 3:4, 4:3, 9:16, 16:9)
+      const validAspectRatios = ["1:1", "3:4", "4:3", "9:16", "16:9"];
+      let selectedAspectRatio = aspectRatio || "1:1";
+      if (!validAspectRatios.includes(selectedAspectRatio)) {
+        if (selectedAspectRatio === "2:3") selectedAspectRatio = "3:4";
+        else if (selectedAspectRatio === "3:2") selectedAspectRatio = "4:3";
+        else if (selectedAspectRatio === "21:9") selectedAspectRatio = "16:9";
+        else selectedAspectRatio = "1:1";
+      }
+      
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash-image",
+        contents: {
+          parts: [{ text: prompt }]
+        },
+        config: {
+          imageConfig: {
+            aspectRatio: selectedAspectRatio,
+            imageSize: imageSize === "4K" || imageSize === "2K" ? "1K" : imageSize || "1K"
+          }
+        }
+      });
+      
+      let base64ImageBytes = "";
+      let responseText = "";
+      
+      if (response.candidates?.[0]?.content?.parts) {
+        for (const part of response.candidates[0].content.parts) {
+          if (part.inlineData) {
+            base64ImageBytes = part.inlineData.data;
+          } else if (part.text) {
+            responseText = part.text;
+          }
+        }
+      }
+      
+      if (!base64ImageBytes) {
+        throw new Error("No image data returned from Gemini API");
+      }
+      
+      res.json({
+        imageUrl: `data:image/png;base64,${base64ImageBytes}`,
+        text: responseText
+      });
+    } catch (err: any) {
+      console.error("AI Image Gen Error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // 3. Audio Transcription Route
+  app.post("/api/ai/transcribe", async (req, res) => {
+    try {
+      if (!ai) {
+        throw new Error("GEMINI_API_KEY environment variable is missing.");
+      }
+      
+      const { audioData, mimeType } = req.body;
+      if (!audioData) {
+        throw new Error("Missing audio data bytes.");
+      }
+      
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: [
+          {
+            inlineData: {
+              mimeType: mimeType || "audio/webm",
+              data: audioData
+            }
+          },
+          {
+            text: "Please transcribe this spoken audio. Return ONLY the verbatim transcribed text without any extra conversational remarks or markdown blocks."
+          }
+        ]
+      });
+      
+      res.json({
+        text: response.text || ""
+      });
+    } catch (err: any) {
+      console.error("Audio Transcription Error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // Mock endpoints for the base44 SDK behavior requested with real Firebase & Supabase Sync
   const inMemoryDB: Record<string, any[]> = {
     CardComment: []
@@ -96,13 +267,49 @@ async function startServer() {
     console.error("Supabase client backend initialization failed:", err.message);
   }
 
+  // Helper to map entity names to standard Supabase/PostgreSQL snake_case plural table names
+  const getSupabaseTableName = (entity: string) => {
+    const snake = entity.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
+    if (snake.endsWith('s')) {
+      return snake;
+    }
+    if (snake.endsWith('y')) {
+      return snake.slice(0, -1) + 'ies';
+    }
+    return snake + 's';
+  };
+
   app.get("/api/db/:entity", async (req, res) => {
     const { entity } = req.params;
     let data: any[] = [];
-    let loadedFromFirestore = false;
+    let loadedFromSupabase = false;
 
-    // A. Read from Firebase Firestore
-    if (firestore) {
+    // A. Read from Supabase (Primary)
+    if (supabase) {
+      try {
+        const tableName = getSupabaseTableName(entity);
+        let queryBuilder = supabase.from(tableName).select('*');
+        if (req.query.card_id) {
+          queryBuilder = queryBuilder.eq('card_id', req.query.card_id);
+        } else if (req.query.user_email) {
+          queryBuilder = queryBuilder.eq('user_email', req.query.user_email);
+        }
+        
+        const { data: list, error } = await queryBuilder;
+        if (!error && list) {
+          console.log(`Successfully retrieved ${list.length} '${entity}' records from Supabase [Table: ${tableName}].`);
+          data = list;
+          loadedFromSupabase = true;
+        } else if (error) {
+          console.warn(`Supabase select status/note for table '${tableName}':`, error.message);
+        }
+      } catch (err: any) {
+        console.error(`Supabase read failed for '${entity}':`, err.message);
+      }
+    }
+
+    // B. Fallback to Firebase Firestore (Secondary Backup)
+    if (!loadedFromSupabase && firestore) {
       try {
         const colRef = collection(firestore, entity);
         let q = colRef as any;
@@ -116,28 +323,9 @@ async function startServer() {
         snapshot.forEach((colDoc) => {
           data.push({ id: colDoc.id, ...(colDoc.data() as any) });
         });
-        loadedFromFirestore = true;
-        console.log(`Successfully fetched ${data.length} records for '${entity}' from Firestore.`);
+        console.log(`Successfully fetched ${data.length} backup records for '${entity}' from Firestore.`);
       } catch (err: any) {
-        console.error(`Firestore read failed for '${entity}':`, err.message);
-      }
-    }
-
-    // B. Read from Supabase (fallback/parallel verification if table exists)
-    if (supabase) {
-      try {
-        const tableName = entity.toLowerCase() + 's';
-        const { data: list, error } = await supabase
-          .from(tableName)
-          .select('*');
-        if (!error && list && list.length > 0) {
-          console.log(`Successfully retrieved '${entity}' records from Supabase.`);
-          if (!loadedFromFirestore) {
-            data = list;
-          }
-        }
-      } catch (err) {
-        // Table might not exist yet, skip gracefully
+        console.error(`Firestore backup read skipped/failed for '${entity}':`, err.message);
       }
     }
 
@@ -151,34 +339,34 @@ async function startServer() {
 
   app.post("/api/db/:entity", async (req, res) => {
     const { entity } = req.params;
-    const id = Math.random().toString(36).substring(7);
+    const id = req.body.id || Math.random().toString(36).substring(7);
     const item = { id, ...req.body, created_date: new Date().toISOString() };
 
-    // A. Save to Firebase Firestore
-    if (firestore) {
-      try {
-        const docRef = doc(firestore, entity, id);
-        await setDoc(docRef, item);
-        console.log(`Successfully saved '${entity}' to Firestore with ID: ${id}`);
-      } catch (err: any) {
-        console.error(`Firestore write failed for '${entity}':`, err.message);
-      }
-    }
-
-    // B. Save to Supabase
+    // A. Prioritize Supabase (Primary Write Target)
     if (supabase) {
       try {
-        const tableName = entity.toLowerCase() + 's';
+        const tableName = getSupabaseTableName(entity);
         const { error } = await supabase
           .from(tableName)
           .insert([item]);
         if (!error) {
-          console.log(`Successfully sync'ed '${entity}' to Supabase with ID: ${id}`);
+          console.log(`Successfully persisted '${entity}' to Supabase table '${tableName}' with ID: ${id}`);
         } else {
-          console.warn(`Supabase sync note for table '${tableName}': ${error.message}`);
+          console.warn(`Supabase write issue for table '${tableName}': ${error.message}`);
         }
-      } catch (err) {
-        // Table might not exist, skip gracefully
+      } catch (err: any) {
+        console.error(`Supabase write exception for table:`, err.message);
+      }
+    }
+
+    // B. Save to Firebase Firestore (Secondary Sync Target)
+    if (firestore) {
+      try {
+        const docRef = doc(firestore, entity, id);
+        await setDoc(docRef, item);
+        console.log(`Successfully synced backup '${entity}' to Firestore with ID: ${id}`);
+      } catch (err: any) {
+        console.error(`Firestore backup sync bypassed for '${entity}':`, err.message);
       }
     }
 
@@ -193,30 +381,32 @@ async function startServer() {
     const { entity, id } = req.params;
     const updateData = req.body;
 
-    // A. Update in Firestore
-    if (firestore) {
-      try {
-        const docRef = doc(firestore, entity, id);
-        await setDoc(docRef, updateData, { merge: true });
-        console.log(`Successfully updated '${entity}' in Firestore with ID: ${id}`);
-      } catch (err: any) {
-        console.error(`Firestore update failed for '${entity}':`, err.message);
-      }
-    }
-
-    // B. Update in Supabase
+    // A. Prioritize Supabase (Primary Update Target)
     if (supabase) {
       try {
-        const tableName = entity.toLowerCase() + 's';
+        const tableName = getSupabaseTableName(entity);
         const { error } = await supabase
           .from(tableName)
           .update(updateData)
           .eq('id', id);
         if (!error) {
-          console.log(`Successfully updated '${entity}' in Supabase with ID: ${id}`);
+          console.log(`Successfully updated '${entity}' in Supabase [${tableName}] with ID: ${id}`);
+        } else {
+          console.warn(`Supabase update issue: ${error.message}`);
         }
-      } catch (err) {
-        // Skip
+      } catch (err: any) {
+        console.error(`Supabase update throw on '${entity}':`, err.message);
+      }
+    }
+
+    // B. Update in Firestore (Secondary Sync Target)
+    if (firestore) {
+      try {
+        const docRef = doc(firestore, entity, id);
+        await setDoc(docRef, updateData, { merge: true });
+        console.log(`Successfully synced updated '${entity}' to Firestore with ID: ${id}`);
+      } catch (err: any) {
+        console.error(`Firestore update sync skipped for '${entity}':`, err.message);
       }
     }
 
@@ -237,30 +427,32 @@ async function startServer() {
   app.delete("/api/db/:entity/:id", async (req, res) => {
     const { entity, id } = req.params;
 
-    // A. Delete in Firestore
-    if (firestore) {
-      try {
-        const docRef = doc(firestore, entity, id);
-        await deleteDoc(docRef);
-        console.log(`Successfully deleted '${entity}' from Firestore with ID: ${id}`);
-      } catch (err: any) {
-        console.error(`Firestore delete failed for '${entity}':`, err.message);
-      }
-    }
-
-    // B. Delete in Supabase
+    // A. Prioritize Supabase (Primary Delete Target)
     if (supabase) {
       try {
-        const tableName = entity.toLowerCase() + 's';
+        const tableName = getSupabaseTableName(entity);
         const { error } = await supabase
           .from(tableName)
           .delete()
           .eq('id', id);
         if (!error) {
-          console.log(`Successfully deleted '${entity}' from Supabase with ID: ${id}`);
+          console.log(`Successfully deleted '${entity}' from Supabase [${tableName}] with ID: ${id}`);
+        } else {
+          console.warn(`Supabase deletion issue: ${error.message}`);
         }
-      } catch (err) {
-        // Skip
+      } catch (err: any) {
+        console.error(`Supabase delete exception for '${entity}':`, err.message);
+      }
+    }
+
+    // B. Delete in Firestore (Secondary Sync Target)
+    if (firestore) {
+      try {
+        const docRef = doc(firestore, entity, id);
+        await deleteDoc(docRef);
+        console.log(`Successfully deleted backup '${entity}' from Firestore with ID: ${id}`);
+      } catch (err: any) {
+        console.error(`Firestore backup delete bypassed for '${entity}':`, err.message);
       }
     }
 

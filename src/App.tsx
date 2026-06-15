@@ -8,6 +8,7 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import {
+  Shield,
   BrainCircuit,
   Contact,
   QrCode,
@@ -17,13 +18,17 @@ import {
   Settings as SettingsIcon,
   MessageCircle,
   Menu,
-  X
+  X,
+  Video,
+  MessageSquare
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { UserProvider, useUser } from "./lib/UserContext";
 
 // Pages
 import Dashboard from "./pages/Dashboard";
+import GoogleMeet from "./pages/GoogleMeet";
+import GoogleChat from "./pages/GoogleChat";
 import Vault from "./pages/Vault";
 import Editor from "./pages/Editor";
 import Admin from "./pages/Admin";
@@ -53,6 +58,7 @@ function TopNav() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const location = useLocation();
   const { profile, logout } = useUser();
+  const isAdmin = profile?.role === 'super_admin' || profile?.email === 'lusimadio12@gmail.com' || profile?.email === 'simao@neurogrowthlabs.co.za';
   const [notifications, setNotifications] = useState([
     { id: 1, type: "message", text: "Sarah Jenkins connected with you.", time: "10m ago" },
     { id: 2, type: "system", text: "Your profile visibility was updated.", time: "1h ago" },
@@ -62,6 +68,8 @@ function TopNav() {
     { path: "/", icon: QrCode, label: "Dashboard" },
     { path: "/vault", icon: Contact, label: "Vault" },
     { path: "/editor", icon: Zap, label: "AI Studio" },
+    { path: "/chat", icon: MessageSquare, label: "Google Chat" },
+    { path: "/meet", icon: Video, label: "Google Meet" },
   ];
 
   useEffect(() => {
@@ -173,6 +181,15 @@ function TopNav() {
           {showProfileMenu && (
             <div className="absolute right-0 top-12 w-48 bg-[#12121a] border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50">
               <div className="p-2 flex flex-col gap-1">
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setShowProfileMenu(false)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-cyan-400 hover:text-cyan-300 hover:bg-white/5 rounded-lg transition-colors font-semibold border-b border-white/5 mb-1"
+                  >
+                    <Shield className="w-4 h-4" /> Admin Console
+                  </Link>
+                )}
                 <Link
                   to="/settings"
                   onClick={() => setShowProfileMenu(false)}
@@ -215,7 +232,7 @@ function TopNav() {
 import Auth from "./components/Auth";
 
 function AppContent() {
-  const { user, loading } = useUser();
+  const { user, loading, profile } = useUser();
 
   if (loading) {
     return (
@@ -235,6 +252,8 @@ function AppContent() {
     );
   }
 
+  const isAdmin = profile?.role === 'super_admin' || user?.email === 'lusimadio12@gmail.com' || user?.email === 'simao@neurogrowthlabs.co.za';
+
   return (
     <div className="min-h-screen bg-[#0a0a0c] text-white flex justify-center">
       {/* Mobile frame container */}
@@ -243,6 +262,7 @@ function AppContent() {
         <div className="h-full overflow-y-auto pt-16 pb-6 scrollbar-hide">
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/user-dashboard" element={<Dashboard />} />
             <Route path="/vault" element={<Vault />} />
             <Route path="/editor" element={<Editor />} />
             <Route path="/admin" element={<Admin />} />
@@ -263,6 +283,8 @@ function AppContent() {
             <Route path="/team" element={<Team />} />
             <Route path="/templates" element={<Templates />} />
             <Route path="/voice-call" element={<VoiceCall />} />
+            <Route path="/chat" element={<GoogleChat />} />
+            <Route path="/meet" element={<GoogleMeet />} />
           </Routes>
         </div>
       </div>

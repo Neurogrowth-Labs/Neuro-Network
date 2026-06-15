@@ -1,6 +1,7 @@
 const makeEntityMock = (name: string) => ({
   list: async (orderBy?: string) => {
-    return [];
+    const res = await fetch(`/api/db/${name}${orderBy ? `?orderBy=${encodeURIComponent(orderBy)}` : ""}`);
+    return res.ok ? res.json() : [];
   },
   filter: async (filters: any) => {
     const query = new URLSearchParams(filters).toString();

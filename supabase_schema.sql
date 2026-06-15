@@ -138,3 +138,27 @@ GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;
 GRANT ALL ON ALL TABLES IN SCHEMA public TO anon;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon;
+
+-- ======================================================================================
+-- 10. BIOMETRIC CREDENTIALS (SECURE WEB-AUTH MICROSIGNATURES)
+-- ======================================================================================
+CREATE TABLE IF NOT EXISTS public.biometric_credentials (
+    id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_email text NOT NULL,
+    credential_id text NOT NULL,
+    type text NOT NULL,
+    raw_id text NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.biometric_credentials ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can manage biometric credentials"
+    ON public.biometric_credentials FOR ALL
+    USING (true)
+    WITH CHECK (true);
+
+CREATE INDEX IF NOT EXISTS idx_biometric_user ON public.biometric_credentials(user_email);
+
+GRANT ALL ON public.biometric_credentials TO authenticated;
+GRANT ALL ON public.biometric_credentials TO anon;

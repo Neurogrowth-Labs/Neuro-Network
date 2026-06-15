@@ -6,6 +6,7 @@ import { MY_CARD } from "./Dashboard";
 import AddToCalendarButton from "../components/AddToCalendarButton";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import BiometricVerification from "../components/BiometricVerification";
 
 const INITIAL_CONTACTS = [
   {
@@ -65,11 +66,20 @@ const INITIAL_CONTACTS = [
 ];
 
 export default function ContactVault() {
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const [contacts, setContacts] = useState(INITIAL_CONTACTS);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showFollowUpOnly, setShowFollowUpOnly] = useState(false);
   const [newTagInput, setNewTagInput] = useState<{ [key: string]: string }>({});
   const [enrichingId, setEnrichingId] = useState<string | null>(null);
+
+  if (!isUnlocked) {
+    return (
+      <div className="p-6">
+        <BiometricVerification onUnlockSuccess={() => setIsUnlocked(true)} sectionName="Smart Vault" />
+      </div>
+    );
+  }
 
   const handleAddTag = (contactId: string) => {
     const tag = newTagInput[contactId]?.trim();

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { MY_CARD } from "./Dashboard";
 import AddToCalendarButton from "../components/AddToCalendarButton";
+import BiometricVerification from "../components/BiometricVerification";
 
 const CONTACTS = [
   {
@@ -64,7 +65,16 @@ const CONTACTS = [
 ];
 
 export default function Vault() {
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  if (!isUnlocked) {
+    return (
+      <div className="p-6">
+        <BiometricVerification onUnlockSuccess={() => setIsUnlocked(true)} sectionName="Smart Vault" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
