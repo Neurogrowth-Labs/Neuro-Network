@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from './supabase';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { ensureUUID } from './uuid';
+import { saveProfileOffline, getProfileOffline } from './offlineStorage';
 
 export const defaultUser = {
   full_name: "Alexander Vance",
@@ -27,6 +29,8 @@ interface UserContextType {
   session: Session | null;
   user: SupabaseUser | null;
   loading: boolean;
+  isSaving: boolean;
+  isOnline: boolean;
   logout: () => Promise<void>;
 }
 
@@ -37,6 +41,21 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [profile, setProfile] = useState<UserProfile>(defaultUser);
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     let activeUser: any = null;
@@ -124,26 +143,31 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       try {
         let supabaseProfile: any = null;
         try {
-          // Ensure user.id matches valid UUID structure before executing DB query (prevents syntax error 22P02)
-          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-          if (uuidRegex.test(user.id)) {
-            const { data, error } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', user.id)
-              .single();
-              
-            if (error && error.code !== 'PGRST116' && error.code !== '42501') {
-               console.error('Database query error:', error);
-            }
-            if (data) {
-              supabaseProfile = data;
-            }
-          } else {
-            console.warn("User ID is not a valid UUID format. Skipping DB lookup:", user.id);
+          // Always use ensureUUID to format the identifier correctly and prevent PostgreSQL syntax errors
+          const safeId = ensureUUID(user.id);
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', safeId)
+            .single();
+            
+          if (error && error.code !== 'PGRST116' && error.code !== '42501') {
+             console.error('Database query error:', error);
+          }
+          if (data) {
+            supabaseProfile = data;
           }
         } catch (e) {
           console.error("Supabase load error:", e);
+        }
+
+        // Load from local IndexedDB cache for robust offline storage
+        let offlineCachedProfile: any = null;
+        try {
+          const safeId = ensureUUID(user.id);
+          offlineCachedProfile = await getProfileOffline(safeId);
+        } catch (e) {
+          console.error("IndexedDB profile load error:", e);
         }
 
         // Load from local storage cache to guarantee persistent edits across reloads
@@ -160,10 +184,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setProfile({
           ...defaultUser,
           ...(cachedProfile || {}),
+          ...(offlineCachedProfile || {}),
           ...(supabaseProfile || {}),
           id: user.id,
           email: user.email || defaultUser.email,
-          role: supabaseProfile?.role || cachedProfile?.role || ((user.email === 'lusimadio12@gmail.com' || user.email === 'alex@neuronets.work' || user.email === 'simao@neurogrowthlabs.co.za') ? 'super_admin' : 'user'),
+          role: supabaseProfile?.role || offlineCachedProfile?.role || cachedProfile?.role || ((user.email === 'lusimadio12@gmail.com' || user.email === 'alex@neuronets.work' || user.email === 'simao@neurogrowthlabs.co.za') ? 'super_admin' : 'user'),
         });
       } catch (error) {
         console.error('Error loading user profile:', error);
@@ -178,25 +203,32 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const saveToDatabases = async (nextProfile: UserProfile) => {
     if (!user) return;
 
-    // Cache locally immediately to ensure changes are always preserved across reloads
+    // Cache locally to localStorage immediately
     try {
       localStorage.setItem(`profile_cache_${user.id}`, JSON.stringify(nextProfile));
     } catch (e) {
       console.error("Local storage save error:", e);
     }
     
-    // Ensure user.id matches valid UUID structure before executing DB query (prevents syntax error 22P02)
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(user.id)) {
-      console.warn("User ID is not a valid UUID format. Skipping DB save:", user.id);
-      return;
+    // Convert to fully valid RFC4122 UUID structure
+    const safeId = ensureUUID(user.id);
+
+    // Persist to offline IndexedDB
+    try {
+      await saveProfileOffline({
+        ...nextProfile,
+        id: safeId
+      });
+    } catch (e) {
+      console.error("IndexedDB save profile error:", e);
     }
 
+    setIsSaving(true);
     try {
       const { error } = await supabase
         .from('profiles')
         .upsert({
-          id: user.id,
+          id: safeId,
           full_name: nextProfile.full_name,
           job_title: nextProfile.job_title,
           company: nextProfile.company,
@@ -219,6 +251,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (e) {
       console.error("Supabase upsert failed:", e);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -241,7 +275,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <UserContext.Provider value={{ profile, setProfile: updateProfile, session, user, loading, logout }}>
+    <UserContext.Provider value={{ profile, setProfile: updateProfile, session, user, loading, isSaving, isOnline, logout }}>
       {children}
     </UserContext.Provider>
   );
