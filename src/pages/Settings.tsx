@@ -8,6 +8,11 @@ export default function Settings() {
   const [formData, setFormData] = useState(profile);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Synchronize form fields whenever the saved profile loads or updates
+  React.useEffect(() => {
+    setFormData(profile);
+  }, [profile]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));

@@ -146,12 +146,24 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           console.error("Supabase load error:", e);
         }
 
+        // Load from local storage cache to guarantee persistent edits across reloads
+        let cachedProfile: any = null;
+        try {
+          const cached = localStorage.getItem(`profile_cache_${user.id}`);
+          if (cached) {
+            cachedProfile = JSON.parse(cached);
+          }
+        } catch (e) {
+          console.error("Local storage read error:", e);
+        }
+
         setProfile({
           ...defaultUser,
+          ...(cachedProfile || {}),
           ...(supabaseProfile || {}),
           id: user.id,
           email: user.email || defaultUser.email,
-          role: supabaseProfile?.role || ((user.email === 'lusimadio12@gmail.com' || user.email === 'alex@neuronets.work' || user.email === 'simao@neurogrowthlabs.co.za') ? 'super_admin' : 'user'),
+          role: supabaseProfile?.role || cachedProfile?.role || ((user.email === 'lusimadio12@gmail.com' || user.email === 'alex@neuronets.work' || user.email === 'simao@neurogrowthlabs.co.za') ? 'super_admin' : 'user'),
         });
       } catch (error) {
         console.error('Error loading user profile:', error);
@@ -165,6 +177,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const saveToDatabases = async (nextProfile: UserProfile) => {
     if (!user) return;
+
+    // Cache locally immediately to ensure changes are always preserved across reloads
+    try {
+      localStorage.setItem(`profile_cache_${user.id}`, JSON.stringify(nextProfile));
+    } catch (e) {
+      console.error("Local storage save error:", e);
+    }
     
     // Ensure user.id matches valid UUID structure before executing DB query (prevents syntax error 22P02)
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

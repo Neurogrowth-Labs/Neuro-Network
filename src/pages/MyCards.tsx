@@ -11,6 +11,13 @@ export default function MyCards() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(profile);
 
+  // Synchronize form fields whenever the saved profile loads or updates
+  React.useEffect(() => {
+    if (!isEditing) {
+      setFormData(profile);
+    }
+  }, [profile, isEditing]);
+
   const handleSave = () => {
     setProfile(formData);
     setIsEditing(false);
