@@ -58,7 +58,7 @@ function TopNav() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const location = useLocation();
-  const { profile, logout } = useUser();
+  const { profile, logout, isOnline } = useUser();
   const isAdmin = profile?.role === 'super_admin' || profile?.email === 'lusimadio12@gmail.com' || profile?.email === 'simao@neurogrowthlabs.co.za';
   const [notifications, setNotifications] = useState([
     { id: 1, type: "message", text: "Sarah Jenkins connected with you.", time: "10m ago" },
@@ -130,9 +130,16 @@ function TopNav() {
         </button>
         <div className="flex items-center gap-2">
           <img src="/icon.png" alt="Logo" onError={(e) => e.currentTarget.src = '/logo.png'} className="w-8 h-8 rounded-lg drop-shadow-[0_0_8px_rgba(59,130,246,0.3)] object-cover bg-white p-0.5" />
-          <span className="font-bold text-sm tracking-tighter uppercase text-white truncate max-w-[100px] sm:max-w-none">
-            Neuro NetWorks
-          </span>
+          <div className="flex flex-col">
+            <span className="font-bold text-sm tracking-tighter uppercase text-white truncate max-w-[100px] sm:max-w-none leading-none">
+              Neuro NetWorks
+            </span>
+            {!isOnline && (
+              <span className="text-[8px] text-amber-400 font-mono tracking-widest uppercase animate-pulse font-bold mt-0.5">
+                Offline (IDB Cache)
+              </span>
+            )}
+          </div>
         </div>
       </div>
 

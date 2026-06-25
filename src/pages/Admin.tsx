@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "../lib/supabase";
 import { useUser } from "../lib/UserContext";
 import { useAdminState } from "../lib/AdminStateProvider";
+import { ensureUUID } from "../lib/uuid";
 import {
   Shield,
   Activity,
@@ -418,24 +419,17 @@ export default function Admin() {
 
   // Helper to get a valid user UUID for relational references
   const getSafeUserId = (): string => {
-    const currentId = authUser?.id;
-    if (currentId && currentId.length === 36 && currentId.includes("-")) {
-      return currentId;
-    }
-    const profileId = profile?.id;
-    if (profileId && profileId.length === 36 && profileId.includes("-")) {
-      return profileId;
-    }
-    return "00000000-0000-0000-0000-000000000000";
+    return ensureUUID(authUser?.id || profile?.id);
   };
 
   // Modify user system properties (Role & Status management)
   const handleModifyUserStatus = async (userId: string, newStatus: PlatformUser["status"]) => {
     try {
+      const safeUserId = ensureUUID(userId);
       const { error } = await supabase
         .from("profiles")
         .update({ status: newStatus })
-        .eq("id", userId);
+        .eq("id", safeUserId);
       
       if (error) throw error;
 
@@ -458,10 +452,11 @@ export default function Admin() {
   // Promotes / changes user platform permissions role
   const handleModifyUserRole = async (userId: string, newRole: PlatformUser["role"]) => {
     try {
+      const safeUserId = ensureUUID(userId);
       const { error } = await supabase
         .from("profiles")
         .update({ role: newRole })
-        .eq("id", userId);
+        .eq("id", safeUserId);
 
       if (error) throw error;
 
@@ -587,20 +582,21 @@ export default function Admin() {
   // Delete Platform Data items (manage profiles, contacts, notes tables)
   const handleDeletePlatformDataItem = async (id: string) => {
     try {
+      const safeId = ensureUUID(id);
       if (dataSubTab === "profiles") {
-        const { error } = await supabase.from("profiles").delete().eq("id", id);
+        const { error } = await supabase.from("profiles").delete().eq("id", safeId);
         if (error) throw error;
         setPlatformCards(prev => prev.filter(p => p.id !== id));
         toast.success("Digital card profile removed.");
         await logAdminAction("Catalog Profile Deleted", `Removed profile item container: [${id}]`, "SECURITY");
       } else if (dataSubTab === "contacts") {
-        const { error } = await supabase.from("contacts").delete().eq("id", id);
+        const { error } = await supabase.from("contacts").delete().eq("id", safeId);
         if (error) throw error;
         setPlatformContacts(prev => prev.filter(c => c.id !== id));
         toast.success("Business card exchange contact deleted.");
         await logAdminAction("Vault Connection Refused", `Withdrew card vault record: [${id}]`, "INFO");
       } else if (dataSubTab === "notes") {
-        const { error } = await supabase.from("notes").delete().eq("id", id);
+        const { error } = await supabase.from("notes").delete().eq("id", safeId);
         if (error) throw error;
         setPlatformNotes(prev => prev.filter(n => n.id !== id));
         toast.success("Meeting note summary deleted from central database.");
