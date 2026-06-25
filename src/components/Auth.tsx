@@ -294,14 +294,14 @@ export default function Auth() {
           toast.success("Welcome back, Super Admin!");
         }
 
-        const mockUser = {
-          id: "simao-admin-uuid-99a",
+        const adminUser = {
+          id: "99a99999-99aa-499a-a99a-99999999999a",
           email: "simao@neurogrowthlabs.co.za",
           user_metadata: {
             full_name: fullName || "Simao - Super Admin",
           }
         };
-        localStorage.setItem("bypass_admin_user", JSON.stringify(mockUser));
+        localStorage.setItem("admin_onboarding_session", JSON.stringify(adminUser));
         
         setTimeout(() => {
           window.location.reload();

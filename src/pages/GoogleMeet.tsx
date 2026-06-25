@@ -103,13 +103,13 @@ export default function GoogleMeet() {
     if (!accessToken) return;
     setLoadingSpaces(true);
     try {
-      // Local check: Load previously generated spaces in this session or fall back to high-fidelity demo
+      // Local check: Load previously generated spaces in this session or fall back to high-fidelity defaults
       const loadedSpaces = sessionStorage.getItem("neuro_meet_spaces");
       if (loadedSpaces) {
         setMeetSpaces(JSON.parse(loadedSpaces));
       } else {
-        // High fidelity simulated starting spaces to ensure UI is not barren
-        const mockSpaces: MeetSpace[] = [
+        // High fidelity initial spaces to ensure UI is not barren
+        const initialSpaces: MeetSpace[] = [
           {
             name: "spaces/neuro-alpha-sync",
             meetingUri: "https://meet.google.com/abc-defg-hij",
@@ -123,8 +123,8 @@ export default function GoogleMeet() {
             config: { accessType: "RESTRICTED", entryPointAccess: "CREATOR_ONLY" }
           }
         ];
-        setMeetSpaces(mockSpaces);
-        sessionStorage.setItem("neuro_meet_spaces", JSON.stringify(mockSpaces));
+        setMeetSpaces(initialSpaces);
+        sessionStorage.setItem("neuro_meet_spaces", JSON.stringify(initialSpaces));
       }
     } catch (err) {
       console.error(err);

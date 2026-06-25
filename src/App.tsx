@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { UserProvider, useUser } from "./lib/UserContext";
+import { AdminStateProvider, useAdminState } from "./lib/AdminStateProvider";
 
 // Pages
 import Dashboard from "./pages/Dashboard";
@@ -80,7 +81,38 @@ function TopNav() {
         ...prev
       ]);
     }, 15000); // 15 seconds after load
-    return () => clearTimeout(timer);
+
+    // Listen to Supabase Realtime broadcast and insert events
+    const handleRealtimeNotif = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const newNotif = customEvent.detail;
+      if (newNotif) {
+        setNotifications(prev => [
+          { id: newNotif.id || Date.now(), type: "system", text: newNotif.content, time: "Just now" },
+          ...prev
+        ]);
+      }
+    };
+
+    const handleGlobalBroadcast = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const payload = customEvent.detail;
+      if (payload) {
+        setNotifications(prev => [
+          { id: Date.now(), type: "system", text: `[BROADCAST] ${payload.subject}: ${payload.body}`, time: "Just now" },
+          ...prev
+        ]);
+      }
+    };
+
+    window.addEventListener("realtime-notification-received", handleRealtimeNotif);
+    window.addEventListener("admin-global-broadcast", handleGlobalBroadcast);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("realtime-notification-received", handleRealtimeNotif);
+      window.removeEventListener("admin-global-broadcast", handleGlobalBroadcast);
+    };
   }, []);
 
   return (
@@ -233,6 +265,7 @@ import Auth from "./components/Auth";
 
 function AppContent() {
   const { user, loading, profile } = useUser();
+  const { maintenanceMode } = useAdminState();
 
   if (loading) {
     return (
@@ -253,6 +286,45 @@ function AppContent() {
   }
 
   const isAdmin = profile?.role === 'super_admin' || user?.email === 'lusimadio12@gmail.com' || user?.email === 'simao@neurogrowthlabs.co.za';
+  const isSuspended = profile?.status === "Suspended";
+
+  if (isSuspended) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0c] text-white flex justify-center">
+        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative bg-[#0d0101] shadow-2xl flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-16 h-16 rounded-full bg-red-950/50 border border-red-500/30 flex items-center justify-center mb-6 text-red-500 animate-pulse animate-duration-1000">
+            <Shield className="w-8 h-8" />
+          </div>
+          <h1 className="text-xl font-bold tracking-tight text-red-400 mb-2">Account Suspended</h1>
+          <p className="text-xs text-white/60 leading-relaxed mb-6">
+            This user account has been suspended by the super administrator. Access to the platform's core registry has been restricted.
+          </p>
+          <div className="text-[10px] font-mono text-white/30">
+            SECURITY TRACE ID: SUSP_STATE_ACTIVE
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (maintenanceMode && !isAdmin) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0c] text-white flex justify-center">
+        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative bg-[#0a0803] shadow-2xl flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-16 h-16 rounded-full bg-amber-950/50 border border-amber-500/30 flex items-center justify-center mb-6 text-amber-500 animate-pulse">
+            <BrainCircuit className="w-8 h-8" />
+          </div>
+          <h1 className="text-xl font-bold tracking-tight text-amber-400 mb-2">Maintenance Underway</h1>
+          <p className="text-xs text-white/60 leading-relaxed mb-6">
+            The Neuro NetWorks platform is currently undergoing scheduled system calibration. We apologize for the brief interruption.
+          </p>
+          <div className="text-[10px] font-mono text-white/30">
+            SYSTEM ENGINE STATUS: CALIBRATING
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0c] text-white flex justify-center">
@@ -295,12 +367,14 @@ function AppContent() {
 export default function App() {
   return (
     <UserProvider>
-      <QueryClientProvider client={queryClient}>
-        <Router>
-          <AppContent />
-          <Toaster theme="dark" position="top-center" />
-        </Router>
-      </QueryClientProvider>
+      <AdminStateProvider>
+        <QueryClientProvider client={queryClient}>
+          <Router>
+            <AppContent />
+            <Toaster theme="dark" position="top-center" />
+          </Router>
+        </QueryClientProvider>
+      </AdminStateProvider>
     </UserProvider>
   );
 }

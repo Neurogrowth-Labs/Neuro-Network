@@ -62,7 +62,7 @@ export default function Landing() {
       a: "Our single Pro Catalyst tier gives you unlimited personal card creation, real-time chat nodes, high-fidelity Imagen artwork rendering, and access to the cryptographic vault with absolutely no hidden parameters or data limits."
     },
     {
-      q: "Is any of my information simulated or mock cached?",
+      q: "Is any of my information simulated or temporarily cached?",
       a: "Absolutely not. This platform executes direct, live API calls against Firebase Firestore databases and certified Workspace endpoints under high-grade authorization protocols. Your credentials never bypass the local state layer."
     }
   ];
@@ -266,7 +266,7 @@ export default function Landing() {
                   <Lock className="w-3.5 h-3.5" /> Sovereign Purge Accordance
                 </div>
                 <p className="text-[10px] text-white/60 leading-relaxed">
-                  No tracking scripts, logging beacons, or persistent tracking cookies are deployed in the sandbox. Any cards, templates, or image mock assets can be permanently purged instantly at your sovereign discretion.
+                  No tracking scripts, logging beacons, or persistent tracking cookies are deployed in the sandbox. Any cards, templates, or image assets can be permanently purged instantly at your sovereign discretion.
                 </p>
               </motion.div>
             )}

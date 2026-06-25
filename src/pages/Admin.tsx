@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "../lib/supabase";
 import { useUser } from "../lib/UserContext";
+import { useAdminState } from "../lib/AdminStateProvider";
 import {
   Shield,
   Activity,
@@ -130,16 +131,6 @@ export default function Admin() {
 
   // Analytics tab stats
   const [analyticsTimespan, setAnalyticsTimespan] = useState<"7d" | "30d" | "90d">("30d");
-  const signupsData = [
-    { name: "Jun 01", shares: 42, signups: 8 },
-    { name: "Jun 03", shares: 58, signups: 12 },
-    { name: "Jun 05", shares: 72, signups: 15 },
-    { name: "Jun 07", shares: 90, signups: 22 },
-    { name: "Jun 09", shares: 104, signups: 19 },
-    { name: "Jun 11", shares: 131, signups: 28 },
-    { name: "Jun 13", shares: 148, signups: 34 },
-    { name: "Jun 15", shares: 165, signups: 41 },
-  ];
 
   // Database lists
   const [dbUsers, setDbUsers] = useState<PlatformUser[]>([]);
@@ -156,6 +147,12 @@ export default function Admin() {
   const [loadingPlatformData, setLoadingPlatformData] = useState(false);
   const [dataSearchQuery, setDataSearchQuery] = useState("");
 
+  // Real-time contact and note creation inputs
+  const [showAddContactForm, setShowAddContactForm] = useState(false);
+  const [newContactData, setNewContactData] = useState({ first_name: "", last_name: "", company: "", email: "", phone: "" });
+  const [showAddNoteForm, setShowAddNoteForm] = useState(false);
+  const [newNoteContent, setNewNoteContent] = useState("");
+
   // Users Tab Search & Filter State
   const [userSearchText, setUserSearchText] = useState("");
   const [userRoleFilter, setUserRoleFilter] = useState<"all" | "super_admin" | "executive" | "manager" | "individual">("all");
@@ -167,16 +164,18 @@ export default function Admin() {
   const [broadcastPriority, setBroadcastPriority] = useState<"normal" | "urgent">("normal");
   const [sendingBroadcast, setSendingBroadcast] = useState(false);
 
-  // Settings config states (simulated / bound to local & profiles)
-  const [signupsEnabled, setSignupsEnabled] = useState<boolean>(() => {
-    return localStorage.getItem("setting_signups_enabled") !== "false";
-  });
-  const [copilotSpeed, setCopilotSpeed] = useState<"turbo" | "balanced">(() => {
-    return (localStorage.getItem("setting_copilot_speed") as "turbo" | "balanced") || "turbo";
-  });
-  const [maintenanceMode, setMaintenanceMode] = useState<boolean>(() => {
-    return localStorage.getItem("setting_maintenance_mode") === "true";
-  });
+  // Settings config states loaded from live Realtime context provider
+  const {
+    signupsEnabled,
+    copilotSpeed,
+    maintenanceMode,
+    toggleSetting,
+    broadcastAnnouncement,
+    profilesVersion,
+    contactsVersion,
+    notesVersion,
+    realtimeLogs
+  } = useAdminState();
 
   // Check if current user is authorized
   const isAuthorized = useMemo(() => {
@@ -186,6 +185,84 @@ export default function Admin() {
       ADMIN_EMAILS.includes(authUser?.email || "")
     );
   }, [profile, authUser]);
+
+  // Dynamically calculate actual business KPIs from real database instances in real-time
+  const liveKPIs = useMemo(() => {
+    const totalUsers = dbUsers.length;
+    const activeUsersCount = dbUsers.filter(u => u.status === "Active").length;
+    
+    // Each Active user is valued at $49/month
+    const estimatedMRR = activeUsersCount * 49;
+    
+    // Card exchanges in the last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const recentExchangesCount = platformContacts.filter(c => {
+      const cDate = new Date(c.created_at || Date.now());
+      return cDate >= thirtyDaysAgo;
+    }).length;
+
+    const totalNotesCount = platformNotes.length;
+
+    // Mean contacts per card (total contacts / total cards)
+    const meanContacts = totalUsers > 0 ? (platformContacts.length / totalUsers).toFixed(1) : "0.0";
+
+    return {
+      estimatedMRR,
+      recentExchangesCount,
+      totalNotesCount,
+      meanContacts
+    };
+  }, [dbUsers, platformContacts, platformNotes]);
+
+  // Dynamically calculate real growth trends (Shares vs Signup Conversion)
+  const signupsData = useMemo(() => {
+    // Determine the number of days and intervals based on selected timespan
+    let daysToInclude = 7;
+    let intervalsCount = 7;
+    if (analyticsTimespan === "30d") {
+      daysToInclude = 30;
+      intervalsCount = 10;
+    } else if (analyticsTimespan === "90d") {
+      daysToInclude = 90;
+      intervalsCount = 10;
+    }
+
+    const points: Array<{ name: string; shares: number; signups: number }> = [];
+    const now = new Date();
+
+    // Create intervals
+    const intervalDays = Math.max(1, Math.round(daysToInclude / intervalsCount));
+
+    for (let i = intervalsCount - 1; i >= 0; i--) {
+      const dateStart = new Date();
+      dateStart.setDate(now.getDate() - (i + 1) * intervalDays);
+      const dateEnd = new Date();
+      dateEnd.setDate(now.getDate() - i * intervalDays);
+
+      // Count profiles (signups) created between dateStart and dateEnd
+      const signupsCount = dbUsers.filter(u => {
+        const uDate = new Date(u.created_at);
+        return uDate >= dateStart && uDate <= dateEnd;
+      }).length;
+
+      // Count contacts (shares/exchanges) created between dateStart and dateEnd
+      const sharesCount = platformContacts.filter(c => {
+        const cDate = new Date(c.created_at || now);
+        return cDate >= dateStart && cDate <= dateEnd;
+      }).length;
+
+      const label = dateEnd.toLocaleDateString("en-US", { month: "short", day: "2-digit" });
+      
+      points.push({
+        name: label,
+        shares: sharesCount,
+        signups: signupsCount
+      });
+    }
+
+    return points;
+  }, [dbUsers, platformContacts, analyticsTimespan]);
 
   // Fetch all core system directory elements from Supabase securely
   const fetchUsers = useCallback(async () => {
@@ -242,41 +319,30 @@ export default function Admin() {
     }
   }, [profile, authUser]);
 
-  // Fetch platform data dynamically based on the sub-tab (Profiles, Contacts, Notes)
+  // Fetch all platform data tables (Profiles, Contacts, Notes) concurrently for real-time aggregation
   const fetchPlatformData = useCallback(async () => {
     setLoadingPlatformData(true);
     try {
-      if (dataSubTab === "profiles") {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("id, full_name, job_title, avatar_url, created_at")
-          .order("created_at", { ascending: false });
-        if (error) throw error;
-        setPlatformCards(data || []);
-      } else if (dataSubTab === "contacts") {
-        const { data, error } = await supabase
-          .from("contacts")
-          .select("*")
-          .order("created_at", { ascending: false });
-        if (error) throw error;
-        setPlatformContacts(data || []);
-      } else if (dataSubTab === "notes") {
-        const { data, error } = await supabase
-          .from("notes")
-          .select("*")
-          .order("created_at", { ascending: false });
-        if (error) throw error;
-        setPlatformNotes(data || []);
-      }
+      const [profilesRes, contactsRes, notesRes] = await Promise.all([
+        supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+        supabase.from("contacts").select("*").order("created_at", { ascending: false }),
+        supabase.from("notes").select("*").order("created_at", { ascending: false })
+      ]);
+
+      if (profilesRes.error) throw profilesRes.error;
+      if (contactsRes.error) throw contactsRes.error;
+      if (notesRes.error) throw notesRes.error;
+
+      setPlatformCards(profilesRes.data || []);
+      setPlatformContacts(contactsRes.data || []);
+      setPlatformNotes(notesRes.data || []);
     } catch (err: any) {
       console.error("Supabase live platform data fetch error:", err.message);
-      if (dataSubTab === "profiles") setPlatformCards([]);
-      else if (dataSubTab === "contacts") setPlatformContacts([]);
-      else if (dataSubTab === "notes") setPlatformNotes([]);
+      toast.error("Failed to sync live platform collections.");
     } finally {
       setLoadingPlatformData(false);
     }
-  }, [dataSubTab]);
+  }, []);
 
   // Retrieve Audit Logs
   const fetchAuditLogs = useCallback(async () => {
@@ -339,7 +405,7 @@ export default function Admin() {
     measureDbLatency();
     const interval = setInterval(measureDbLatency, 4000);
     return () => clearInterval(interval);
-  }, [isAuthorized, fetchUsers, fetchAuditLogs, fetchPlatformData, measureDbLatency]);
+  }, [isAuthorized, fetchUsers, fetchAuditLogs, fetchPlatformData, measureDbLatency, profilesVersion, contactsVersion, notesVersion]);
 
   // Force re-fetch data based on active view status
   const handleReloadData = () => {
@@ -414,36 +480,107 @@ export default function Admin() {
     }
   };
 
-  // Generate a trial user directly in the pool
-  const handleCreateMockUser = async () => {
-    const randomHex = Math.random().toString(16).substring(2, 8);
-    const mockEmail = `member_${randomHex}@neurogrowth.co.za`;
-    const mockName = `Simao Node ${randomHex.toUpperCase()}`;
-    const newId = crypto.randomUUID();
+  // Generate and Copy real-time Platform Invite Link
+  const handleCopyInviteLink = () => {
+    try {
+      const signupUrl = `${window.location.origin}?auth=signup`;
+      navigator.clipboard.writeText(signupUrl);
+      toast.success("Platform registration invitation link copied to clipboard!");
+      logAdminAction(
+        "Invite Link Generated",
+        "Copied real-time onboarding portal URL for new executive invitations.",
+        "INFO"
+      );
+    } catch (err: any) {
+      console.error("Copy invitation failed:", err);
+      toast.error("Unable to copy invitation link to clipboard.");
+    }
+  };
+
+  // Creates a real-time live business contact record
+  const handleCreateLiveContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newContactData.first_name.trim()) {
+      toast.error("First name is required!");
+      return;
+    }
 
     try {
-      const { error } = await supabase.from("profiles").insert([{
-        id: newId,
-        full_name: mockName,
-        email: mockEmail,
-        job_title: "AI Growth Architect",
-        company: "Neuro Growth Labs",
-        role: "executive",
-        status: "Active"
+      const contactId = crypto.randomUUID();
+      const newContact: DbContactRecord = {
+        id: contactId,
+        first_name: newContactData.first_name.trim(),
+        last_name: newContactData.last_name.trim(),
+        company: newContactData.company.trim(),
+        email: newContactData.email.trim(),
+        phone: newContactData.phone.trim()
+      };
+
+      const { error } = await supabase.from("contacts").insert([{
+        id: contactId,
+        user_id: getSafeUserId(),
+        first_name: newContact.first_name,
+        last_name: newContact.last_name,
+        company: newContact.company,
+        email: newContact.email,
+        phone: newContact.phone
       }]);
 
       if (error) throw error;
 
-      await fetchUsers();
+      setPlatformContacts(prev => [newContact, ...prev]);
+      toast.success("Live contact record synced and saved!");
       await logAdminAction(
-        "Provisioned Live Test Account",
-        `Created trial member account with email: "${mockEmail}"`,
+        "Registered Live Business Contact", 
+        `Added contact: "${newContact.first_name} ${newContact.last_name}" (${newContact.company}) to Vault`, 
         "INFO"
       );
-      toast.success("Designated user profile created inside Supabase!");
+      
+      setNewContactData({ first_name: "", last_name: "", company: "", email: "", phone: "" });
+      setShowAddContactForm(false);
     } catch (err: any) {
-      console.warn("Direct profiles insert failed (likely key checks or constraint rules).", err.message);
-      toast.error("Foreign key block: User profiles must point to registered Supabase auth credentials. Send an invite instead!");
+      console.error("Live contact creation error:", err.message);
+      toast.error("Failed to sync new contact to Supabase.");
+    }
+  };
+
+  // Creates a real-time live meeting transcript/note record
+  const handleCreateLiveNote = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newNoteContent.trim()) {
+      toast.error("Note content cannot be empty!");
+      return;
+    }
+
+    try {
+      const noteId = crypto.randomUUID();
+      const newNote: DbNoteRecord = {
+        id: noteId,
+        content: newNoteContent.trim(),
+        created_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase.from("notes").insert([{
+        id: noteId,
+        user_id: getSafeUserId(),
+        content: newNote.content
+      }]);
+
+      if (error) throw error;
+
+      setPlatformNotes(prev => [newNote, ...prev]);
+      toast.success("Live note synced and saved!");
+      await logAdminAction(
+        "Registered Live Transcript Summary", 
+        `Injected new transcript summary node ID: ${newNote.id}`, 
+        "INFO"
+      );
+
+      setNewNoteContent("");
+      setShowAddNoteForm(false);
+    } catch (err: any) {
+      console.error("Live note creation error:", err.message);
+      toast.error("Failed to sync new note to Supabase.");
     }
   };
 
@@ -475,63 +612,6 @@ export default function Admin() {
     }
   };
 
-  // Injects quick simulation items (Contacts / Notes)
-  const handleSimulateDataInjection = async () => {
-    try {
-      if (dataSubTab === "contacts") {
-        const randomNum = Math.floor(Math.random() * 1000);
-        const contactId = crypto.randomUUID();
-        const newContact: DbContactRecord = {
-          id: contactId,
-          first_name: "Tshepo",
-          last_name: `Zulu ${randomNum}`,
-          company: "Simao Digital Holdings",
-          email: `zulu_${randomNum}@simaoholdings.com`,
-          phone: "+27 82 453 9122"
-        };
-        
-        const { error } = await supabase.from("contacts").insert([{
-          id: contactId,
-          user_id: getSafeUserId(),
-          first_name: newContact.first_name,
-          last_name: newContact.last_name,
-          company: newContact.company,
-          email: newContact.email,
-          phone: newContact.phone
-        }]);
-
-        if (error) throw error;
-
-        setPlatformContacts(prev => [newContact, ...prev]);
-        toast.success("Live connection contact created and synced!");
-        await logAdminAction("Injected Live Business Contact", `Added trial contact inside vault: "${newContact.first_name} ${newContact.last_name}"`, "INFO");
-      } else if (dataSubTab === "notes") {
-        const randomNum = Math.floor(Math.random() * 1000);
-        const noteId = crypto.randomUUID();
-        const newNote: DbNoteRecord = {
-          id: noteId,
-          content: `Automated check check telemetry diagnostics Check: ${randomNum}. Connection speed verified at standard offline ratios. Ready for executive endorsement.`,
-          created_at: new Date().toISOString()
-        };
-
-        const { error } = await supabase.from("notes").insert([{
-          id: noteId,
-          user_id: getSafeUserId(),
-          content: newNote.content
-        }]);
-
-        if (error) throw error;
-
-        setPlatformNotes(prev => [newNote, ...prev]);
-        toast.success("Live meeting note transcript injected and synced!");
-        await logAdminAction("Telemetry Note Summary Logged", `Injected transcript node ID: ${newNote.id}`, "INFO");
-      }
-    } catch (err: any) {
-      console.error("Data injection error:", err.message);
-      toast.error("Failed to sync live test item down to Supabase.");
-    }
-  };
-
   // Bulk Broadcaster form submit
   const handleSendBroadcast = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -557,6 +637,9 @@ export default function Admin() {
         await supabase.from("notifications").insert(inserts);
       }
 
+      // Additionally broadcast to all active subscribers via Realtime channel instantly
+      await broadcastAnnouncement(broadcastSubject, broadcastBody, broadcastPriority);
+
       await logAdminAction(
         "Mail System Broadcast Dispatch",
         `Distributed announcement: "${broadcastSubject}" with priority: "${broadcastPriority}" to global pool.`,
@@ -566,10 +649,17 @@ export default function Admin() {
       setBroadcastSubject("");
       setBroadcastBody("");
     } catch (err) {
-      console.warn("Saving broadcast alert notification parameters inside system console simulation feed.");
+      // Also broadcast on fallback path
+      try {
+        await broadcastAnnouncement(broadcastSubject, broadcastBody, broadcastPriority);
+      } catch (be) {
+        console.warn("Realtime broadcast fallback failed:", be);
+      }
+
+      console.warn("Saving broadcast alert notification parameters inside system console backup feed.");
       await logAdminAction(
-        "Simulated Announcement Composed",
-        `Dispatch Simulation [${broadcastPriority.toUpperCase()}] title: "${broadcastSubject}". Dispatched to temporary active cache.`,
+        "Backup Announcement Dispatched",
+        `Dispatch Backup [${broadcastPriority.toUpperCase()}] title: "${broadcastSubject}". Dispatched via memory caching.`,
         "BROADCAST"
       );
       toast.success("In-memory backup broadcast queued!");
@@ -581,25 +671,30 @@ export default function Admin() {
   };
 
   // Global Setup Settings Toggles Changer
-  const handleToggleConfSetting = (setting: "signups" | "copilot" | "maintenance") => {
-    if (setting === "signups") {
-      const next = !signupsEnabled;
-      setSignupsEnabled(next);
-      localStorage.setItem("setting_signups_enabled", String(next));
-      logAdminAction("SignUp Protocol Updated", `Public enrollment set to: ${next ? "ENABLED" : "DISABLED"}`, "SECURITY");
-      toast.success(`User Account enrollment is now ${next ? "ENABLED" : "DISABLED"}`);
-    } else if (setting === "copilot") {
-      const next = copilotSpeed === "turbo" ? "balanced" : "turbo";
-      setCopilotSpeed(next);
-      localStorage.setItem("setting_copilot_speed", next);
-      logAdminAction("AI Engine Recalibration", `AI Studio model priority adjusted to: "${next.toUpperCase()}"`, "INFO");
-      toast.success(`AI Copilot system speed updated to ${next.toUpperCase()} ratio`);
-    } else if (setting === "maintenance") {
-      const next = !maintenanceMode;
-      setMaintenanceMode(next);
-      localStorage.setItem("setting_maintenance_mode", String(next));
-      logAdminAction("Maintenance State Overridden", `Global system maintenance layout set to: ${next ? "ACTIVE" : "OFFLINE"}`, "SECURITY");
-      toast.success(`Platform system main lock is now ${next ? "ON" : "OFF"}`);
+  const handleToggleConfSetting = async (setting: "signups" | "copilot" | "maintenance") => {
+    try {
+      const prevSignups = signupsEnabled;
+      const prevCopilot = copilotSpeed;
+      const prevMaintenance = maintenanceMode;
+
+      await toggleSetting(setting);
+
+      if (setting === "signups") {
+        const next = !prevSignups;
+        logAdminAction("SignUp Protocol Updated", `Public enrollment set to: ${next ? "ENABLED" : "DISABLED"}`, "SECURITY");
+        toast.success(`User Account enrollment is now ${next ? "ENABLED" : "DISABLED"}`);
+      } else if (setting === "copilot") {
+        const next = prevCopilot === "turbo" ? "balanced" : "turbo";
+        logAdminAction("AI Engine Recalibration", `AI Studio model priority adjusted to: "${next.toUpperCase()}"`, "INFO");
+        toast.success(`AI Copilot system speed updated to ${next.toUpperCase()} ratio`);
+      } else if (setting === "maintenance") {
+        const next = !prevMaintenance;
+        logAdminAction("Maintenance State Overridden", `Global system maintenance layout set to: ${next ? "ACTIVE" : "OFFLINE"}`, "SECURITY");
+        toast.success(`Platform system main lock is now ${next ? "ON" : "OFF"}`);
+      }
+    } catch (err: any) {
+      console.error("Toggle configuration setting error:", err);
+      toast.error("Failed to propagate setting state over Realtime channel.");
     }
   };
 
@@ -690,15 +785,23 @@ export default function Admin() {
 
   // Filtered platform directory search selector
   const processedPlatformCards = useMemo(() => {
-    return platformCards.filter(c => c.full_name.toLowerCase().includes(dataSearchQuery.toLowerCase()) || c.company.toLowerCase().includes(dataSearchQuery.toLowerCase()));
+    return platformCards.filter(c => 
+      (c.full_name || "").toLowerCase().includes(dataSearchQuery.toLowerCase()) || 
+      (c.company || "").toLowerCase().includes(dataSearchQuery.toLowerCase())
+    );
   }, [platformCards, dataSearchQuery]);
 
   const processedPlatformContacts = useMemo(() => {
-    return platformContacts.filter(c => c.first_name.toLowerCase().includes(dataSearchQuery.toLowerCase()) || c.company.toLowerCase().includes(dataSearchQuery.toLowerCase()));
+    return platformContacts.filter(c => 
+      (c.first_name || "").toLowerCase().includes(dataSearchQuery.toLowerCase()) || 
+      (c.company || "").toLowerCase().includes(dataSearchQuery.toLowerCase())
+    );
   }, [platformContacts, dataSearchQuery]);
 
   const processedPlatformNotes = useMemo(() => {
-    return platformNotes.filter(n => n.content.toLowerCase().includes(dataSearchQuery.toLowerCase()));
+    return platformNotes.filter(n => 
+      (n.content || "").toLowerCase().includes(dataSearchQuery.toLowerCase())
+    );
   }, [platformNotes, dataSearchQuery]);
 
 
@@ -901,24 +1004,24 @@ export default function Admin() {
               <div className="bg-white/[0.01] border border-white/5 rounded-xl p-3.5 space-y-1">
                 <span className="text-[8px] font-bold uppercase text-white/40">Estimated platform MRR</span>
                 <p className="text-xl font-bold text-white flex items-center gap-1">
-                  <DollarSign className="w-4 h-4 text-cyan-400" /> 8,420
+                  <DollarSign className="w-4 h-4 text-cyan-400" /> {liveKPIs.estimatedMRR.toLocaleString()}
                 </p>
                 <div className="text-[8px] font-bold text-emerald-400 flex items-center gap-0.5 uppercase">
-                  +12.4% Momentum
+                  Based on active users
                 </div>
               </div>
 
               <div className="bg-white/[0.01] border border-white/5 rounded-xl p-3.5 space-y-1">
                 <span className="text-[8px] font-bold uppercase text-white/40">Card Exchanges (30 days)</span>
-                <p className="text-xl font-bold text-cyan-400">2,940</p>
+                <p className="text-xl font-bold text-cyan-400">{liveKPIs.recentExchangesCount}</p>
                 <div className="text-[8px] font-bold text-emerald-400 flex items-center gap-0.5 uppercase">
-                  +18.1% Velocity
+                  Real-time database sync
                 </div>
               </div>
 
               <div className="bg-white/[0.01] border border-white/5 rounded-xl p-3.5 space-y-1">
                 <span className="text-[8px] font-bold uppercase text-white/40">AI Translation summaries</span>
-                <p className="text-xl font-bold text-white">845 runs</p>
+                <p className="text-xl font-bold text-white">{liveKPIs.totalNotesCount} runs</p>
                 <div className="text-[8px] font-bold text-cyan-400 uppercase">
                   Active integrations
                 </div>
@@ -926,7 +1029,7 @@ export default function Admin() {
 
               <div className="bg-white/[0.01] border border-white/5 rounded-xl p-3.5 space-y-1">
                 <span className="text-[8px] font-bold uppercase text-white/40">Mean Contacts/Card</span>
-                <p className="text-xl font-bold text-white">19.8</p>
+                <p className="text-xl font-bold text-white">{liveKPIs.meanContacts}</p>
                 <div className="text-[8px] font-bold text-cyan-500 uppercase">
                   SLA Health check safe
                 </div>
@@ -977,13 +1080,13 @@ export default function Admin() {
                   </button>
                 </div>
 
-                {/* Direct Inject Member Simulator */}
+                {/* Copy Platform Registration & Invitation Link */}
                 <button
                   type="button"
-                  onClick={handleCreateMockUser}
+                  onClick={handleCopyInviteLink}
                   className="w-full h-8 border border-dashed border-cyan-500/30 hover:border-cyan-500 bg-cyan-500/5 hover:bg-cyan-500/10 text-cyan-400 font-bold text-[9px] uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition-all"
                 >
-                  <PlusCircle className="w-3.5 h-3.5" /> Provision Live Executive User
+                  <PlusCircle className="w-3.5 h-3.5" /> Copy Registration & Onboarding Link
                 </button>
 
                 {/* Search Bar */}
@@ -1157,14 +1260,102 @@ export default function Admin() {
                   ))}
                 </div>
 
-                {/* Interactive Inject trial data simulator button */}
-                {dataSubTab !== "profiles" && (
-                  <button
-                    onClick={handleSimulateDataInjection}
-                    className="w-full h-8 bg-cyan-500/5 hover:bg-cyan-500/10 border border-dashed border-cyan-500/25 hover:border-cyan-500/50 text-cyan-400 text-[9px] uppercase font-black rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1"
-                  >
-                    <PlusCircle className="w-3.5 h-3.5" /> Push Live {dataSubTab === "contacts" ? "Contact Exchange" : "Meeting Note"} Record to Supabase
-                  </button>
+                {/* Interactive Direct Add Contact Forms */}
+                {dataSubTab === "contacts" && (
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddContactForm(!showAddContactForm)}
+                      className="w-full h-8 bg-cyan-500/5 hover:bg-cyan-500/10 border border-dashed border-cyan-500/25 hover:border-cyan-500/50 text-cyan-400 text-[9px] uppercase font-black rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1"
+                    >
+                      <PlusCircle className="w-3.5 h-3.5" /> {showAddContactForm ? "Close Add Form" : "Register Live Contact Exchange"}
+                    </button>
+
+                    {showAddContactForm && (
+                      <form onSubmit={handleCreateLiveContact} className="bg-white/[0.02] border border-white/5 rounded-xl p-3 space-y-2.5 animate-scale-up">
+                        <p className="text-[9px] font-bold text-cyan-400 uppercase tracking-wider">New Card Contact Exchange Entry</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            placeholder="First Name *"
+                            required
+                            value={newContactData.first_name}
+                            onChange={e => setNewContactData(prev => ({ ...prev, first_name: e.target.value }))}
+                            className="bg-black/60 border border-white/10 rounded-lg p-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-cyan-500/50"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Last Name"
+                            value={newContactData.last_name}
+                            onChange={e => setNewContactData(prev => ({ ...prev, last_name: e.target.value }))}
+                            className="bg-black/60 border border-white/10 rounded-lg p-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-cyan-500/50"
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Company"
+                          value={newContactData.company}
+                          onChange={e => setNewContactData(prev => ({ ...prev, company: e.target.value }))}
+                          className="w-full bg-black/60 border border-white/10 rounded-lg p-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-cyan-500/50"
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="email"
+                            placeholder="Email"
+                            value={newContactData.email}
+                            onChange={e => setNewContactData(prev => ({ ...prev, email: e.target.value }))}
+                            className="bg-black/60 border border-white/10 rounded-lg p-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-cyan-500/50"
+                          />
+                          <input
+                            type="tel"
+                            placeholder="Phone (e.g., +27...)"
+                            value={newContactData.phone}
+                            onChange={e => setNewContactData(prev => ({ ...prev, phone: e.target.value }))}
+                            className="bg-black/60 border border-white/10 rounded-lg p-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-cyan-500/50"
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          className="w-full py-1.5 bg-cyan-500 hover:bg-cyan-400 text-black text-[9px] uppercase font-black rounded-lg cursor-pointer transition-all"
+                        >
+                          Save Connection Record
+                        </button>
+                      </form>
+                    )}
+                  </div>
+                )}
+
+                {/* Interactive Direct Add Note Forms */}
+                {dataSubTab === "notes" && (
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddNoteForm(!showAddNoteForm)}
+                      className="w-full h-8 bg-cyan-500/5 hover:bg-cyan-500/10 border border-dashed border-cyan-500/25 hover:border-cyan-500/50 text-cyan-400 text-[9px] uppercase font-black rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1"
+                    >
+                      <PlusCircle className="w-3.5 h-3.5" /> {showAddNoteForm ? "Close Add Form" : "Log Live Meeting Summary Note"}
+                    </button>
+
+                    {showAddNoteForm && (
+                      <form onSubmit={handleCreateLiveNote} className="bg-white/[0.02] border border-white/5 rounded-xl p-3 space-y-2.5 animate-scale-up">
+                        <p className="text-[9px] font-bold text-cyan-400 uppercase tracking-wider">New System / Meeting Note Summary</p>
+                        <textarea
+                          placeholder="Type meeting summary transcript / audit note..."
+                          required
+                          rows={3}
+                          value={newNoteContent}
+                          onChange={e => setNewNoteContent(e.target.value)}
+                          className="w-full bg-black/60 border border-white/10 rounded-lg p-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-cyan-500/50 resize-none"
+                        />
+                        <button
+                          type="submit"
+                          className="w-full py-1.5 bg-cyan-500 hover:bg-cyan-400 text-black text-[9px] uppercase font-black rounded-lg cursor-pointer transition-all"
+                        >
+                          Save Summary Note
+                        </button>
+                      </form>
+                    )}
+                  </div>
                 )}
 
                 {/* Dynamic Data Directory Search bar */}
@@ -1517,6 +1708,31 @@ export default function Admin() {
                     </div>
                   ))
                 )}
+              </div>
+            </div>
+
+            {/* Realtime Supabase Channels & Sockets Live Feed */}
+            <div className="bg-[#12121a] border border-cyan-500/15 rounded-2xl p-5 space-y-4 animate-fade-in">
+              <div>
+                <h3 className="text-xs font-black uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Supabase Realtime Subscriptions Live Monitor
+                </h3>
+                <p className="text-[9px] text-white/40 leading-relaxed">
+                  Active WebSocket stream monitoring postgres database updates and lightweight state broadcasting live.
+                </p>
+              </div>
+
+              <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1 scrollbar-hide">
+                {realtimeLogs.map((log) => (
+                  <div key={log.id} className="p-2.5 bg-cyan-950/10 border border-cyan-500/10 rounded-xl space-y-1 font-mono text-[9px] hover:bg-cyan-950/20 transition-all">
+                    <div className="flex items-center justify-between text-cyan-500">
+                      <span className="font-extrabold uppercase tracking-wide">WEBSOCKET_STREAM</span>
+                      <span className="text-white/30 text-[7.5px]">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                    </div>
+                    <p className="text-white/85 leading-relaxed">{log.event}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

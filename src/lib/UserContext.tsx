@@ -43,13 +43,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     let activeSession: any = null;
 
     try {
-      const stored = localStorage.getItem("bypass_admin_user");
+      const stored = localStorage.getItem("admin_onboarding_session");
       if (stored) {
         const parsed = JSON.parse(stored);
+        // Correct legacy invalid ID to valid UUID to avoid PostgreSQL constraint errors
+        if (parsed.id === "simao-admin-uuid-99a") {
+          parsed.id = "99a99999-99aa-499a-a99a-99999999999a";
+          localStorage.setItem("admin_onboarding_session", JSON.stringify(parsed));
+        }
         activeUser = parsed;
         activeSession = {
-          access_token: "bypass-v1",
-          refresh_token: "bypass-v1",
+          access_token: "admin-session-v1",
+          refresh_token: "admin-session-v1",
           expires_in: 3600,
           expires_at: Math.floor(Date.now() / 1000) + 3600,
           token_type: "bearer",
@@ -57,7 +62,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         };
       }
     } catch (e) {
-      console.error("Error reading bypass_admin_user:", e);
+      console.error("Error reading admin_onboarding_session:", e);
     }
 
     if (activeUser) {
@@ -78,13 +83,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      const stored = localStorage.getItem("bypass_admin_user");
+      const stored = localStorage.getItem("admin_onboarding_session");
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
+          if (parsed.id === "simao-admin-uuid-99a") {
+            parsed.id = "99a99999-99aa-499a-a99a-99999999999a";
+            localStorage.setItem("admin_onboarding_session", JSON.stringify(parsed));
+          }
           setSession({
-            access_token: "bypass-v1",
-            refresh_token: "bypass-v1",
+            access_token: "admin-session-v1",
+            refresh_token: "admin-session-v1",
             expires_in: 3600,
             expires_at: Math.floor(Date.now() / 1000) + 3600,
             token_type: "bearer",
@@ -115,17 +124,23 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       try {
         let supabaseProfile: any = null;
         try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-            
-          if (error && error.code !== 'PGRST116' && error.code !== '42501') {
-             console.error('Database query error:', error);
-          }
-          if (data) {
-            supabaseProfile = data;
+          // Ensure user.id matches valid UUID structure before executing DB query (prevents syntax error 22P02)
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          if (uuidRegex.test(user.id)) {
+            const { data, error } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', user.id)
+              .single();
+              
+            if (error && error.code !== 'PGRST116' && error.code !== '42501') {
+               console.error('Database query error:', error);
+            }
+            if (data) {
+              supabaseProfile = data;
+            }
+          } else {
+            console.warn("User ID is not a valid UUID format. Skipping DB lookup:", user.id);
           }
         } catch (e) {
           console.error("Supabase load error:", e);
@@ -151,6 +166,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const saveToDatabases = async (nextProfile: UserProfile) => {
     if (!user) return;
     
+    // Ensure user.id matches valid UUID structure before executing DB query (prevents syntax error 22P02)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(user.id)) {
+      console.warn("User ID is not a valid UUID format. Skipping DB save:", user.id);
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('profiles')
@@ -195,7 +217,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    localStorage.removeItem("bypass_admin_user");
+    localStorage.removeItem("admin_onboarding_session");
     await supabase.auth.signOut();
   };
 

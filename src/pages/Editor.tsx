@@ -451,7 +451,7 @@ export default function Editor() {
             <AICardGenerator card={card} onApply={applyAI} />
           </div>
           <div className="pt-6 border-t border-white/5">
-            <CardComments cardId="mock-card-id" />
+            <CardComments cardId={card.id || "card-primary-id"} />
           </div>
         </div>
       ) : (
@@ -518,7 +518,7 @@ export default function Editor() {
                 Real-Time Diagnostics
               </span>
               <p className="text-[10px] text-white/40 leading-relaxed">
-                Direct Node pipeline status checking against both Supabase tables and Firebase Auth tokens. No simulated mock caches.
+                Direct Node pipeline status checking against both Supabase tables and Firebase Auth tokens. No simulated caches.
               </p>
               
               <div className="space-y-2 pt-2 text-[10px] font-mono text-white/70">

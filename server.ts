@@ -3,9 +3,12 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, query, where, getDoc } from "firebase/firestore";
+import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, query, where, getDoc, setLogLevel } from "firebase/firestore";
 import { createClient } from "@supabase/supabase-js";
 import firebaseConfig from "./firebase-applet-config.json" with { type: "json" };
+
+// Quiet down internal Firestore connection retry logs on projects with the Firestore API disabled
+setLogLevel("silent");
 
 async function startServer() {
   const app = express();
@@ -248,12 +251,14 @@ async function startServer() {
 
   // 1. Initialize Firebase Firestore for server-side persistence
   let firestore: any = null;
+  let isFirestoreAvailable = true;
   try {
     const firebaseApp = initializeApp(firebaseConfig);
     firestore = getFirestore(firebaseApp);
     console.log("Firebase Firestore initialized successfully in Express Backend!");
   } catch (err: any) {
     console.error("Firebase Firestore backend initialization failed:", err.message);
+    isFirestoreAvailable = false;
   }
 
   // 2. Initialize Supabase Client for server-side persistence
@@ -309,7 +314,7 @@ async function startServer() {
     }
 
     // B. Fallback to Firebase Firestore (Secondary Backup)
-    if (!loadedFromSupabase && firestore) {
+    if (!loadedFromSupabase && firestore && isFirestoreAvailable) {
       try {
         const colRef = collection(firestore, entity);
         let q = colRef as any;
@@ -326,6 +331,10 @@ async function startServer() {
         console.log(`Successfully fetched ${data.length} backup records for '${entity}' from Firestore.`);
       } catch (err: any) {
         console.error(`Firestore backup read skipped/failed for '${entity}':`, err.message);
+        if (err.message && (err.message.includes("API has not been used") || err.message.includes("PERMISSION_DENIED") || err.message.includes("disabled"))) {
+          console.warn("Disabling Firebase Firestore backup fallback due to API disabled status.");
+          isFirestoreAvailable = false;
+        }
       }
     }
 
@@ -360,13 +369,17 @@ async function startServer() {
     }
 
     // B. Save to Firebase Firestore (Secondary Sync Target)
-    if (firestore) {
+    if (firestore && isFirestoreAvailable) {
       try {
         const docRef = doc(firestore, entity, id);
         await setDoc(docRef, item);
         console.log(`Successfully synced backup '${entity}' to Firestore with ID: ${id}`);
       } catch (err: any) {
         console.error(`Firestore backup sync bypassed for '${entity}':`, err.message);
+        if (err.message && (err.message.includes("API has not been used") || err.message.includes("PERMISSION_DENIED") || err.message.includes("disabled"))) {
+          console.warn("Disabling Firebase Firestore backup sync due to API disabled status.");
+          isFirestoreAvailable = false;
+        }
       }
     }
 
@@ -400,13 +413,17 @@ async function startServer() {
     }
 
     // B. Update in Firestore (Secondary Sync Target)
-    if (firestore) {
+    if (firestore && isFirestoreAvailable) {
       try {
         const docRef = doc(firestore, entity, id);
         await setDoc(docRef, updateData, { merge: true });
         console.log(`Successfully synced updated '${entity}' to Firestore with ID: ${id}`);
       } catch (err: any) {
         console.error(`Firestore update sync skipped for '${entity}':`, err.message);
+        if (err.message && (err.message.includes("API has not been used") || err.message.includes("PERMISSION_DENIED") || err.message.includes("disabled"))) {
+          console.warn("Disabling Firebase Firestore backup sync due to API disabled status.");
+          isFirestoreAvailable = false;
+        }
       }
     }
 
@@ -446,13 +463,17 @@ async function startServer() {
     }
 
     // B. Delete in Firestore (Secondary Sync Target)
-    if (firestore) {
+    if (firestore && isFirestoreAvailable) {
       try {
         const docRef = doc(firestore, entity, id);
         await deleteDoc(docRef);
         console.log(`Successfully deleted backup '${entity}' from Firestore with ID: ${id}`);
       } catch (err: any) {
         console.error(`Firestore backup delete bypassed for '${entity}':`, err.message);
+        if (err.message && (err.message.includes("API has not been used") || err.message.includes("PERMISSION_DENIED") || err.message.includes("disabled"))) {
+          console.warn("Disabling Firebase Firestore backup sync due to API disabled status.");
+          isFirestoreAvailable = false;
+        }
       }
     }
 

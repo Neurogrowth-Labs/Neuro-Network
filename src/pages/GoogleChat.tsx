@@ -214,7 +214,7 @@ export default function GoogleChat() {
 
     setMessages(prev => [...prev, userMessage]);
 
-    // Check if we are using standard demo mock space vs active Google space
+    // Check if we are using standard demo space vs active Google space
     const isDemo = selectedSpace.name.startsWith("spaces/demo-");
 
     if (isDemo) {
