@@ -11,17 +11,17 @@ import { toast } from "sonner";
 import { useUser } from "../lib/UserContext";
 
 export const MY_CARD = {
-  full_name: "Alexander Vance",
-  job_title: "CEO & Founder",
-  company: "Neuro NetWorks",
-  email: "alex@neuronets.work",
-  phone: "+1 (555) 019-2831",
-  website: "neuronets.work",
-  bio: "Connecting AI and human networks on a global scale.",
+  full_name: "",
+  job_title: "",
+  company: "",
+  email: "",
+  phone: "",
+  website: "",
+  bio: "",
   template: "executive",
   theme_color: "#06b6d4",
-  linkedin: "https://linkedin.com",
-  twitter: "https://twitter.com",
+  linkedin: "",
+  twitter: "",
 };
 
 export default function Dashboard() {

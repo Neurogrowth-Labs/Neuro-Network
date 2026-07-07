@@ -20,7 +20,6 @@ export default function Settings() {
 
   const handleSave = () => {
     setIsSaving(true);
-    // simulate network
     setTimeout(() => {
       setProfile(formData);
       setIsSaving(false);

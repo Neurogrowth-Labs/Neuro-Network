@@ -135,15 +135,9 @@ export default function GoogleChat() {
         setSpaces(data.spaces);
         setSelectedSpace(data.spaces[0]);
       } else {
-        // Fallback placeholder spaces so they can still interface and test out message nodes
-        const demoSpaces: ChatSpace[] = [
-          { name: "spaces/demo-executive", displayName: "Executive Strategy Board", type: "ROOM" },
-          { name: "spaces/demo-development", displayName: "Digital Growth Room", type: "ROOM" },
-          { name: "spaces/demo-direct", displayName: "Alexander Vance (CEO Direct)", type: "DIRECT_MESSAGE" }
-        ];
-        setSpaces(demoSpaces);
-        setSelectedSpace(demoSpaces[0]);
-        toast.info("Active workspace has no live Chat spaces. Loaded core network channels to simulate setup.");
+        setSpaces([]);
+        setSelectedSpace(null);
+        toast.info("No live Google Chat spaces were returned for this Workspace account.");
       }
     } catch (err) {
       console.error(err);
@@ -160,31 +154,7 @@ export default function GoogleChat() {
   };
 
   const loadRecentChatHistory = () => {
-    // Generate context messages specific to selected space type/title to align with simulated layers
-    const targetSpaceName = selectedSpace?.displayName || "Conversation Room";
-    setMessages([
-      {
-        id: "m-1",
-        sender: "Executive Admin",
-        text: `Welcome to the ${targetSpaceName} secure channel. Connections are verified under Google Chat Workspace.`,
-        timestamp: "10:32 AM",
-        isMe: false
-      },
-      {
-        id: "m-2",
-        sender: "Sarah Jenkins",
-        text: "The new digital cards layout looks really elegant. Are the QR coordinates active fully?",
-        timestamp: "10:34 AM",
-        isMe: false
-      },
-      {
-        id: "m-3",
-        sender: "Alexander Vance",
-        text: "Yes, fully active! The proximity checks and wallet cards synchronize in real-time.",
-        timestamp: "10:35 AM",
-        isMe: false
-      }
-    ]);
+    setMessages([]);
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -205,7 +175,7 @@ export default function GoogleChat() {
     // Setup optimistic message bubble
     const userMessage: ChatMessage = {
       id: `msg-${Date.now()}`,
-      sender: currentUser?.displayName || "Alexander Vance",
+      sender: currentUser?.displayName || currentUser?.email || "You",
       senderAvatar: currentUser?.photoURL || "",
       text: textToSend,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -213,28 +183,6 @@ export default function GoogleChat() {
     };
 
     setMessages(prev => [...prev, userMessage]);
-
-    // Check if we are using standard demo space vs active Google space
-    const isDemo = selectedSpace.name.startsWith("spaces/demo-");
-
-    if (isDemo) {
-      setTimeout(() => {
-        setSending(false);
-        toast.success("Broadcast delivered successfully (Simulated Space)!");
-        
-        // Add supportive reply
-        setTimeout(() => {
-          setMessages(prev => [...prev, {
-            id: `reply-${Date.now()}`,
-            sender: "Alpha AI Operator",
-            text: "Diagnostics completed. Sync channel speed looks exceptional.",
-            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-            isMe: false
-          }]);
-        }, 1200);
-      }, 500);
-      return;
-    }
 
     try {
       const res = await fetch(`https://chat.googleapis.com/v1/${selectedSpace.name}/messages`, {
@@ -258,11 +206,11 @@ export default function GoogleChat() {
       } else {
         const errJson = await res.json();
         console.warn("Google Chat API Response:", errJson);
-        toast.info("Target Space requires active Bot / App permissions. Simulated delivery completed!");
+        toast.error(errJson.error?.message || "Target Space requires active Bot / App permissions.");
       }
     } catch (err) {
       console.error(err);
-      toast.error("Direct delivery blocked by Workspace domain rules. Saved locally instead.");
+      toast.error("Direct delivery blocked by Workspace domain rules.");
     } finally {
       setSending(false);
     }

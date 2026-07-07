@@ -235,8 +235,8 @@ export default function VoiceCall() {
           <div className="relative">
             <div className="absolute inset-0 rounded-full bg-cyan-500/20 blur-[30px] animate-pulse"></div>
             <img 
-              src="https://i.pravatar.cc/150?u=sarah" 
-              alt="Sarah Jenkins" 
+              src="/icon.png" 
+              alt="Caller avatar" 
               className="w-32 h-32 rounded-full border border-white/10 shadow-2xl relative z-10"
             />
             <button 
@@ -248,7 +248,7 @@ export default function VoiceCall() {
           </div>
           <div className="flex flex-col items-center space-y-1 relative">
             <h1 className="text-4xl font-semibold tracking-tight text-white drop-shadow-md">
-              Sarah Jenkins
+              Active Caller
             </h1>
             <p className={`text-sm font-medium tracking-wide ${isConnected ? 'text-green-400' : 'text-cyan-400 opacity-80 animate-pulse'}`}>
               {isConnected ? formatDuration(duration) : callStatus}
@@ -269,7 +269,7 @@ export default function VoiceCall() {
                      </div>
                      <div>
                        <p className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Title</p>
-                       <p className="text-sm text-white/90 font-medium">VP of Partner Channels</p>
+                       <p className="text-sm text-white/90 font-medium">Contact title unavailable</p>
                      </div>
                    </div>
                    <div className="flex items-center gap-3">
@@ -278,7 +278,7 @@ export default function VoiceCall() {
                      </div>
                      <div>
                        <p className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Company</p>
-                       <p className="text-sm text-white/90 font-medium">Nexus Dynamics</p>
+                       <p className="text-sm text-white/90 font-medium">Company unavailable</p>
                      </div>
                    </div>
                  </div>
