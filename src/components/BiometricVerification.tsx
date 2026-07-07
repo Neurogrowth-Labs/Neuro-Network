@@ -15,7 +15,6 @@ export default function BiometricVerification({ onUnlockSuccess, sectionName = "
   const [message, setMessage] = useState("Place your finger on the sensor or touch SCAN to authenticate");
   const [registeredCred, setRegisteredCred] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [useFallback, setUseFallback] = useState(false);
 
   // Load existing credential from server (Supabase sync via /api/db/BiometricCredential)
   useEffect(() => {
@@ -46,7 +45,7 @@ export default function BiometricVerification({ onUnlockSuccess, sectionName = "
     loadCredential();
   }, [profile.email]);
 
-  // Handle actual/simulated fingerprint scan
+  // Handle WebAuthn fingerprint scan
   const handleFingerprintScan = async () => {
     setStatus("scanning");
     setMessage("Initializing biometric scanner... DO NOT move your finger");
@@ -56,8 +55,8 @@ export default function BiometricVerification({ onUnlockSuccess, sectionName = "
 
     if (mode === "register") {
       try {
-        if (!navigator.credentials || useFallback) {
-          throw new Error("WebAuthn API not available in sandbox iframe or fallback requested");
+        if (!navigator.credentials) {
+          throw new Error("WebAuthn API is not available in this browser context");
         }
 
         setMessage("Communicating with external authenticator... scan your hardware sensor");
@@ -76,8 +75,8 @@ export default function BiometricVerification({ onUnlockSuccess, sectionName = "
           },
           user: {
             id: userID,
-            name: profile.email || "user@example.com",
-            displayName: profile.full_name || "Vance User",
+            name: profile.email,
+            displayName: profile.full_name || profile.email,
           },
           pubKeyCredParams: [
             { type: "public-key", alg: -7 }, // ES256
@@ -124,46 +123,16 @@ export default function BiometricVerification({ onUnlockSuccess, sectionName = "
           }
         }
       } catch (err: any) {
-        console.warn("Standard WebAuthn API not completed, launching high-fidelity interactive sandbox bypass simulation:", err.message);
-        
-        // Gorgeous fallback simulation
-        setMessage("Sanitized Frame context detected. Activating secure local biometric emulation...");
-        await new Promise((r) => setTimeout(r, 2000));
-        
-        const simulatedCred = {
-          user_email: profile.email,
-          credential_id: `sim_cred_${Math.random().toString(36).substring(5)}`,
-          type: "simulated-platform-authenticator",
-          raw_id: btoa(String.fromCharCode(...new Uint8Array(16))),
-          created_at: new Date().toISOString(),
-        };
-
-        const saveRes = await fetch("/api/db/BiometricCredential", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(simulatedCred),
-        });
-
-        if (saveRes.ok) {
-          const savedData = await saveRes.json();
-          setRegisteredCred(savedData);
-          setStatus("success");
-          setMessage("Secure fingerprint registered! Biometric channel established.");
-          toast.success("Fingerprint registered successfully!");
-          await new Promise((r) => setTimeout(r, 1200));
-          setMode("authenticate");
-          setStatus("idle");
-          setMessage("Secure biometric lock activated. Tap below to verify and open the vault.");
-        } else {
-          setStatus("error");
-          setMessage("Failed to write biometric credentials to Supabase backend.");
-        }
+        console.error("WebAuthn registration failed:", err.message);
+        setStatus("error");
+        setMessage(err.message || "Biometric registration failed. Please use a supported secure authenticator.");
+        toast.error("Biometric registration failed.");
       }
     } else {
       // Authenticating
       try {
-        if (!navigator.credentials || !registeredCred || registeredCred.type === "simulated-platform-authenticator" || useFallback) {
-          throw new Error("Simulating authentication (or real credential unsupported)");
+        if (!navigator.credentials || !registeredCred) {
+          throw new Error("Biometric authentication requires a registered WebAuthn credential and browser support.");
         }
 
         setMessage("Verifying biometric hash against hardware secure enclave...");
@@ -195,23 +164,10 @@ export default function BiometricVerification({ onUnlockSuccess, sectionName = "
           onUnlockSuccess();
         }
       } catch (err: any) {
-        console.warn("Using secure fallback for fingerprint validation:", err.message);
-        
-        setMessage("Aligning dermal ridges & matching minutiae map to Supabase ID...");
-        await new Promise((r) => setTimeout(r, 1600));
-
-        // Perform cryptographic match of registered user credentials
-        if (registeredCred && registeredCred.user_email === profile.email) {
-          setStatus("success");
-          setMessage("Fingerprint Verified! Signature matched with 99.8% confidence.");
-          toast.success("Fingerprint verified! Access granted by Supabase.");
-          await new Promise((r) => setTimeout(r, 1200));
-          onUnlockSuccess();
-        } else {
-          setStatus("error");
-          setMessage("Fingerprint template mismatch or no credential found for registered user.");
-          toast.error("Biometric authentication rejected.");
-        }
+        console.error("WebAuthn authentication failed:", err.message);
+        setStatus("error");
+        setMessage(err.message || "Biometric authentication failed. Please use the registered authenticator.");
+        toast.error("Biometric authentication failed.");
       }
     }
   };

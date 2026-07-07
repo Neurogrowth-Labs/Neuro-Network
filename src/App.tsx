@@ -60,10 +60,7 @@ function TopNav() {
   const location = useLocation();
   const { profile, logout, isOnline } = useUser();
   const isAdmin = profile?.role === 'super_admin' || profile?.email === 'lusimadio12@gmail.com' || profile?.email === 'simao@neurogrowthlabs.co.za';
-  const [notifications, setNotifications] = useState([
-    { id: 1, type: "message", text: "Sarah Jenkins connected with you.", time: "10m ago" },
-    { id: 2, type: "system", text: "Your profile visibility was updated.", time: "1h ago" },
-  ]);
+  const [notifications, setNotifications] = useState<Array<{ id: number; type: string; text: string; time: string }>>([]);
 
   const tabs = [
     { path: "/", icon: QrCode, label: "Dashboard" },
@@ -74,14 +71,6 @@ function TopNav() {
   ];
 
   useEffect(() => {
-    // Simulate incoming real-time notifications
-    const timer = setTimeout(() => {
-      setNotifications(prev => [
-        { id: Date.now(), type: "message", text: "David Chen left a comment on your card.", time: "Just now" },
-        ...prev
-      ]);
-    }, 15000); // 15 seconds after load
-
     // Listen to Supabase Realtime broadcast and insert events
     const handleRealtimeNotif = (e: Event) => {
       const customEvent = e as CustomEvent;
@@ -109,7 +98,6 @@ function TopNav() {
     window.addEventListener("admin-global-broadcast", handleGlobalBroadcast);
 
     return () => {
-      clearTimeout(timer);
       window.removeEventListener("realtime-notification-received", handleRealtimeNotif);
       window.removeEventListener("admin-global-broadcast", handleGlobalBroadcast);
     };

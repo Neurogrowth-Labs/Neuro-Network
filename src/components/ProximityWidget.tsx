@@ -29,6 +29,7 @@ export default function ProximityWidget({ user }: any) {
   const checkInMutation = useMutation({
     mutationFn: async () => {
       if (!eventName.trim()) throw new Error("Enter an event name");
+      if (!user?.email) throw new Error("Sign in before starting proximity sharing");
       setLocating(true);
       let lat = null,
         lng = null;
@@ -48,8 +49,8 @@ export default function ProximityWidget({ user }: any) {
         Date.now() + SESSION_TTL_MINUTES * 60000,
       ).toISOString();
       return base44.entities.ProximitySession.create({
-        user_email: user?.email || "demo@neuro.net",
-        user_name: user?.full_name || "Demo",
+        user_email: user?.email,
+        user_name: user?.full_name || user?.email || "",
         card_id: activeCard?.id || "",
         card_slug: activeCard?.card_slug || "",
         event_name: eventName.trim(),

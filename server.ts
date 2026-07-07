@@ -244,10 +244,7 @@ async function startServer() {
     }
   });
 
-  // Mock endpoints for the base44 SDK behavior requested with real Firebase & Supabase Sync
-  const inMemoryDB: Record<string, any[]> = {
-    CardComment: []
-  };
+  // Base44-compatible entity endpoints backed by Supabase with Firestore backup sync.
 
   // 1. Initialize Firebase Firestore for server-side persistence
   let firestore: any = null;
@@ -264,8 +261,11 @@ async function startServer() {
   // 2. Initialize Supabase Client for server-side persistence
   let supabase: any = null;
   try {
-    const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://jhlitbcjnvaosvyovfub.supabase.co';
-    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpobGl0YmNqbnZhb3N2eW92ZnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0ODMzOTksImV4cCI6MjA5NjA1OTM5OX0.nu3y7thYPOkh9lPiYjHWs40iyKg5ZZPxQfWGl70eRNM';
+    const supabaseUrl = process.env.VITE_SUPABASE_URL;
+    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY. Supabase persistence disabled.');
+    }
     supabase = createClient(supabaseUrl, supabaseKey);
     console.log("Supabase client initialized successfully in Express Backend!");
   } catch (err: any) {
@@ -338,11 +338,6 @@ async function startServer() {
       }
     }
 
-    // C. Fallback to in-memory DB if remote reads returned empty
-    if (data.length === 0) {
-      data = inMemoryDB[entity] || [];
-    }
-
     res.json(data);
   });
 
@@ -382,10 +377,6 @@ async function startServer() {
         }
       }
     }
-
-    // C. Update in-memory
-    if (!inMemoryDB[entity]) inMemoryDB[entity] = [];
-    inMemoryDB[entity].push(item);
 
     res.json(item);
   });
@@ -427,18 +418,7 @@ async function startServer() {
       }
     }
 
-    // C. Update in-memory DB
-    if (!inMemoryDB[entity]) inMemoryDB[entity] = [];
-    let updated = null;
-    inMemoryDB[entity] = inMemoryDB[entity].map(item => {
-      if (item.id === id) {
-        updated = { ...item, ...updateData };
-        return updated;
-      }
-      return item;
-    });
-
-    res.json(updated || {});
+    res.json({ id, ...updateData });
   });
 
   app.delete("/api/db/:entity/:id", async (req, res) => {
@@ -476,10 +456,6 @@ async function startServer() {
         }
       }
     }
-
-    // C. Delete from in-memory
-    if (!inMemoryDB[entity]) inMemoryDB[entity] = [];
-    inMemoryDB[entity] = inMemoryDB[entity].filter(item => item.id !== id);
 
     res.json({ success: true });
   });

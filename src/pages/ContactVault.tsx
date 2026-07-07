@@ -8,62 +8,7 @@ import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import BiometricVerification from "../components/BiometricVerification";
 
-const INITIAL_CONTACTS = [
-  {
-    id: "c1",
-    full_name: "Sarah Jenkins",
-    job_title: "Partner",
-    company: "Capital Ventures",
-    industry: "Venture Capital",
-    role_level: "executive",
-    opportunity_type: "investor",
-    contact_score: 92,
-    ai_tags: ["fintech", "seed-stage", "networking"],
-    ai_summary:
-      "Target partner for Series A. Primarily interested in AI consumer apps based on recent investments.",
-    met_at: "Web Summit 2024",
-    notes:
-      "Briefly chatted about our AI integration. Wanted to see traction numbers next quarter.",
-    profile_photo: "https://i.pravatar.cc/150?u=sarah",
-    follow_up_done: false,
-    follow_up_date: new Date(Date.now() - 86400000).toISOString(), // Past date
-  },
-  {
-    id: "c2",
-    full_name: "David Chen",
-    job_title: "SVP Engineering",
-    company: "TechFlow",
-    industry: "Enterprise Software",
-    role_level: "executive",
-    opportunity_type: "client",
-    contact_score: 85,
-    ai_tags: ["dev-tools", "enterprise", "b2b"],
-    ai_summary: "Potential enterprise buyer for our team management tool.",
-    met_at: "TechFlow CTO Dinner",
-    notes:
-      "Complained about standardizing dev environments across large teams.",
-    profile_photo: "https://i.pravatar.cc/150?u=david",
-    follow_up_done: true,
-    follow_up_date: new Date(Date.now() - 86400000).toISOString(), // Past date
-  },
-  {
-    id: "c3",
-    full_name: "Elena Rodriguez",
-    job_title: "Content Strategist",
-    company: "Freelance",
-    industry: "Media",
-    role_level: "individual",
-    opportunity_type: "media",
-    contact_score: 65,
-    ai_tags: ["marketing", "seo", "copy"],
-    ai_summary: "Good contact for guest blogging opportunities.",
-    met_at: "SF Creators Meetup",
-    notes: "Good contact for guest blogging opportunities.",
-    profile_photo: "https://i.pravatar.cc/150?u=elena",
-    follow_up_done: false,
-    follow_up_date: new Date(Date.now() + 86400000).toISOString(), // Future date
-  },
-];
+const INITIAL_CONTACTS: any[] = [];
 
 export default function ContactVault() {
   const [isUnlocked, setIsUnlocked] = useState(false);
