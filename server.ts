@@ -5,6 +5,7 @@ import { GoogleGenAI } from "@google/genai";
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, query, where, getDoc, setLogLevel } from "firebase/firestore";
 import { createClient } from "@supabase/supabase-js";
+import { randomUUID } from "crypto";
 import firebaseConfig from "./firebase-applet-config.json" with { type: "json" };
 
 // Quiet down internal Firestore connection retry logs on projects with the Firestore API disabled
@@ -257,20 +258,13 @@ async function startServer() {
     console.error("Firebase Firestore backend initialization failed:", err.message);
     isFirestoreAvailable = false;
   }
-
-  // 2. Initialize Supabase Client for server-side persistence
-  let supabase: any = null;
-  try {
-    const supabaseUrl = process.env.VITE_SUPABASE_URL;
-    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY. Supabase persistence disabled.');
-    }
-    supabase = createClient(supabaseUrl, supabaseKey);
-    console.log("Supabase client initialized successfully in Express Backend!");
-  } catch (err: any) {
-    console.error("Supabase client backend initialization failed:", err.message);
-  }
+  const getSupabaseClient = (req: express.Request) => {
+    if (!supabaseUrl || !supabaseKey) return null;
+    const authorization = req.headers.authorization;
+    return createClient(supabaseUrl, supabaseKey, {
+      global: authorization ? { headers: { Authorization: authorization } } : undefined,
+    });
+  };
 
   // Helper to map entity names to standard Supabase/PostgreSQL snake_case plural table names
   const getSupabaseTableName = (entity: string) => {
@@ -290,14 +284,20 @@ async function startServer() {
     let loadedFromSupabase = false;
 
     // A. Read from Supabase (Primary)
+    const supabase = getSupabaseClient(req);
     if (supabase) {
       try {
         const tableName = getSupabaseTableName(entity);
         let queryBuilder = supabase.from(tableName).select('*');
-        if (req.query.card_id) {
-          queryBuilder = queryBuilder.eq('card_id', req.query.card_id);
-        } else if (req.query.user_email) {
-          queryBuilder = queryBuilder.eq('user_email', req.query.user_email);
+        Object.entries(req.query).forEach(([key, value]) => {
+          if (key !== "orderBy" && typeof value === "string") {
+            queryBuilder = queryBuilder.eq(key, value);
+          }
+        });
+        if (typeof req.query.orderBy === "string") {
+          const orderBy = req.query.orderBy;
+          const ascending = !orderBy.startsWith("-");
+          queryBuilder = queryBuilder.order(orderBy.replace(/^-/, ""), { ascending });
         }
         
         const { data: list, error } = await queryBuilder;
@@ -343,10 +343,11 @@ async function startServer() {
 
   app.post("/api/db/:entity", async (req, res) => {
     const { entity } = req.params;
-    const id = req.body.id || Math.random().toString(36).substring(7);
+    const id = req.body.id || randomUUID();
     const item = { id, ...req.body, created_date: new Date().toISOString() };
 
     // A. Prioritize Supabase (Primary Write Target)
+    const supabase = getSupabaseClient(req);
     if (supabase) {
       try {
         const tableName = getSupabaseTableName(entity);
@@ -357,6 +358,7 @@ async function startServer() {
           console.log(`Successfully persisted '${entity}' to Supabase table '${tableName}' with ID: ${id}`);
         } else {
           console.warn(`Supabase write issue for table '${tableName}': ${error.message}`);
+          return res.status(400).json({ error: error.message });
         }
       } catch (err: any) {
         console.error(`Supabase write exception for table:`, err.message);
@@ -386,6 +388,7 @@ async function startServer() {
     const updateData = req.body;
 
     // A. Prioritize Supabase (Primary Update Target)
+    const supabase = getSupabaseClient(req);
     if (supabase) {
       try {
         const tableName = getSupabaseTableName(entity);
@@ -397,6 +400,7 @@ async function startServer() {
           console.log(`Successfully updated '${entity}' in Supabase [${tableName}] with ID: ${id}`);
         } else {
           console.warn(`Supabase update issue: ${error.message}`);
+          return res.status(400).json({ error: error.message });
         }
       } catch (err: any) {
         console.error(`Supabase update throw on '${entity}':`, err.message);
@@ -425,6 +429,7 @@ async function startServer() {
     const { entity, id } = req.params;
 
     // A. Prioritize Supabase (Primary Delete Target)
+    const supabase = getSupabaseClient(req);
     if (supabase) {
       try {
         const tableName = getSupabaseTableName(entity);
@@ -436,6 +441,7 @@ async function startServer() {
           console.log(`Successfully deleted '${entity}' from Supabase [${tableName}] with ID: ${id}`);
         } else {
           console.warn(`Supabase deletion issue: ${error.message}`);
+          return res.status(400).json({ error: error.message });
         }
       } catch (err: any) {
         console.error(`Supabase delete exception for '${entity}':`, err.message);

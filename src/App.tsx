@@ -25,6 +25,7 @@ import {
 import React, { useState, useEffect } from "react";
 import { UserProvider, useUser } from "./lib/UserContext";
 import { AdminStateProvider, useAdminState } from "./lib/AdminStateProvider";
+import { supabase } from "./lib/supabase";
 
 // Pages
 import Dashboard from "./pages/Dashboard";
@@ -60,8 +61,6 @@ function TopNav() {
   const location = useLocation();
   const { profile, logout, isOnline } = useUser();
   const isAdmin = profile?.role === 'super_admin' || profile?.email === 'lusimadio12@gmail.com' || profile?.email === 'simao@neurogrowthlabs.co.za';
-  const [notifications, setNotifications] = useState<Array<{ id: number; type: string; text: string; time: string }>>([]);
-
   const tabs = [
     { path: "/", icon: QrCode, label: "Dashboard" },
     { path: "/vault", icon: Contact, label: "Vault" },
@@ -97,11 +96,49 @@ function TopNav() {
     window.addEventListener("realtime-notification-received", handleRealtimeNotif);
     window.addEventListener("admin-global-broadcast", handleGlobalBroadcast);
 
+    if (profile?.id) {
+      supabase
+        .from("notifications")
+        .select("id,type,content,created_at")
+        .eq("user_id", profile.id)
+        .order("created_at", { ascending: false })
+        .limit(20)
+        .then(({ data }) => {
+          setNotifications((data || []).map((n: any) => ({
+            id: n.id,
+            type: n.type || "system",
+            text: n.content,
+            time: n.created_at ? new Date(n.created_at).toLocaleString() : "Just now",
+          })));
+        });
+
+      const channel = supabase
+        .channel("top-nav-notifications")
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${profile.id}` },
+          (payload) => {
+            const next: any = payload.new;
+            setNotifications(prev => [
+              { id: next.id, type: next.type || "system", text: next.content, time: "Just now" },
+              ...prev,
+            ]);
+          },
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+        window.removeEventListener("realtime-notification-received", handleRealtimeNotif);
+        window.removeEventListener("admin-global-broadcast", handleGlobalBroadcast);
+      };
+    }
+
     return () => {
       window.removeEventListener("realtime-notification-received", handleRealtimeNotif);
       window.removeEventListener("admin-global-broadcast", handleGlobalBroadcast);
     };
-  }, []);
+  }, [profile?.id]);
 
   return (
     <div className="fixed top-0 w-full md:w-[400px] h-16 bg-[#0a0a0c]/90 backdrop-blur-xl border-b border-white/5 z-50 flex items-center justify-between px-4">

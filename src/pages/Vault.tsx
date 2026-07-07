@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import AIEnrichBadge from "../components/AIEnrichBadge";
 import MessageGenerator from "../components/MessageGenerator";
 import {
@@ -13,12 +13,56 @@ import {
 import { MY_CARD } from "./Dashboard";
 import AddToCalendarButton from "../components/AddToCalendarButton";
 import BiometricVerification from "../components/BiometricVerification";
-
-const CONTACTS: any[] = [];
+import { supabase } from "@/lib/supabase";
+import { useUser } from "@/lib/UserContext";
 
 export default function Vault() {
+  const { user } = useUser();
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [contacts, setContacts] = useState<any[]>([]);
+  const [loadingContacts, setLoadingContacts] = useState(false);
+
+  useEffect(() => {
+    if (!isUnlocked || !user?.id) return;
+
+    let mounted = true;
+    setLoadingContacts(true);
+    const loadContacts = async () => {
+      const { data } = await supabase
+        .from("contacts")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      if (mounted) {
+        setContacts((data || []).map(normalizeContact));
+        setLoadingContacts(false);
+      }
+    };
+
+    loadContacts();
+
+    const channel = supabase
+      .channel("vault-contacts")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "contacts", filter: `user_id=eq.${user.id}` },
+        () => {
+          supabase
+            .from("contacts")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .then(({ data }) => mounted && setContacts((data || []).map(normalizeContact)));
+        },
+      )
+      .subscribe();
+
+    return () => {
+      mounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, [isUnlocked, user?.id]);
 
   if (!isUnlocked) {
     return (
@@ -49,7 +93,15 @@ export default function Vault() {
       </div>
 
       <div className="space-y-4">
-        {CONTACTS.map((c) => {
+        {loadingContacts ? (
+          <div className="text-center p-8 bg-white/[0.02] border border-white/5 rounded-xl text-white/40">
+            Loading contacts from Supabase...
+          </div>
+        ) : contacts.length === 0 ? (
+          <div className="text-center p-8 bg-white/[0.02] border border-white/5 rounded-xl text-white/40">
+            No contacts saved yet.
+          </div>
+        ) : contacts.map((c) => {
           const isExpanded = expandedId === c.id;
           return (
             <div

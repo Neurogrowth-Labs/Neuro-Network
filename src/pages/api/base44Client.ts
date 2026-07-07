@@ -1,55 +1,13 @@
-import { auth } from "@/lib/googleAuth";
-
-const makeEntityClient = (name: string) => ({
-  list: async (orderBy?: string) => {
-    const res = await fetch(`/api/db/${name}${orderBy ? `?orderBy=${encodeURIComponent(orderBy)}` : ""}`);
-    if (!res.ok) throw new Error(`Failed to load ${name}`);
-    return res.json();
   },
-  filter: async (filters: Record<string, string>) => {
-    const query = new URLSearchParams(filters).toString();
-    const res = await fetch(`/api/db/${name}?${query}`);
-    if (!res.ok) throw new Error(`Failed to filter ${name}`);
-    return res.json();
-  },
-  create: async (data: any) => {
-    const res = await fetch(`/api/db/${name}`, {
+  create: async (data: any) =>
+    requestJson(`/api/db/${name}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error(`Failed to create ${name}`);
-    return res.json();
-  },
-  update: async (id: string, data: any) => {
-    const res = await fetch(`/api/db/${name}/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error(`Failed to update ${name}`);
-    return res.json();
-  },
-  delete: async (id: string) => {
-    const res = await fetch(`/api/db/${name}/${id}`, { method: "DELETE" });
-    if (!res.ok) throw new Error(`Failed to delete ${name}`);
-    return res.json();
   },
   subscribe: (_callback?: unknown) => () => {},
 });
 
 const getCurrentUser = async () => {
-  const currentUser = auth.currentUser;
-  if (!currentUser) {
-    throw Object.assign(new Error("Authentication required"), { status: 401 });
-  }
-
-  return {
-    id: currentUser.uid,
-    full_name: currentUser.displayName || currentUser.email || "Authenticated user",
-    email: currentUser.email,
-    photo_url: currentUser.photoURL,
-    role: "user",
   };
 };
 
@@ -86,7 +44,6 @@ export const base44 = {
   auth: {
     me: getCurrentUser,
     logout: async (url?: string) => {
-      await auth.signOut();
       if (url) window.location.assign(url);
     },
     redirectToLogin: (url?: string) => {

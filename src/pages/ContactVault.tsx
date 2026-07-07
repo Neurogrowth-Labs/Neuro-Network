@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import AIEnrichBadge from "../components/AIEnrichBadge";
 import MessageGenerator from "../components/MessageGenerator";
 import { Search, MapPin, Calendar, ListFilter, Plus, X, Brain, Loader2 } from "lucide-react";
@@ -6,17 +6,66 @@ import { MY_CARD } from "./Dashboard";
 import AddToCalendarButton from "../components/AddToCalendarButton";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
+import { useUser } from "@/lib/UserContext";
 import BiometricVerification from "../components/BiometricVerification";
 
-const INITIAL_CONTACTS: any[] = [];
-
 export default function ContactVault() {
+  const { user } = useUser();
   const [isUnlocked, setIsUnlocked] = useState(false);
-  const [contacts, setContacts] = useState(INITIAL_CONTACTS);
+  const [contacts, setContacts] = useState<any[]>([]);
+  const [loadingContacts, setLoadingContacts] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showFollowUpOnly, setShowFollowUpOnly] = useState(false);
   const [newTagInput, setNewTagInput] = useState<{ [key: string]: string }>({});
   const [enrichingId, setEnrichingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isUnlocked || !user?.id) return;
+
+    let mounted = true;
+    setLoadingContacts(true);
+
+    const loadContacts = async () => {
+      const { data, error } = await supabase
+        .from("contacts")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (!mounted) return;
+      if (error) {
+        toast.error("Failed to load contacts from Supabase.");
+        setContacts([]);
+      } else {
+        setContacts((data || []).map(normalizeContact));
+      }
+      setLoadingContacts(false);
+    };
+
+    loadContacts();
+
+    const channel = supabase
+      .channel("contact-vault-contacts")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "contacts", filter: `user_id=eq.${user.id}` },
+        () => {
+          supabase
+            .from("contacts")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .then(({ data }) => mounted && setContacts((data || []).map(normalizeContact)));
+        },
+      )
+      .subscribe();
+
+    return () => {
+      mounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, [isUnlocked, user?.id]);
 
   if (!isUnlocked) {
     return (
@@ -78,16 +127,16 @@ opportunity_type (one of: client, partner, investor, supplier, media, friend, ot
         }
       });
       
-      setContacts(contacts.map(c => 
-        c.id === contact.id ? { 
-          ...c, 
-          ai_summary: res.ai_summary, 
-          ai_tags: res.ai_tags, 
-          contact_score: res.contact_score, 
-          role_level: res.role_level, 
-          opportunity_type: res.opportunity_type 
-        } : c
-      ));
+      const updates = {
+        ai_summary: res.ai_summary,
+        ai_tags: res.ai_tags,
+        contact_score: res.contact_score,
+        role_level: res.role_level,
+        opportunity_type: res.opportunity_type,
+      };
+      const { error } = await supabase.from("contacts").update(updates).eq("id", contact.id);
+      if (error) throw error;
+      setContacts(contacts.map(c => c.id === contact.id ? { ...c, ...updates } : c));
       toast.success("Contact successfully enriched!");
     } catch {
       toast.error("Failed to enrich contact.");
@@ -139,7 +188,11 @@ opportunity_type (one of: client, partner, investor, supplier, media, friend, ot
       </div>
 
       <div className="space-y-4">
-        {filteredContacts.length === 0 ? (
+        {loadingContacts ? (
+          <div className="text-center p-8 bg-white/[0.02] border border-white/5 rounded-xl text-white/40">
+            Loading contacts from Supabase...
+          </div>
+        ) : filteredContacts.length === 0 ? (
           <div className="text-center p-8 bg-white/[0.02] border border-white/5 rounded-xl text-white/40">
             No contacts found for current filter.
           </div>
