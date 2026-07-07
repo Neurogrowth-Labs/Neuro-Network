@@ -8,12 +8,7 @@ export default function ProximityAlerts() {
   const [notifyMatches, setNotifyMatches] = useState(true);
   const [scanning, setScanning] = useState(true);
   
-  const [nearbyUsers, setNearbyUsers] = useState([
-    { id: 1, name: "Sarah Jenkins", role: "VP of Engineering at TechGlobal", distance: "50m", matched: true, connected: false },
-    { id: 2, name: "David Chen", role: "Product Designer", distance: "120m", matched: false, connected: true },
-    { id: 3, name: "Amanda Lewis", role: "Startup Founder", distance: "300m", matched: true, connected: false },
-    { id: 4, name: "James Wilson", role: "Venture Capitalist", distance: "450m", matched: true, connected: false }
-  ]);
+  const [nearbyUsers, setNearbyUsers] = useState<Array<{ id: number; name: string; role: string; distance: string; matched: boolean; connected: boolean }>>([]);
 
   const toggleConnect = (id: number) => {
     setNearbyUsers(users => users.map(u => {

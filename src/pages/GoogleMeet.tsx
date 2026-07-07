@@ -103,29 +103,8 @@ export default function GoogleMeet() {
     if (!accessToken) return;
     setLoadingSpaces(true);
     try {
-      // Local check: Load previously generated spaces in this session or fall back to high-fidelity defaults
       const loadedSpaces = sessionStorage.getItem("neuro_meet_spaces");
-      if (loadedSpaces) {
-        setMeetSpaces(JSON.parse(loadedSpaces));
-      } else {
-        // High fidelity initial spaces to ensure UI is not barren
-        const initialSpaces: MeetSpace[] = [
-          {
-            name: "spaces/neuro-alpha-sync",
-            meetingUri: "https://meet.google.com/abc-defg-hij",
-            meetingCode: "abc-defg-hij",
-            config: { accessType: "TRUSTED", entryPointAccess: "ALL" }
-          },
-          {
-            name: "spaces/neuro-executive-board",
-            meetingUri: "https://meet.google.com/xyz-uvwx-yza",
-            meetingCode: "xyz-uvwx-yza",
-            config: { accessType: "RESTRICTED", entryPointAccess: "CREATOR_ONLY" }
-          }
-        ];
-        setMeetSpaces(initialSpaces);
-        sessionStorage.setItem("neuro_meet_spaces", JSON.stringify(initialSpaces));
-      }
+      setMeetSpaces(loadedSpaces ? JSON.parse(loadedSpaces) : []);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch meeting spaces.");
@@ -182,22 +161,8 @@ export default function GoogleMeet() {
         sessionStorage.setItem("neuro_meet_spaces", JSON.stringify(updated));
         toast.success("Google Meet room generated and active!");
       } else {
-        // Fallback for demo/sandboxed test projects where Google Meet has a restriction
-        const randomCode = Math.random().toString(36).substring(2, 5) + "-" + Math.random().toString(36).substring(2, 6) + "-" + Math.random().toString(36).substring(2, 5);
-        const demoSpace: MeetSpace = {
-          name: `spaces/simulated-${Math.random().toString(36).substring(2, 7)}`,
-          meetingUri: `https://meet.google.com/${randomCode}`,
-          meetingCode: randomCode,
-          config: {
-            accessType,
-            entryPointAccess
-          }
-        };
-
-        const updated = [demoSpace, ...meetSpaces];
-        setMeetSpaces(updated);
-        sessionStorage.setItem("neuro_meet_spaces", JSON.stringify(updated));
-        toast.success("Sync finished. High-fidelity room provisioned on server!");
+        const errJson = await res.json().catch(() => ({}));
+        toast.error(errJson.error?.message || "Google Meet space creation failed.");
       }
     } catch (err: any) {
       console.error(err);
