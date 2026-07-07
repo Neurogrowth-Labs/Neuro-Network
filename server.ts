@@ -258,14 +258,6 @@ async function startServer() {
     console.error("Firebase Firestore backend initialization failed:", err.message);
     isFirestoreAvailable = false;
   }
-
-  // 2. Initialize Supabase settings for per-request, RLS-aware clients.
-  const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !supabaseKey) {
-    console.warn("Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY. Supabase persistence disabled.");
-  }
-
   const getSupabaseClient = (req: express.Request) => {
     if (!supabaseUrl || !supabaseKey) return null;
     const authorization = req.headers.authorization;

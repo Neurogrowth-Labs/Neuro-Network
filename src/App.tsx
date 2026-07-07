@@ -61,8 +61,6 @@ function TopNav() {
   const location = useLocation();
   const { profile, logout, isOnline } = useUser();
   const isAdmin = profile?.role === 'super_admin' || profile?.email === 'lusimadio12@gmail.com' || profile?.email === 'simao@neurogrowthlabs.co.za';
-  const [notifications, setNotifications] = useState<Array<{ id: string | number; type: string; text: string; time: string }>>([]);
-
   const tabs = [
     { path: "/", icon: QrCode, label: "Dashboard" },
     { path: "/vault", icon: Contact, label: "Vault" },

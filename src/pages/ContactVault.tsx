@@ -10,16 +10,6 @@ import { supabase } from "@/lib/supabase";
 import { useUser } from "@/lib/UserContext";
 import BiometricVerification from "../components/BiometricVerification";
 
-const normalizeContact = (contact: any) => ({
-  ...contact,
-  full_name: contact.full_name || `${contact.first_name || ""} ${contact.last_name || ""}`.trim(),
-  job_title: contact.job_title || contact.title || "",
-  profile_photo: contact.profile_photo || contact.avatar_url || "/icon.png",
-  ai_tags: Array.isArray(contact.ai_tags) ? contact.ai_tags : [],
-  follow_up_date: contact.follow_up_date || new Date().toISOString(),
-  follow_up_done: Boolean(contact.follow_up_done),
-});
-
 export default function ContactVault() {
   const { user } = useUser();
   const [isUnlocked, setIsUnlocked] = useState(false);

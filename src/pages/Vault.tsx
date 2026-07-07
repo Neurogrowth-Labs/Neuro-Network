@@ -16,14 +16,6 @@ import BiometricVerification from "../components/BiometricVerification";
 import { supabase } from "@/lib/supabase";
 import { useUser } from "@/lib/UserContext";
 
-const normalizeContact = (contact: any) => ({
-  ...contact,
-  full_name: contact.full_name || `${contact.first_name || ""} ${contact.last_name || ""}`.trim(),
-  job_title: contact.job_title || contact.title || "",
-  profile_photo: contact.profile_photo || contact.avatar_url || "/icon.png",
-  ai_tags: Array.isArray(contact.ai_tags) ? contact.ai_tags.join(",") : "",
-});
-
 export default function Vault() {
   const { user } = useUser();
   const [isUnlocked, setIsUnlocked] = useState(false);
