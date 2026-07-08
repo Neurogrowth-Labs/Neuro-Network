@@ -1,14 +1,44 @@
-  },
+const requestJson = async (url: string, options?: RequestInit) => {
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options?.headers,
+    },
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || "Request failed");
+  }
+
+  return res.json();
+};
+
+const makeEntityClient = (name: string) => ({
+  list: async () => requestJson(`/api/db/${name}`),
+  filter: async (query: any) =>
+    requestJson(`/api/db/${name}?filter=${encodeURIComponent(JSON.stringify(query))}`),
+  get: async (id: string) => requestJson(`/api/db/${name}/${id}`),
   create: async (data: any) =>
     requestJson(`/api/db/${name}`, {
       method: "POST",
       body: JSON.stringify(data),
-  },
+    }),
+  update: async (id: string, data: any) =>
+    requestJson(`/api/db/${name}/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  delete: async (id: string) =>
+    requestJson(`/api/db/${name}/${id}`, {
+      method: "DELETE",
+    }),
   subscribe: (_callback?: unknown) => () => {},
 });
 
 const getCurrentUser = async () => {
-  };
+  return requestJson("/api/auth/me");
 };
 
 export const base44 = {
