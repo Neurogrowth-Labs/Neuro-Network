@@ -15,9 +15,28 @@ export default function CardPDFDownload({ card }: any) {
     try {
       const canvas = await html2canvas(previewRef.current, {
         scale: 3,
-        backgroundColor: null,
+        backgroundColor: "#000000",
         useCORS: true,
         logging: false,
+        ignoreElements: (element) => {
+          // Skip elements that might cause issues
+          return element.tagName === 'NOSCRIPT';
+        },
+        onclone: (clonedDoc) => {
+          // Convert oklch colors to rgb fallbacks in cloned document
+          const style = clonedDoc.createElement('style');
+          style.textContent = `
+            * {
+              --background: #0a0a0c !important;
+              --foreground: #ffffff !important;
+              --primary: #06b6d4 !important;
+              --secondary: #1e1e2e !important;
+              --muted: #27272a !important;
+              --accent: #06b6d4 !important;
+            }
+          `;
+          clonedDoc.head.appendChild(style);
+        },
       });
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({

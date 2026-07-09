@@ -19,7 +19,8 @@ export default function BiometricVerification({ onUnlockSuccess, sectionName = "
   // Load existing credential from server (Supabase sync via /api/db/BiometricCredential)
   useEffect(() => {
     async function loadCredential() {
-      if (!profile.email) return;
+      // Skip if email is empty or not set
+      if (!profile.email || profile.email.trim() === "") return;
       setIsLoading(true);
       try {
         const res = await fetch(`/api/db/BiometricCredential?user_email=${encodeURIComponent(profile.email)}`);
@@ -37,7 +38,10 @@ export default function BiometricVerification({ onUnlockSuccess, sectionName = "
           }
         }
       } catch (err) {
-        console.error("Failed to load credential:", err);
+        // Silently handle fetch errors - credential loading is optional
+        console.warn("Could not load biometric credential:", err);
+        setMode("register");
+        setMessage("No biometric credential registered yet. Please register your fingerprint to secure this vault.");
       } finally {
         setIsLoading(false);
       }
