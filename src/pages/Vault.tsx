@@ -16,6 +16,25 @@ import BiometricVerification from "../components/BiometricVerification";
 import { supabase } from "@/lib/supabase";
 import { useUser } from "@/lib/UserContext";
 
+const normalizeContact = (contact: any) => ({
+  ...contact,
+  full_name: contact.full_name || contact.name || "Unknown contact",
+  job_title: contact.job_title || contact.title || "",
+  company: contact.company || "",
+  profile_photo: contact.profile_photo || contact.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(contact.full_name || contact.name || "Contact")}`,
+  met_at: contact.met_at || contact.location || "Unknown location",
+  notes: contact.notes || "No notes yet.",
+  ai_tags: Array.isArray(contact.ai_tags)
+    ? contact.ai_tags
+    : typeof contact.ai_tags === "string" && contact.ai_tags.length > 0
+      ? contact.ai_tags.split(",").map((tag: string) => tag.trim()).filter(Boolean)
+      : [],
+  follow_up_done: Boolean(contact.follow_up_done),
+  follow_up_date: contact.follow_up_date || new Date(0).toISOString(),
+  contact_score: Number(contact.contact_score || 0),
+});
+
+
 export default function Vault() {
   const { user } = useUser();
   const [isUnlocked, setIsUnlocked] = useState(false);

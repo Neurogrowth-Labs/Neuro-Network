@@ -23,7 +23,7 @@ export default function ProximityWidget({ user }: any) {
 
   const { data: cards = [] } = useQuery({
     queryKey: ["my-cards"],
-    queryFn: () => base44.entities.BusinessCard?.list?.("-created_date") || [],
+    queryFn: () => base44.entities.BusinessCard?.list?.() || [],
   });
 
   const checkInMutation = useMutation({
