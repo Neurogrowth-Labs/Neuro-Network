@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import AIEnrichBadge from "../components/AIEnrichBadge";
 import MessageGenerator from "../components/MessageGenerator";
-import { Search, MapPin, Calendar, ListFilter, Plus, X, Brain, Loader2 } from "lucide-react";
+import { Search, MapPin, Calendar, ListFilter, Plus, X, Brain, Loader2, Upload } from "lucide-react";
 import { MY_CARD } from "./Dashboard";
 import AddToCalendarButton from "../components/AddToCalendarButton";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useUser } from "@/lib/UserContext";
+import ContactImportDialog from "../components/import/ContactImportDialog";
 
 const normalizeContact = (contact: any) => ({
   ...contact,
@@ -38,6 +39,7 @@ export default function ContactVault() {
   const [showFollowUpOnly, setShowFollowUpOnly] = useState(false);
   const [newTagInput, setNewTagInput] = useState<{ [key: string]: string }>({});
   const [enrichingId, setEnrichingId] = useState<string | null>(null);
+  const [showImportDialog, setShowImportDialog] = useState(false);
 
   useEffect(() => {
     if (!isUnlocked || !user?.id) return;
@@ -181,7 +183,19 @@ opportunity_type (one of: client, partner, investor, supplier, media, friend, ot
             Smart networking and AI-enriched CRM.
           </p>
         </div>
+        <button
+          onClick={() => setShowImportDialog(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-[#0a0a0c] rounded-xl font-bold text-sm transition-colors"
+        >
+          <Upload className="w-4 h-4" />
+          Import
+        </button>
       </div>
+
+      <ContactImportDialog
+        open={showImportDialog}
+        onClose={() => setShowImportDialog(false)}
+      />
 
       <div className="flex gap-2">
         <div className="bg-white/[0.02] border border-white/5 rounded-xl px-4 py-3 flex items-center gap-3 flex-1">

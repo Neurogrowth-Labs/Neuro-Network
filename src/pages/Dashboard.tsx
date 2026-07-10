@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import CardPreview from "../components/CardPreview";
 import CardPDFDownload from "../components/CardPDFDownload";
 import UsageBar from "../components/UsageBar";
@@ -9,6 +9,17 @@ import { useNavigate } from "react-router-dom";
 import { QrCode, Share2, ScanLine, ArrowUpRight, Copy, X, Mail, MessageCircle, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "../lib/UserContext";
+import { supabase } from "../lib/supabase";
+
+interface DashboardStats {
+  profileViews: number;
+  saves: number;
+  conversionRate: number;
+  businessCardsCount: number;
+  businessCardsLimit: number;
+  contactsCount: number;
+  contactsLimit: number;
+}
 
 export const MY_CARD = {
   full_name: "",
@@ -25,13 +36,100 @@ export const MY_CARD = {
 };
 
 export default function Dashboard() {
-  const { profile } = useUser();
+  const { profile, user } = useUser();
   const cardData = profile || MY_CARD;
   const [showQRModal, setShowQRModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [stats, setStats] = useState<DashboardStats>({
+    profileViews: 0,
+    saves: 0,
+    conversionRate: 0,
+    businessCardsCount: 0,
+    businessCardsLimit: 3, // Default limit for free plan
+    contactsCount: 0,
+    contactsLimit: 200, // Default limit
+  });
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
   const navigate = useNavigate();
-  
+
   const cardUrl = `${window.location.origin}/card-view`;
+
+  // Fetch real stats from Supabase
+  useEffect(() => {
+    if (!user?.id) {
+      setIsLoadingStats(false);
+      return;
+    }
+
+    const fetchStats = async () => {
+      try {
+        // Fetch contacts count
+        const { count: contactsCount } = await supabase
+          .from("contacts")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id);
+
+        // Fetch business cards count
+        const { count: cardsCount } = await supabase
+          .from("business_cards")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id);
+
+        // Fetch profile views from analytics (last 30 days)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        const { count: viewsCount } = await supabase
+          .from("profile_views")
+          .select("*", { count: "exact", head: true })
+          .eq("profile_id", user.id)
+          .gte("viewed_at", thirtyDaysAgo.toISOString());
+
+        // Fetch saves count (contacts that saved this user's card)
+        const { count: savesCount } = await supabase
+          .from("card_saves")
+          .select("*", { count: "exact", head: true })
+          .eq("card_owner_id", user.id)
+          .gte("saved_at", thirtyDaysAgo.toISOString());
+
+        // Calculate conversion rate
+        const views = viewsCount || 0;
+        const saves = savesCount || 0;
+        const conversion = views > 0 ? Math.round((saves / views) * 100) : 0;
+
+        setStats({
+          profileViews: views,
+          saves: saves,
+          conversionRate: conversion,
+          businessCardsCount: cardsCount || 0,
+          businessCardsLimit: profile?.role === 'super_admin' ? 100 : 3,
+          contactsCount: contactsCount || 0,
+          contactsLimit: profile?.role === 'super_admin' ? 10000 : 200,
+        });
+      } catch (error) {
+        console.warn("Failed to fetch dashboard stats:", error);
+        // Keep default values on error
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+
+    fetchStats();
+
+    // Set up real-time subscription for contacts
+    const channel = supabase
+      .channel("dashboard-stats")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "contacts", filter: `user_id=eq.${user.id}` },
+        () => fetchStats()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, profile?.role]);
 
   const copyLink = () => {
     navigator.clipboard.writeText(cardUrl);
@@ -123,7 +221,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-3 gap-2">
           <div className="border-r border-white/5 pr-2">
             <p className="text-3xl font-light tracking-tighter text-cyan-400">
-              1,204
+              {isLoadingStats ? "..." : stats.profileViews.toLocaleString()}
             </p>
             <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mt-1">
               Profile Views
@@ -131,7 +229,7 @@ export default function Dashboard() {
           </div>
           <div className="border-r border-white/5 px-2">
             <p className="text-3xl font-light tracking-tighter text-white">
-              431
+              {isLoadingStats ? "..." : stats.saves.toLocaleString()}
             </p>
             <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mt-1">
               Saves
@@ -139,7 +237,7 @@ export default function Dashboard() {
           </div>
           <div className="pl-2">
             <p className="text-3xl font-light tracking-tighter text-cyan-400">
-              +12%
+              {isLoadingStats ? "..." : `${stats.conversionRate > 0 ? '+' : ''}${stats.conversionRate}%`}
             </p>
             <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mt-1">
               Conversion
@@ -149,15 +247,15 @@ export default function Dashboard() {
 
         <div className="pt-6 border-t border-white/5 space-y-4">
           <UsageBar
-            label="Business Cards Limit"
-            used={1}
-            limit={3}
+            label="Business Cards"
+            used={stats.businessCardsCount}
+            limit={stats.businessCardsLimit}
             color="bg-cyan-400"
           />
           <UsageBar
-            label="Contact AI Credits"
-            used={85}
-            limit={200}
+            label="Contacts"
+            used={stats.contactsCount}
+            limit={stats.contactsLimit}
             color="bg-white/40"
           />
         </div>

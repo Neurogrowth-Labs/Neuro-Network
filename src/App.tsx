@@ -25,7 +25,9 @@ import {
 import React, { useState, useEffect } from "react";
 import { UserProvider, useUser } from "./lib/UserContext";
 import { AdminStateProvider, useAdminState } from "./lib/AdminStateProvider";
+import { WorkspaceProvider } from "./lib/WorkspaceContext";
 import { supabase } from "./lib/supabase";
+import WorkspaceSelector from "./components/workspace/WorkspaceSelector";
 
 // Pages
 import Dashboard from "./pages/Dashboard";
@@ -166,6 +168,9 @@ function TopNav() {
               </span>
             )}
           </div>
+        </div>
+        <div className="hidden sm:block">
+          <WorkspaceSelector />
         </div>
       </div>
 
@@ -400,14 +405,16 @@ function AppContent() {
 export default function App() {
   return (
     <UserProvider>
-      <AdminStateProvider>
-        <QueryClientProvider client={queryClient}>
-          <Router>
-            <AppContent />
-            <Toaster theme="dark" position="top-center" />
-          </Router>
-        </QueryClientProvider>
-      </AdminStateProvider>
+      <WorkspaceProvider>
+        <AdminStateProvider>
+          <QueryClientProvider client={queryClient}>
+            <Router>
+              <AppContent />
+              <Toaster theme="dark" position="top-center" />
+            </Router>
+          </QueryClientProvider>
+        </AdminStateProvider>
+      </WorkspaceProvider>
     </UserProvider>
   );
 }
