@@ -21,7 +21,17 @@ export const defaultUser = {
   banner_url: "",
 };
 
-export type UserProfile = typeof defaultUser & { id?: string; role?: 'super_admin' | 'user' };
+export type UserProfile = typeof defaultUser & {
+  id?: string;
+  role?: 'super_admin' | 'user';
+  subscription_status?: 'active' | 'inactive';
+  subscription_plan?: string;
+  subscription_amount_usd?: number;
+  subscription_interval?: string;
+  subscription_provider?: string;
+  subscription_receipt_id?: string;
+  subscription_active_until?: string;
+};
 
 interface UserContextType {
   profile: UserProfile;
@@ -181,11 +191,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           console.error("Local storage read error:", e);
         }
 
+        let cachedSubscription: any = null;
+        try {
+          const subscription = localStorage.getItem(`subscription_${user.id}`);
+          if (subscription) {
+            cachedSubscription = JSON.parse(subscription);
+          }
+        } catch (e) {
+          console.error("Subscription cache read error:", e);
+        }
+
         setProfile({
           ...defaultUser,
           ...(cachedProfile || {}),
           ...(offlineCachedProfile || {}),
           ...(supabaseProfile || {}),
+          ...(cachedSubscription || {}),
           id: user.id,
           email: user.email || defaultUser.email,
           role: supabaseProfile?.role || offlineCachedProfile?.role || cachedProfile?.role || ((user.email === 'lusimadio12@gmail.com' || user.email === 'alex@neuronets.work' || user.email === 'simao@neurogrowthlabs.co.za') ? 'super_admin' : 'user'),

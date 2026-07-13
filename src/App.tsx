@@ -345,6 +345,22 @@ function AppContent() {
     );
   }
 
+
+  const subscriptionActiveUntil = profile?.subscription_active_until ? new Date(profile.subscription_active_until).getTime() : 0;
+  const hasActiveSubscription = profile?.subscription_status === "active" && subscriptionActiveUntil > Date.now();
+
+  if (!isAdmin && !hasActiveSubscription) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0c] text-white flex justify-center">
+        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative bg-[#0a0a0c] shadow-2xl">
+          <div className="h-full overflow-y-auto scrollbar-hide">
+            <Checkout />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (maintenanceMode && !isAdmin) {
     return (
       <div className="min-h-screen bg-[#0a0a0c] text-white flex justify-center">
@@ -381,6 +397,7 @@ function AppContent() {
             <Route path="/card-builder" element={<CardBuilder />} />
             <Route path="/card-view" element={<CardView />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/subscribe" element={<Checkout />} />
             <Route path="/contact-vault" element={<ContactVault />} />
             <Route path="/crm-integration" element={<CRMIntegration />} />
             <Route path="/map" element={<GeoMap />} />
