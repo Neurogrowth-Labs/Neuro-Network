@@ -35,6 +35,34 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
+  const buildSubscriptionReceipt = (provider: string, body: any) => ({
+    id: `${provider}_sub_${randomUUID()}`,
+    provider,
+    status: "active",
+    planName: body.planName || "Neuro NetWorks Platform Access",
+    amountUSD: Number(body.amountUSD || 3.99),
+    interval: body.interval || "monthly recurring",
+    payerEmail: body.payerEmail || body.email,
+    startedAt: new Date().toISOString(),
+    mode: "test",
+  });
+
+  app.post("/api/payments/stripe-subscription", (req, res) => {
+    res.json(buildSubscriptionReceipt("stripe", req.body));
+  });
+
+  app.post("/api/payments/paypal-subscription", (req, res) => {
+    res.json(buildSubscriptionReceipt("paypal", req.body));
+  });
+
+  app.post("/api/payments/google-pay-subscription", (req, res) => {
+    if (!req.body?.googlePayToken) {
+      return res.status(400).json({ message: "Google Pay token is required." });
+    }
+
+    res.json(buildSubscriptionReceipt("google-pay", req.body));
+  });
+
   // LLM endpoint simulating base44 InvokeLLM
   app.post("/api/llm", async (req, res) => {
     try {
