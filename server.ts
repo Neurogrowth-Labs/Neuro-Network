@@ -14,10 +14,11 @@ setLogLevel("silent");
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT || 3000);
 
   // Middleware to parse JSON bodies
-  app.use(express.json());
+  app.disable("x-powered-by");
+  app.use(express.json({ limit: "10mb" }));
 
   // Supabase configuration
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
@@ -103,7 +104,7 @@ async function startServer() {
       console.error("LLM Error:", err);
       // Wait for 1 second just so UI doesn't flash errors instantly
       await new Promise(r => setTimeout(r, 1000));
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
     }
   });
 
@@ -165,7 +166,7 @@ async function startServer() {
       }
       
       const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-2.5-flash",
         contents,
         config
       });
@@ -179,7 +180,7 @@ async function startServer() {
       });
     } catch (err: any) {
       console.error("AI Chat Error:", err);
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
     }
   });
 
@@ -238,7 +239,7 @@ async function startServer() {
       });
     } catch (err: any) {
       console.error("AI Image Gen Error:", err);
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
     }
   });
 
@@ -255,7 +256,7 @@ async function startServer() {
       }
       
       const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-2.5-flash",
         contents: [
           {
             inlineData: {
@@ -274,7 +275,7 @@ async function startServer() {
       });
     } catch (err: any) {
       console.error("Audio Transcription Error:", err);
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
     }
   });
 

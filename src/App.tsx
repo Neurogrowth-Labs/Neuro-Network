@@ -144,7 +144,7 @@ function TopNav() {
   }, [profile?.id]);
 
   return (
-    <div className="fixed top-0 w-full md:w-[400px] h-16 bg-[#0a0a0c]/90 backdrop-blur-xl border-b border-white/5 z-50 flex items-center justify-between px-4">
+    <div className="fixed top-0 w-full md:w-[400px] h-16 glass-panel border-x-0 border-t-0 z-50 flex items-center justify-between px-4">
       <div className="flex items-center gap-3">
         <button 
           onClick={() => {
@@ -175,7 +175,7 @@ function TopNav() {
       </div>
 
       {showMobileMenu && (
-        <div className="absolute left-4 top-16 w-48 bg-[#12121a] border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50">
+        <div className="absolute left-4 top-16 w-48 glass-menu rounded-xl overflow-hidden z-50">
           <div className="p-2 flex flex-col gap-1">
             {tabs.map((t) => {
               const active = location.pathname === t.path;
@@ -211,7 +211,7 @@ function TopNav() {
           </button>
           
           {showNotifications && (
-            <div className="absolute right-0 top-12 w-64 bg-[#12121a] border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50">
+            <div className="absolute right-0 top-12 w-64 glass-menu rounded-xl overflow-hidden z-50">
               <div className="p-3 border-b border-white/5 flex justify-between items-center">
                 <span className="text-xs font-bold text-white uppercase tracking-widest">Notifications</span>
                 <span className="text-[10px] text-cyan-400 cursor-pointer" onClick={() => setNotifications([])}>Mark all read</span>
@@ -249,7 +249,7 @@ function TopNav() {
           </div>
 
           {showProfileMenu && (
-            <div className="absolute right-0 top-12 w-48 bg-[#12121a] border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50">
+            <div className="absolute right-0 top-12 w-48 glass-menu rounded-xl overflow-hidden z-50">
               <div className="p-2 flex flex-col gap-1">
                 {isAdmin && (
                   <Link
@@ -315,8 +315,8 @@ function AppContent() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#0a0a0c] text-white flex justify-center">
-        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative bg-[#0a0a0c] shadow-2xl">
+      <div className="min-h-screen app-aurora text-white flex justify-center">
+        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative glass-panel shadow-2xl">
           <Auth />
         </div>
       </div>
@@ -328,8 +328,8 @@ function AppContent() {
 
   if (isSuspended) {
     return (
-      <div className="min-h-screen bg-[#0a0a0c] text-white flex justify-center">
-        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative bg-[#0d0101] shadow-2xl flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen app-aurora text-white flex justify-center">
+        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative bg-red-950/30 glass-panel shadow-2xl flex flex-col items-center justify-center p-6 text-center">
           <div className="w-16 h-16 rounded-full bg-red-950/50 border border-red-500/30 flex items-center justify-center mb-6 text-red-500 animate-pulse animate-duration-1000">
             <Shield className="w-8 h-8" />
           </div>
@@ -351,8 +351,8 @@ function AppContent() {
 
   if (!isAdmin && !hasActiveSubscription) {
     return (
-      <div className="min-h-screen bg-[#0a0a0c] text-white flex justify-center">
-        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative bg-[#0a0a0c] shadow-2xl">
+      <div className="min-h-screen app-aurora text-white flex justify-center">
+        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative glass-panel shadow-2xl">
           <div className="h-full overflow-y-auto scrollbar-hide">
             <Checkout />
           </div>
@@ -363,8 +363,8 @@ function AppContent() {
 
   if (maintenanceMode && !isAdmin) {
     return (
-      <div className="min-h-screen bg-[#0a0a0c] text-white flex justify-center">
-        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative bg-[#0a0803] shadow-2xl flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen app-aurora text-white flex justify-center">
+        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative bg-amber-950/25 glass-panel shadow-2xl flex flex-col items-center justify-center p-6 text-center">
           <div className="w-16 h-16 rounded-full bg-amber-950/50 border border-amber-500/30 flex items-center justify-center mb-6 text-amber-500 animate-pulse">
             <BrainCircuit className="w-8 h-8" />
           </div>
@@ -381,9 +381,9 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0c] text-white flex justify-center">
+    <div className="min-h-screen app-aurora text-white flex justify-center">
       {/* Mobile frame container */}
-      <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative bg-[#0a0a0c] shadow-2xl">
+      <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative glass-panel shadow-2xl">
         <TopNav />
         <div className="h-full overflow-y-auto pt-16 pb-6 scrollbar-hide">
           <Routes>
