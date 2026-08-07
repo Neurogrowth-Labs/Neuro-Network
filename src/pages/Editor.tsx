@@ -236,7 +236,7 @@ export default function Editor() {
 
     try {
       // Fetch user location if coordinates maps search is toggled
-      let latLng = null;
+      let latLng: { latitude: number; longitude: number } | null = null;
       if (enableMapsSearch && navigator.geolocation) {
         try {
           const pos = await new Promise<GeolocationPosition>((resolve, reject) => {

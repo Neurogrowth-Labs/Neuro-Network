@@ -61,7 +61,7 @@ export const googleSignIn = async (): Promise<{ user: User; accessToken: string 
       sessionStorage.setItem("google_workspace_access_token", cachedAccessToken);
     } catch (e) {}
     
-    return { user: result.user, accessToken: cachedAccessToken };
+    return { user: result.user, accessToken: credential.accessToken };
   } catch (error: any) {
     console.error("Google Sign-In Error:", error);
     throw error;

@@ -198,3 +198,35 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
+@layer base {
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 12% 8%, rgba(34, 211, 238, 0.24), transparent 30rem),
+      radial-gradient(circle at 90% 12%, rgba(168, 85, 247, 0.2), transparent 28rem),
+      linear-gradient(135deg, #030712 0%, #07111f 48%, #111827 100%);
+  }
+}
+
+@layer utilities {
+  .app-aurora {
+    background:
+      radial-gradient(circle at top left, rgba(34, 211, 238, 0.24), transparent 22rem),
+      radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.2), transparent 22rem),
+      linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.96));
+  }
+
+  .glass-panel {
+    @apply border border-white/10 bg-white/[0.07] shadow-2xl backdrop-blur-2xl;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+
+  .glass-card {
+    @apply border border-white/10 bg-white/[0.08] backdrop-blur-xl;
+    box-shadow: 0 16px 48px rgba(15, 23, 42, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-menu {
+    @apply border border-white/10 bg-slate-950/70 shadow-2xl backdrop-blur-2xl;
+  }
+}
