@@ -26,7 +26,8 @@ const cardPaymentMethod = {
 
 type SubscriptionPlan = {
   name: string;
-  priceUSD: number;
+  priceCents: number;
+  currency: string;
   interval: string;
 };
 
@@ -50,7 +51,7 @@ function getGooglePaymentsClient() {
 }
 
 function buildPaymentDataRequest(plan: SubscriptionPlan) {
-  const totalPrice = plan.priceUSD.toFixed(2);
+  const totalPrice = (plan.priceCents / 100).toFixed(2);
 
   return {
     apiVersion: 2,
@@ -61,8 +62,8 @@ function buildPaymentDataRequest(plan: SubscriptionPlan) {
       merchantName: "Neuro NetWorks",
     },
     transactionInfo: {
-      countryCode: "US",
-      currencyCode: "USD",
+      countryCode: "ZA",
+      currencyCode: plan.currency,
       totalPriceStatus: "FINAL",
       totalPrice,
       totalPriceLabel: `${plan.name} first month`,
@@ -145,7 +146,8 @@ export default function GooglePayButton({ plan, userEmail, onSuccess, onError }:
           googlePayToken,
           payerEmail,
           planName: plan.name,
-          amountUSD: plan.priceUSD,
+          amountCents: plan.priceCents,
+          currency: plan.currency,
           interval: plan.interval,
         }),
       });

@@ -28,6 +28,7 @@ import { AdminStateProvider, useAdminState } from "./lib/AdminStateProvider";
 import { WorkspaceProvider } from "./lib/WorkspaceContext";
 import { supabase } from "./lib/supabase";
 import WorkspaceSelector from "./components/workspace/WorkspaceSelector";
+import { hasPremiumAccess } from "./lib/subscription";
 
 // Pages
 import Dashboard from "./pages/Dashboard";
@@ -346,10 +347,9 @@ function AppContent() {
   }
 
 
-  const subscriptionActiveUntil = profile?.subscription_active_until ? new Date(profile.subscription_active_until).getTime() : 0;
-  const hasActiveSubscription = profile?.subscription_status === "active" && subscriptionActiveUntil > Date.now();
+  const hasAccess = hasPremiumAccess(profile);
 
-  if (!isAdmin && !hasActiveSubscription) {
+  if (!isAdmin && !hasAccess) {
     return (
       <div className="min-h-screen app-aurora text-white flex justify-center">
         <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative glass-panel shadow-2xl">
