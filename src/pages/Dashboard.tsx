@@ -10,6 +10,7 @@ import { QrCode, Share2, ScanLine, ArrowUpRight, Copy, X, Mail, MessageCircle, M
 import { toast } from "sonner";
 import { useUser } from "../lib/UserContext";
 import { supabase } from "../lib/supabase";
+import { normalizeSubscription, trialDaysRemaining, PREMIUM_PLAN } from "../lib/subscription";
 
 interface DashboardStats {
   profileViews: number;
@@ -51,6 +52,8 @@ export default function Dashboard() {
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const navigate = useNavigate();
+  const subscriptionState = normalizeSubscription(profile);
+  const trialDays = trialDaysRemaining(profile);
 
   const cardUrl = `${window.location.origin}/card-view`;
 
@@ -169,6 +172,15 @@ export default function Dashboard() {
       <div className="relative">
         <CardPreview card={cardData} />
       </div>
+      <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/10 p-4 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-cyan-300">Subscription</p>
+          <h2 className="text-lg font-bold text-white">{subscriptionState.status === "trial" ? `${trialDays} trial day${trialDays === 1 ? "" : "s"} remaining` : subscriptionState.status}</h2>
+          <p className="text-[11px] text-white/55">{PREMIUM_PLAN.name} · {PREMIUM_PLAN.displayPrice}/month · Full premium access during trial.</p>
+        </div>
+        <button onClick={() => navigate("/checkout")} className="rounded-xl bg-cyan-400 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-black">Manage</button>
+      </div>
+
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-3">

@@ -72,6 +72,10 @@ interface PlatformUser {
   created_at: string;
   job_title?: string;
   role: "super_admin" | "executive" | "manager" | "individual";
+  subscription_status?: "trial" | "active" | "expired" | "cancelled" | "past_due" | "inactive";
+  trial_expires_at?: string;
+  next_billing_date?: string;
+  subscription_provider?: string;
 }
 
 interface DbCardRecord {
@@ -285,7 +289,11 @@ export default function Admin() {
           status: d.status || "Active",
           created_at: d.created_at || new Date().toISOString(),
           job_title: d.job_title || "Network Consultant",
-          role: d.role || (ADMIN_EMAILS.includes(d.email) ? "super_admin" : "individual")
+          role: d.role || (ADMIN_EMAILS.includes(d.email) ? "super_admin" : "individual"),
+          subscription_status: d.subscription_status || "trial",
+          trial_expires_at: d.trial_expires_at,
+          next_billing_date: d.next_billing_date,
+          subscription_provider: d.subscription_provider
         }));
         setDbUsers(mappedUsers);
       }
@@ -423,6 +431,40 @@ export default function Admin() {
   };
 
   // Modify user system properties (Role & Status management)
+  const handleSubscriptionOverride = async (userId: string, subscription_status: PlatformUser["subscription_status"]) => {
+    try {
+      const nextBilling = subscription_status === "active" ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null;
+      const { error } = await supabase
+        .from("profiles")
+        .update({ subscription_status, next_billing_date: nextBilling, subscription_active_until: nextBilling })
+        .eq("id", ensureUUID(userId));
+      if (error) throw error;
+      setDbUsers(prev => prev.map(u => u.id === userId ? { ...u, subscription_status, next_billing_date: nextBilling || undefined } : u));
+      toast.success(`Subscription marked ${subscription_status}.`);
+      logAdminAction("Subscription Override", `Set ${userId} subscription to ${subscription_status}.`, "SECURITY");
+    } catch (err: any) {
+      console.error("Subscription override error:", err.message);
+      toast.error("Failed to update subscription status.");
+    }
+  };
+
+  const handleExtendTrial = async (userId: string, days = 7) => {
+    try {
+      const trialExpires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+      const { error } = await supabase
+        .from("profiles")
+        .update({ subscription_status: "trial", trial_expires_at: trialExpires })
+        .eq("id", ensureUUID(userId));
+      if (error) throw error;
+      setDbUsers(prev => prev.map(u => u.id === userId ? { ...u, subscription_status: "trial", trial_expires_at: trialExpires } : u));
+      toast.success(`Trial extended by ${days} days.`);
+      logAdminAction("Trial Extended", `Extended ${userId} trial by ${days} days.`, "SECURITY");
+    } catch (err: any) {
+      console.error("Trial extension error:", err.message);
+      toast.error("Failed to extend trial.");
+    }
+  };
+
   const handleModifyUserStatus = async (userId: string, newStatus: PlatformUser["status"]) => {
     try {
       const safeUserId = ensureUUID(userId);
@@ -1170,6 +1212,9 @@ export default function Admin() {
                               }`}>
                                 {user.status}
                               </span>
+                              <span className="text-[7.5px] font-extrabold tracking-widest uppercase px-1.5 py-0.5 rounded border bg-cyan-500/10 text-cyan-300 border-cyan-500/20">
+                                {user.subscription_status || "trial"}
+                              </span>
                             </div>
                             <span className="text-[7.5px] text-white/20 font-mono">
                               JOINED: {new Date(user.created_at).toLocaleDateString()}
@@ -1192,6 +1237,12 @@ export default function Admin() {
                               <option value="manager">Manager</option>
                               <option value="individual">Standard</option>
                             </select>
+                          </div>
+
+                          <div className="flex items-center gap-1.5">
+                            <button onClick={() => handleExtendTrial(user.id, 7)} className="px-2 py-1 bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 font-extrabold text-[8px] uppercase tracking-widest rounded-lg">+7 Trial</button>
+                            <button onClick={() => handleSubscriptionOverride(user.id, "active")} className="px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-extrabold text-[8px] uppercase tracking-widest rounded-lg">Sub On</button>
+                            <button onClick={() => handleSubscriptionOverride(user.id, "cancelled")} className="px-2 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-300 font-extrabold text-[8px] uppercase tracking-widest rounded-lg">Cancel</button>
                           </div>
 
                           {/* Lock / Unlock Toggle action buttons */}

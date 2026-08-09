@@ -4,11 +4,9 @@ import { toast } from "sonner";
 import GooglePayButton from "../components/payments/GooglePayButton";
 import { useUser } from "../lib/UserContext";
 
-const PLAN = {
-  name: "Neuro NetWorks Platform Access",
-  priceUSD: 3.99,
-  interval: "monthly recurring",
-};
+import { PREMIUM_PLAN } from "../lib/subscription";
+
+const PLAN = PREMIUM_PLAN;
 
 type PaymentMethod = "stripe" | "paypal" | "google-pay";
 
@@ -18,9 +16,6 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false);
   const [receipt, setReceipt] = useState<any>(null);
   const [cardName, setCardName] = useState(profile.full_name || "");
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvc, setCvc] = useState("");
   const [paypalEmail, setPaypalEmail] = useState(user?.email || profile.email || "");
 
   const activateSubscription = (nextReceipt: any) => {
@@ -29,11 +24,15 @@ export default function Checkout() {
     const subscription = {
       subscription_status: "active",
       subscription_plan: PLAN.name,
-      subscription_amount_usd: PLAN.priceUSD,
+      subscription_amount_cents: PLAN.priceCents,
       subscription_interval: PLAN.interval,
       subscription_provider: nextReceipt.provider,
       subscription_receipt_id: nextReceipt.id,
-      subscription_active_until: activeUntil.toISOString(),
+      provider_subscription_id: nextReceipt.providerSubscriptionId || nextReceipt.id,
+      subscription_transaction_id: nextReceipt.transactionId || nextReceipt.id,
+      subscription_started_at: nextReceipt.startedAt,
+      next_billing_date: nextReceipt.nextBillingDate || activeUntil.toISOString(),
+      subscription_active_until: nextReceipt.nextBillingDate || activeUntil.toISOString(),
     };
 
     localStorage.setItem(`subscription_${user?.id || "guest"}`, JSON.stringify(subscription));
@@ -45,8 +44,8 @@ export default function Checkout() {
   const submitPayment = async (provider: "stripe" | "paypal") => {
     setLoading(true);
     try {
-      if (provider === "stripe" && (!cardName || cardNumber.replace(/\s/g, "").length < 12 || !expiry || !cvc)) {
-        throw new Error("Enter the Stripe card details to continue.");
+      if (provider === "stripe" && !cardName) {
+        throw new Error("Enter the billing name to continue. Card details are collected by Stripe Checkout in production.");
       }
       if (provider === "paypal" && !paypalEmail.includes("@")) {
         throw new Error("Enter a valid PayPal email address.");
@@ -60,7 +59,8 @@ export default function Checkout() {
           email: user?.email || profile.email,
           payerEmail: provider === "paypal" ? paypalEmail : user?.email || profile.email,
           planName: PLAN.name,
-          amountUSD: PLAN.priceUSD,
+          amountCents: PLAN.priceCents,
+          currency: PLAN.currency,
           interval: PLAN.interval,
         }),
       });
@@ -84,7 +84,7 @@ export default function Checkout() {
         <div className="rounded-3xl border border-emerald-400/20 bg-emerald-400/10 p-6 text-center">
           <CheckCircle2 className="mx-auto mb-4 h-14 w-14 text-emerald-300" />
           <h1 className="text-2xl font-black tracking-tight text-white">Access unlocked</h1>
-          <p className="mt-2 text-sm text-white/60">Your $3.99 monthly subscription is active.</p>
+          <p className="mt-2 text-sm text-white/60">Your R250 monthly subscription is active.</p>
           <div className="mt-5 rounded-2xl bg-black/30 p-4 text-left text-xs text-white/70 space-y-2">
             <p><strong className="text-white">Plan:</strong> {PLAN.name}</p>
             <p><strong className="text-white">Payment:</strong> {receipt.provider}</p>
@@ -103,7 +103,7 @@ export default function Checkout() {
       <div>
         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-300">Subscription required</p>
         <h1 className="mt-2 text-3xl font-light tracking-tighter text-white">Unlock Neuro NetWorks</h1>
-        <p className="mt-2 text-sm text-white/60">Subscribe after sign up before accessing platform features.</p>
+        <p className="mt-2 text-sm text-white/60">Your 15-day free trial has expired. Subscribe for R250/month to continue enjoying full access to all features.</p>
       </div>
 
       <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/10 p-5">
@@ -113,7 +113,7 @@ export default function Checkout() {
             <p className="mt-1 text-xs text-white/55">Full networking, vault, AI Studio, QR, analytics, and team features.</p>
           </div>
           <div className="text-right">
-            <div className="text-3xl font-black text-white">$3.99</div>
+            <div className="text-3xl font-black text-white">R250</div>
             <div className="text-[10px] uppercase tracking-widest text-white/45">monthly</div>
           </div>
         </div>
@@ -140,12 +140,8 @@ export default function Checkout() {
         {method === "stripe" && (
           <div className="space-y-3">
             <h3 className="font-bold text-white">Stripe card subscription</h3>
-            <input value={cardName} onChange={(e) => setCardName(e.target.value)} placeholder="Name on card" className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400" />
-            <input value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} placeholder="Card number" inputMode="numeric" className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400" />
-            <div className="grid grid-cols-2 gap-3">
-              <input value={expiry} onChange={(e) => setExpiry(e.target.value)} placeholder="MM/YY" className="rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400" />
-              <input value={cvc} onChange={(e) => setCvc(e.target.value)} placeholder="CVC" inputMode="numeric" className="rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400" />
-            </div>
+<input value={cardName} onChange={(e) => setCardName(e.target.value)} placeholder="Billing name" className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400" />
+            <p className="text-[11px] leading-relaxed text-white/45">Card numbers are never stored by Neuro NetWorks. In production this button creates a Stripe Billing Checkout Session using tokenized payment details.</p>
             <button disabled={loading} onClick={() => submitPayment("stripe")} className="w-full rounded-xl bg-cyan-400 py-3 text-xs font-black uppercase tracking-widest text-black disabled:opacity-50">
               {loading ? "Processing…" : "Subscribe with Stripe"}
             </button>
@@ -171,10 +167,10 @@ export default function Checkout() {
 
         <div className="flex gap-2 rounded-2xl border border-white/10 bg-black/20 p-3 text-[11px] leading-relaxed text-white/50">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
-          <p><strong className="text-white">Secure recurring access:</strong> payment is required after sign up and before full platform features. Replace the demo endpoints with live Stripe, PayPal, and Google Pay credentials before production.</p>
+          <p><strong className="text-white">Secure recurring access:</strong> server-side status is verified before premium access. Replace the demo endpoints with live Stripe Billing, PayPal Subscriptions, and Google Pay processor credentials before production.</p>
         </div>
         <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-white/35">
-          <Lock className="h-3 w-3" /> TEST MODE · USD · Monthly recurring
+          <Lock className="h-3 w-3" /> TEST MODE · ZAR · Monthly auto-renewing
         </div>
       </div>
     </div>
