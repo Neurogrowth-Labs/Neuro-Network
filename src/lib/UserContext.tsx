@@ -3,6 +3,7 @@ import { supabase } from './supabase';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { ensureUUID } from './uuid';
 import { saveProfileOffline, getProfileOffline } from './offlineStorage';
+import { createTrialWindow } from './subscription';
 
 export const defaultUser = {
   full_name: "",
@@ -24,13 +25,21 @@ export const defaultUser = {
 export type UserProfile = typeof defaultUser & {
   id?: string;
   role?: 'super_admin' | 'user';
-  subscription_status?: 'active' | 'inactive';
+  trial_started_at?: string;
+  trial_expires_at?: string;
+  subscription_status?: 'trial' | 'active' | 'expired' | 'cancelled' | 'past_due' | 'inactive';
   subscription_plan?: string;
-  subscription_amount_usd?: number;
+  subscription_amount_cents?: number;
   subscription_interval?: string;
   subscription_provider?: string;
   subscription_receipt_id?: string;
+  provider_subscription_id?: string;
+  subscription_transaction_id?: string;
+  subscription_started_at?: string;
+  next_billing_date?: string;
   subscription_active_until?: string;
+  grace_period_ends_at?: string;
+  cancelled_at?: string;
 };
 
 interface UserContextType {
@@ -201,14 +210,20 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           console.error("Subscription cache read error:", e);
         }
 
+        const trialWindow = createTrialWindow(new Date(supabaseProfile?.created_at || cachedProfile?.created_at || Date.now()));
+
         setProfile({
           ...defaultUser,
+          ...trialWindow,
           ...(cachedProfile || {}),
           ...(offlineCachedProfile || {}),
           ...(supabaseProfile || {}),
           ...(cachedSubscription || {}),
           id: user.id,
           email: user.email || defaultUser.email,
+          trial_started_at: supabaseProfile?.trial_started_at || cachedSubscription?.trial_started_at || trialWindow.trial_started_at,
+          trial_expires_at: supabaseProfile?.trial_expires_at || cachedSubscription?.trial_expires_at || trialWindow.trial_expires_at,
+          subscription_status: supabaseProfile?.subscription_status || cachedSubscription?.subscription_status || 'trial',
           role: supabaseProfile?.role || offlineCachedProfile?.role || cachedProfile?.role || ((user.email === 'lusimadio12@gmail.com' || user.email === 'alex@neuronets.work' || user.email === 'simao@neurogrowthlabs.co.za') ? 'super_admin' : 'user'),
         });
       } catch (error) {
@@ -263,6 +278,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           twitter: nextProfile.twitter,
           industry: nextProfile.industry,
           avatar_url: nextProfile.avatar_url || '',
+          trial_started_at: nextProfile.trial_started_at,
+          trial_expires_at: nextProfile.trial_expires_at,
+          subscription_status: nextProfile.subscription_status || 'trial',
+          subscription_plan: nextProfile.subscription_plan || 'Premium Monthly',
+          subscription_provider: nextProfile.subscription_provider,
+          provider_subscription_id: nextProfile.provider_subscription_id,
+          subscription_transaction_id: nextProfile.subscription_transaction_id,
+          subscription_started_at: nextProfile.subscription_started_at,
+          next_billing_date: nextProfile.next_billing_date,
+          subscription_active_until: nextProfile.subscription_active_until,
+          grace_period_ends_at: nextProfile.grace_period_ends_at,
+          cancelled_at: nextProfile.cancelled_at,
           updated_at: new Date().toISOString()
         });
       if (error && error.code !== '42501') {

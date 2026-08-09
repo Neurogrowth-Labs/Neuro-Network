@@ -36,17 +36,27 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
-  const buildSubscriptionReceipt = (provider: string, body: any) => ({
-    id: `${provider}_sub_${randomUUID()}`,
-    provider,
-    status: "active",
-    planName: body.planName || "Neuro NetWorks Platform Access",
-    amountUSD: Number(body.amountUSD || 3.99),
-    interval: body.interval || "monthly recurring",
-    payerEmail: body.payerEmail || body.email,
-    startedAt: new Date().toISOString(),
-    mode: "test",
-  });
+  const buildSubscriptionReceipt = (provider: string, body: any) => {
+    const startedAt = new Date();
+    const nextBillingDate = new Date(startedAt);
+    nextBillingDate.setDate(nextBillingDate.getDate() + 30);
+
+    return {
+      id: `${provider}_sub_${randomUUID()}`,
+      provider,
+      status: "active",
+      planName: body.planName || "Premium Monthly",
+      amountCents: Number(body.amountCents || 25000),
+      currency: body.currency || "ZAR",
+      interval: body.interval || "monthly",
+      payerEmail: body.payerEmail || body.email,
+      transactionId: `${provider}_txn_${randomUUID()}`,
+      providerSubscriptionId: `${provider}_billing_${randomUUID()}`,
+      startedAt: startedAt.toISOString(),
+      nextBillingDate: nextBillingDate.toISOString(),
+      mode: "test",
+    };
+  };
 
   app.post("/api/payments/stripe-subscription", (req, res) => {
     res.json(buildSubscriptionReceipt("stripe", req.body));
@@ -54,6 +64,20 @@ async function startServer() {
 
   app.post("/api/payments/paypal-subscription", (req, res) => {
     res.json(buildSubscriptionReceipt("paypal", req.body));
+  });
+
+  app.get("/api/subscriptions/validate", (req, res) => {
+    const trialExpiresAt = req.query.trial_expires_at ? new Date(String(req.query.trial_expires_at)).getTime() : 0;
+    const activeUntil = req.query.subscription_active_until ? new Date(String(req.query.subscription_active_until)).getTime() : 0;
+    const status = String(req.query.subscription_status || "trial");
+    const now = Date.now();
+    const access = status === "active" && activeUntil > now || status === "trial" && trialExpiresAt > now;
+    res.json({ access, status: access ? status : "expired" });
+  });
+
+  app.post("/api/payments/webhook/:provider", (req, res) => {
+    // Production: verify Stripe/PayPal signatures, persist event idempotently, then update Supabase subscription rows.
+    res.json({ received: true, provider: req.params.provider });
   });
 
   app.post("/api/payments/google-pay-subscription", (req, res) => {
