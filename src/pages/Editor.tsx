@@ -123,12 +123,12 @@ interface ChatMessage {
 
 export default function Editor() {
   const { profile, setProfile, loading: userLoading, isSaving } = useUser();
-  const [card, setCard] = useState(profile || MY_CARD);
+  const [card, setCard] = useState({ ...MY_CARD, ...profile });
   
   // Synchronize card state with user profile once it loads or updates
   useEffect(() => {
     if (profile) {
-      setCard(profile);
+      setCard({ ...MY_CARD, ...profile });
     }
   }, [profile]);
 

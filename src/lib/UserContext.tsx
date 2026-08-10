@@ -20,11 +20,18 @@ export const defaultUser = {
   industry: "",
   avatar_url: "",
   banner_url: "",
+  profile_photo: "",
+  status: "Active" as const,
+  kyc_status: "not_started" as const,
+  kyc_reference: "",
 };
 
 export type UserProfile = typeof defaultUser & {
   id?: string;
-  role?: 'super_admin' | 'user';
+  role?: 'super_admin' | 'executive' | 'manager' | 'individual' | 'user';
+  status?: 'Active' | 'Suspended' | 'Pending';
+  kyc_status?: 'not_started' | 'pending' | 'verified' | 'rejected';
+  kyc_reference?: string;
   trial_started_at?: string;
   trial_expires_at?: string;
   subscription_status?: 'trial' | 'active' | 'expired' | 'cancelled' | 'past_due' | 'inactive';
@@ -277,7 +284,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           linkedin: nextProfile.linkedin,
           twitter: nextProfile.twitter,
           industry: nextProfile.industry,
-          avatar_url: nextProfile.avatar_url || '',
+          avatar_url: nextProfile.avatar_url || nextProfile.profile_photo || '',
+          banner_url: nextProfile.banner_url || '',
+          status: nextProfile.status || 'Active',
+          kyc_status: nextProfile.kyc_status || 'not_started',
+          kyc_reference: nextProfile.kyc_reference || '',
           trial_started_at: nextProfile.trial_started_at,
           trial_expires_at: nextProfile.trial_expires_at,
           subscription_status: nextProfile.subscription_status || 'trial',

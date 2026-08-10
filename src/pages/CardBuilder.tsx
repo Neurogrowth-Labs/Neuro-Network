@@ -54,7 +54,7 @@ export default function CardBuilder() {
       </div>
 
       <div className="relative">
-        <CardPreview card={{ ...profile, profile_photo: profile.avatar_url || profile.profile_photo }} />
+        <CardPreview card={profile} />
       </div>
 
       <div className="bg-white/[0.02] border border-white/5 rounded-xl p-5 space-y-6">
