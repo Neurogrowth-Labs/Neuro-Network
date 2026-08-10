@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { Zap, Loader2, Mail, Lock, User, Globe, Shield, Terminal } from 'lucide-react';
+import { Zap, Loader2, Mail, Lock, User, Globe, Shield, Terminal, Fingerprint, BadgeCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Auth() {
@@ -9,6 +9,8 @@ export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [enableBiometric, setEnableBiometric] = useState(false);
+  const [kycConsent, setKycConsent] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Futuristic 3D Connecting Globe Canvas background
@@ -275,6 +277,8 @@ export default function Auth() {
               options: {
                 data: {
                   full_name: fullName || "Simao - Super Admin",
+                  biometric_opt_in: enableBiometric,
+                  kyc_consent: kycConsent,
                 }
               }
             });
@@ -316,6 +320,8 @@ export default function Auth() {
           options: {
             data: {
               full_name: fullName,
+              biometric_opt_in: enableBiometric,
+              kyc_consent: kycConsent,
             }
           }
         });
@@ -427,6 +433,27 @@ export default function Auth() {
               placeholder="SECRET_TOKEN"
             />
           </div>
+
+
+
+          {isSignUp && (
+            <div className="grid grid-cols-1 gap-3 animate-slide-in">
+              <label className="flex items-start gap-3 rounded-xl border border-white/10 bg-black/40 p-3 cursor-pointer hover:border-cyan-500/40 transition-colors">
+                <input type="checkbox" checked={enableBiometric} onChange={(e) => setEnableBiometric(e.target.checked)} className="mt-1 accent-cyan-400" />
+                <span className="text-left">
+                  <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-cyan-300"><Fingerprint className="w-3.5 h-3.5" /> Enable biometric sign-in prompt</span>
+                  <span className="block text-[10px] text-white/45 mt-1">Optional WebAuthn fingerprint/face unlock setup. You can skip each login prompt.</span>
+                </span>
+              </label>
+              <label className="flex items-start gap-3 rounded-xl border border-white/10 bg-black/40 p-3 cursor-pointer hover:border-emerald-500/40 transition-colors">
+                <input type="checkbox" checked={kycConsent} onChange={(e) => setKycConsent(e.target.checked)} className="mt-1 accent-emerald-400" />
+                <span className="text-left">
+                  <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-300"><BadgeCheck className="w-3.5 h-3.5" /> Start KYC/KYB verification</span>
+                  <span className="block text-[10px] text-white/45 mt-1">Open-source compatible KYC record is created after signup for enhanced access security.</span>
+                </span>
+              </label>
+            </div>
+          )}
 
           <button
             type="submit"

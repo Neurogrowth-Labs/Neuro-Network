@@ -301,10 +301,18 @@ function TopNav() {
 }
 
 import Auth from "./components/Auth";
+import BiometricVerification from "./components/BiometricVerification";
 
 function AppContent() {
   const { user, loading, profile } = useUser();
   const { maintenanceMode } = useAdminState();
+  const [showLoginBiometric, setShowLoginBiometric] = useState(false);
+
+  useEffect(() => {
+    if (user && !loading) {
+      setShowLoginBiometric(true);
+    }
+  }, [user, loading]);
 
   if (loading) {
     return (
@@ -325,7 +333,7 @@ function AppContent() {
   }
 
   const isAdmin = profile?.role === 'super_admin' || user?.email === 'lusimadio12@gmail.com' || user?.email === 'simao@neurogrowthlabs.co.za';
-  const isSuspended = profile?.status === "Suspended";
+  const isSuspended = (profile?.status as string | undefined) === "Suspended";
 
   if (isSuspended) {
     return (
@@ -385,6 +393,16 @@ function AppContent() {
       {/* Mobile frame container */}
       <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative glass-panel shadow-2xl">
         <TopNav />
+        {showLoginBiometric && (
+          <div className="absolute inset-0 z-[70] bg-black/80 backdrop-blur-xl overflow-y-auto">
+            <div className="sticky top-0 z-10 flex justify-end p-4">
+              <button onClick={() => setShowLoginBiometric(false)} className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-white">
+                Skip for now
+              </button>
+            </div>
+            <BiometricVerification sectionName="Login Security" onUnlockSuccess={() => setShowLoginBiometric(false)} />
+          </div>
+        )}
         <div className="h-full overflow-y-auto pt-16 pb-6 scrollbar-hide">
           <Routes>
             <Route path="/" element={<Dashboard />} />

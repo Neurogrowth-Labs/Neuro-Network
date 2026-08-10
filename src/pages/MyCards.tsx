@@ -61,7 +61,7 @@ export default function MyCards() {
           </div>
 
           <div className="pointer-events-none mb-4">
-             <CardPreview card={{ ...formData, profile_photo: formData.avatar_url || formData.profile_photo }} compact={true} />
+             <CardPreview card={formData} compact={true} />
           </div>
 
           {isEditing ? (

@@ -27,7 +27,7 @@ export function MobileDropdown({ trigger, items = [], title }: any) {
   if (!isMobile) {
     return (
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+        <DropdownMenuTrigger render={trigger} />
         <DropdownMenuContent className="bg-[#1a1a2e] border-white/10 text-white text-sm">
           {items.map((item: any, i: number) =>
             item.separator ? (

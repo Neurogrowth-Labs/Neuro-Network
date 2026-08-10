@@ -69,6 +69,8 @@ const isDarkTemplate = (template: string) => !["minimal", "healthcare"].includes
 
 export default function CardPreview({ card, compact = false }: any) {
   const style = templateStyles[card.template] || templateStyles.luxury_gold;
+  const profileImage = card.profile_photo || card.avatar_url || "";
+  const coverImage = card.banner_url || card.cover_photo || "";
   const dark = isDarkTemplate(card.template);
   const textColor = dark ? "text-white" : "text-slate-900";
   const subColor = dark ? "text-white/60" : "text-slate-500";
@@ -81,9 +83,9 @@ export default function CardPreview({ card, compact = false }: any) {
       >
         <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="relative flex items-center gap-4">
-          {card.profile_photo ? (
+          {profileImage ? (
             <img
-              src={card.profile_photo}
+              src={profileImage}
               className="w-12 h-12 rounded-xl object-cover ring-1 ring-white/10 flex-shrink-0"
               alt=""
             />
@@ -132,8 +134,8 @@ export default function CardPreview({ card, compact = false }: any) {
       className={`${style.bg} rounded-3xl border ${style.border} overflow-hidden max-w-sm mx-auto shadow-2xl`}
     >
       <div className="h-28 relative overflow-hidden">
-        {card.banner_url ? (
-          <img src={card.banner_url} alt="Banner" className="absolute inset-0 w-full h-full object-cover" />
+        {coverImage ? (
+          <img src={coverImage} alt="Banner" className="absolute inset-0 w-full h-full object-cover" />
         ) : (
           <div
             className="absolute inset-0"
@@ -152,9 +154,9 @@ export default function CardPreview({ card, compact = false }: any) {
       </div>
 
       <div className="px-8 -mt-14 relative flex justify-between items-end">
-        {card.profile_photo ? (
+        {profileImage ? (
           <img
-            src={card.profile_photo}
+            src={profileImage}
             className="w-24 h-24 rounded-2xl object-cover ring-4 ring-[#0a0a0c] shadow-xl"
             alt=""
           />
