@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { ArrowRight, Eye, Fingerprint, Lock, Mail, User } from 'lucide-react';
 import { toast } from 'sonner';
 import BiometricVerification from './BiometricVerification';
 
@@ -9,7 +8,7 @@ const VISIT_KEY = 'neuro_networks_auth_awakened';
 export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [authMode, setAuthMode] = useState<'sign-in' | 'sign-up' | 'recover'>('sign-in');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -163,7 +162,6 @@ export default function Auth() {
         const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName } } });
         if (error) throw error;
         toast.success('Account created! You can now sign in.');
-        setIsSignUp(false);
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -187,35 +185,12 @@ export default function Auth() {
             <img src="/icon.png" alt="Neuro Networks logo" onError={(e) => e.currentTarget.src = '/logo.png'} className="h-10 w-10 rounded-xl object-cover" />
           </div>
           <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-cyan-200/70">Neuro Networks</p>
-          <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">{isSignUp ? 'Create your neural identity' : 'Welcome back'}</h1>
-          <p className="mt-2 text-sm text-white/55">{isSignUp ? 'Set up your account to enter Neuro Networks.' : 'Continue your neural journey.'}</p>
-        </div>
-
-        <form onSubmit={handleAuth} className="space-y-4">
-          {isSignUp && <AuthInput icon={<User />} label="Full name" value={fullName} onChange={setFullName} placeholder="Ada Lovelace" required />}
-          <AuthInput icon={<Mail />} label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" required />
-          <AuthInput icon={<Lock />} label="Password" type={showPassword ? 'text' : 'password'} value={password} onChange={setPassword} placeholder="••••••••••••" required right={<button type="button" onClick={() => setShowPassword(!showPassword)} className="text-white/45 hover:text-cyan-200"><Eye className="h-4 w-4" /></button>} />
-          {isSignUp && <AuthInput icon={<Lock />} label="Confirm password" type="password" value={confirmPassword} onChange={setConfirmPassword} placeholder="••••••••••••" required />}
-
-          {!isSignUp && <div className="text-right"><button type="button" className="text-xs font-medium text-cyan-200/70 hover:text-cyan-100">Forgot password?</button></div>}
-
           <button type="submit" disabled={loading} className="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-400 text-sm font-bold text-slate-950 shadow-[0_0_26px_rgba(34,211,238,0.24)] transition hover:shadow-[0_0_36px_rgba(124,58,237,0.35)] disabled:opacity-60">
             {loading ? 'Securing channel' : isSignUp ? 'Create my account' : 'Sign in'} <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
           </button>
         </form>
+        )}
 
-        <div className="my-5 flex items-center gap-3 text-[11px] uppercase tracking-[0.28em] text-white/28"><span className="h-px flex-1 bg-white/10" />or<span className="h-px flex-1 bg-white/10" /></div>
-
-        <button type="button" onClick={() => setShowBiometric(true)} className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] text-xs font-semibold text-white/72 transition hover:border-cyan-300/35 hover:bg-cyan-300/10 hover:text-white">
-          <Fingerprint className="h-4 w-4 text-cyan-200" /> {isSignUp ? 'Sign up with Biometric' : 'Continue with Biometric'}
-        </button>
-
-        {isSignUp && <div className="mt-5 flex items-center justify-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-white/45"><span className="text-cyan-300">● Account</span><span>—</span><span>○ Profile</span><span>—</span><span>○ Network</span></div>}
-
-        <div className="mt-6 text-center text-sm text-white/48">
-          {isSignUp ? 'Already connected?' : "Don't have an account?"}
-          <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="ml-2 font-semibold text-cyan-200 hover:text-white">{isSignUp ? 'Sign in' : 'Create account'}</button>
-        </div>
       </div>
 
       {showBiometric && (
