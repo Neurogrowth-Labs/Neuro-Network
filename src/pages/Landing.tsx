@@ -55,7 +55,7 @@ export default function Landing() {
   const faqItems = [
     {
       q: "What is the core of Neuro NetWorks?",
-      a: "Neuro NetWorks is a high-fidelity intelligence and design catalyst. It weaves together secure AI generation pipelines (powered by Gemini and Imagen) with your existing Google Workspace channels (Google Chat and Google Meet) for real-time collaboration and secure brand card sharing."
+      a: "Neuro NetWorks is a high-fidelity intelligence and design catalyst. It weaves together secure AI generation pipelines (powered by secure creative services) with your existing Google Workspace channels (Google Chat and Google Meet) for real-time collaboration and secure brand card sharing."
     },
     {
       q: "How does the $2.99 subscription work?",
@@ -112,7 +112,7 @@ export default function Landing() {
             <div>
               <h3 className="text-xs font-bold text-white uppercase tracking-wide">AI Design Studio</h3>
               <p className="text-[11px] text-white/50 mt-1 leading-relaxed">
-                Render studio-quality Imagen designs, search references in real-time, and run dynamic speech-to-text transcriptions with Gemini integrations.
+                Render studio-quality Imagen designs, search references in real-time, and run dynamic speech-to-text transcriptions with voice integrations.
               </p>
             </div>
           </div>
@@ -136,7 +136,7 @@ export default function Landing() {
             <div>
               <h3 className="text-xs font-bold text-white uppercase tracking-wide">Double-Vault Encryption</h3>
               <p className="text-[11px] text-white/50 mt-1 leading-relaxed">
-                Store private comments, biometric templates, and corporate assets with robust, certified Firebase Security parameters.
+                Store private comments, corporate assets with robust, certified Firebase Security parameters.
               </p>
             </div>
           </div>
