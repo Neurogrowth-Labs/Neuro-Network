@@ -6,10 +6,14 @@ import { useUser } from "../lib/UserContext";
 interface BiometricVerificationProps {
   onUnlockSuccess: () => void;
   sectionName?: string;
+  userEmail?: string;
+  displayName?: string;
 }
 
-export default function BiometricVerification({ onUnlockSuccess, sectionName = "Smart Vault" }: BiometricVerificationProps) {
+export default function BiometricVerification({ onUnlockSuccess, sectionName = "Smart Vault", userEmail, displayName }: BiometricVerificationProps) {
   const { profile } = useUser();
+  const biometricEmail = userEmail || profile?.email || "";
+  const biometricDisplayName = displayName || profile?.full_name || biometricEmail;
   const [status, setStatus] = useState<"idle" | "scanning" | "success" | "error">("idle");
   const [mode, setMode] = useState<"register" | "authenticate">("authenticate");
   const [message, setMessage] = useState("Place your finger on the sensor or touch SCAN to authenticate");
@@ -20,14 +24,14 @@ export default function BiometricVerification({ onUnlockSuccess, sectionName = "
   useEffect(() => {
     async function loadCredential() {
       // Skip if email is empty or not set
-      if (!profile.email || profile.email.trim() === "") return;
+      if (!biometricEmail || biometricEmail.trim() === "") return;
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/db/BiometricCredential?user_email=${encodeURIComponent(profile.email)}`);
+        const res = await fetch(`/api/db/BiometricCredential?user_email=${encodeURIComponent(biometricEmail)}`);
         if (res.ok) {
           const data = await res.json();
           // Find if there is an active credential for this user
-          const cred = data.find((c: any) => c.user_email === profile.email);
+          const cred = data.find((c: any) => c.user_email === biometricEmail);
           if (cred) {
             setRegisteredCred(cred);
             setMode("authenticate");
@@ -47,7 +51,7 @@ export default function BiometricVerification({ onUnlockSuccess, sectionName = "
       }
     }
     loadCredential();
-  }, [profile.email]);
+  }, [biometricEmail]);
 
   // Handle WebAuthn fingerprint scan
   const handleFingerprintScan = async () => {
@@ -79,8 +83,8 @@ export default function BiometricVerification({ onUnlockSuccess, sectionName = "
           },
           user: {
             id: userID,
-            name: profile.email,
-            displayName: profile.full_name || profile.email,
+            name: biometricEmail,
+            displayName: biometricDisplayName,
           },
           pubKeyCredParams: [
             { type: "public-key", alg: -7 }, // ES256
@@ -100,7 +104,7 @@ export default function BiometricVerification({ onUnlockSuccess, sectionName = "
         if (credential) {
           // Success with real WebAuthn!
           const newCredPayload = {
-            user_email: profile.email,
+            user_email: biometricEmail,
             credential_id: credential.id,
             type: credential.type,
             raw_id: btoa(String.fromCharCode(...new Uint8Array((credential as any).rawId))),
@@ -177,7 +181,7 @@ export default function BiometricVerification({ onUnlockSuccess, sectionName = "
   };
 
   const handleResetBiometrics = async () => {
-    if (!profile.email || !registeredCred) return;
+    if (!biometricEmail || !registeredCred) return;
     setStatus("idle");
     setIsLoading(true);
     try {

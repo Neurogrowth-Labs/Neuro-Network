@@ -146,7 +146,7 @@ function TopNav() {
   }, [profile?.id]);
 
   return (
-    <div className="fixed top-0 w-full md:w-[400px] h-16 glass-panel border-x-0 border-t-0 z-50 flex items-center justify-between px-4">
+    <div className="fixed top-0 w-full md:w-[400px] h-16 border-b border-white/5 bg-transparent z-50 flex items-center justify-between px-4 backdrop-blur-md">
       <div className="flex items-center gap-3">
         <button 
           onClick={() => {
@@ -159,16 +159,11 @@ function TopNav() {
         </button>
         <div className="flex items-center gap-2">
           <img src="/icon.png" alt="Logo" onError={(e) => e.currentTarget.src = '/logo.png'} className="w-8 h-8 rounded-lg drop-shadow-[0_0_8px_rgba(59,130,246,0.3)] object-cover bg-white p-0.5" />
-          <div className="flex flex-col">
-            <span className="font-bold text-sm tracking-tighter uppercase text-white truncate max-w-[100px] sm:max-w-none leading-none">
-              Neuro NetWorks
+          {!isOnline && (
+            <span className="text-[8px] text-amber-400 font-mono tracking-widest uppercase animate-pulse font-bold">
+              Offline (IDB Cache)
             </span>
-            {!isOnline && (
-              <span className="text-[8px] text-amber-400 font-mono tracking-widest uppercase animate-pulse font-bold mt-0.5">
-                Offline (IDB Cache)
-              </span>
-            )}
-          </div>
+          )}
         </div>
         <div className="hidden sm:block">
           <WorkspaceSelector />
@@ -284,19 +279,10 @@ function TopNav() {
 }
 
 import Auth from "./components/Auth";
-import BiometricVerification from "./components/BiometricVerification";
 
 function AppContent() {
   const { user, loading, profile } = useUser();
   const { maintenanceMode } = useAdminState();
-  const [showLoginBiometric, setShowLoginBiometric] = useState(false);
-
-  useEffect(() => {
-    if (user && !loading) {
-      setShowLoginBiometric(true);
-    }
-  }, [user, loading]);
-
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0c] flex items-center justify-center">
@@ -376,16 +362,6 @@ function AppContent() {
       {/* Mobile frame container */}
       <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative glass-panel shadow-2xl">
         <TopNav />
-        {showLoginBiometric && (
-          <div className="absolute inset-0 z-[70] bg-black/80 backdrop-blur-xl overflow-y-auto">
-            <div className="sticky top-0 z-10 flex justify-end p-4">
-              <button onClick={() => setShowLoginBiometric(false)} className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-white">
-                Skip for now
-              </button>
-            </div>
-            <BiometricVerification sectionName="Login Security" onUnlockSuccess={() => setShowLoginBiometric(false)} />
-          </div>
-        )}
         <div className="h-full overflow-y-auto pt-16 pb-6 scrollbar-hide">
           <Routes>
             <Route path="/" element={<Dashboard />} />
