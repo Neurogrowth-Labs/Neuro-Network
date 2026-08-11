@@ -294,7 +294,7 @@ export default function Editor() {
         ...prev,
         {
           role: "assistant",
-          content: "I ran into a server communication speed hiccup. Please ensure your GEMINI_API_KEY is configured under Settings > Secrets, or try re-sending.",
+          content: "I ran into a server communication speed hiccup. Please ensure your AI service key is configured under Settings > Secrets, or try re-sending.",
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
@@ -333,7 +333,7 @@ export default function Editor() {
       toast.success("Design assets saved to your active cache!");
     } catch (err: any) {
       console.error(err);
-      toast.error("Unable to execute base image generation. Ensure your GEMINI_API_KEY is valid.");
+      toast.error("Unable to execute base image generation. Ensure your AI service key is valid.");
     } finally {
       setImageLoading(false);
     }
@@ -366,7 +366,7 @@ export default function Editor() {
           reader.onloadend = async () => {
             const base64Bytes = (reader.result as string).split(",")[1];
             
-            setAudioFeedbackText("Contacting transcription model via gemini-3.5-flash...");
+            setAudioFeedbackText("Contacting transcription model...");
             const transRes = await fetch("/api/ai/transcribe", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -517,7 +517,7 @@ export default function Editor() {
                 >
                   <div className="flex items-center gap-2">
                     <MessageSquare className="w-4 h-4 text-cyan-400" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Gemini Chatbot</span>
+                    <span className="text-xs font-bold uppercase tracking-wider">Chatbot</span>
                   </div>
                   <Bot className="w-3.5 h-3.5 text-white/30" />
                 </button>
@@ -577,7 +577,7 @@ export default function Editor() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-white/40 uppercase">Active Models</span>
-                  <span className="text-white">GEMINI 3.5, IMAGEN-4</span>
+                  <span className="text-white">CHAT, IMAGE</span>
                 </div>
               </div>
             </div>
@@ -587,12 +587,12 @@ export default function Editor() {
           <div className="md:col-span-8">
             <div className="bg-[#12121a] border border-white/10 rounded-2xl p-4 md:p-6 min-h-[500px] flex flex-col justify-between">
               
-              {/* PANEL VIEW A: GEMINI CHATBOT WITH SEARCH AND MAPS GROUNDING */}
+              {/* PANEL VIEW A: CHATBOT WITH SEARCH AND MAPS GROUNDING */}
               {playgroundTab === "chatbot" && (
                 <div className="flex-1 flex flex-col justify-between space-y-4 h-full" id="chatbot-workspace">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-4">
                     <div>
-                      <h2 className="text-md font-bold uppercase tracking-wider text-white">Gemini Conversational Space</h2>
+                      <h2 className="text-md font-bold uppercase tracking-wider text-white">Conversational Space</h2>
                       <p className="text-[10px] text-white/40 mt-0.5">Supports real-time search context grounding.</p>
                     </div>
                     
@@ -752,7 +752,7 @@ export default function Editor() {
                 <div className="flex-1 flex flex-col justify-between space-y-6" id="image-workspace">
                   <div className="border-b border-white/5 pb-4">
                     <h2 className="text-md font-bold uppercase tracking-wider text-white">AI Studio Artwork Core</h2>
-                    <p className="text-[10px] text-white/40 mt-0.5">Generate high-fidelity card backgrounds using gemini-2.5-flash-image models.</p>
+                    <p className="text-[10px] text-white/40 mt-0.5">Generate high-fidelity card backgrounds using image models.</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -871,7 +871,7 @@ export default function Editor() {
                 <div className="flex-1 flex flex-col justify-between space-y-6" id="audio-workspace">
                   <div className="border-b border-white/5 pb-4">
                     <h2 className="text-md font-bold uppercase tracking-wider text-white">Active Microphone Sandbox</h2>
-                    <p className="text-[10px] text-white/40 mt-0.5">Use your device microphone to record dynamic memos transcribing with gemini-3.5-flash.</p>
+                    <p className="text-[10px] text-white/40 mt-0.5">Use your device microphone to record dynamic memos with speech transcription.</p>
                   </div>
 
                   <div className="max-w-xl mx-auto w-full text-center space-y-6 py-6">

@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { MY_CARD } from "./Dashboard";
 import AddToCalendarButton from "../components/AddToCalendarButton";
-import BiometricVerification from "../components/BiometricVerification";
 import { supabase } from "@/lib/supabase";
 import { useUser } from "@/lib/UserContext";
 
@@ -37,13 +36,12 @@ const normalizeContact = (contact: any) => ({
 
 export default function Vault() {
   const { user } = useUser();
-  const [isUnlocked, setIsUnlocked] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [contacts, setContacts] = useState<any[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(false);
 
   useEffect(() => {
-    if (!isUnlocked || !user?.id) return;
+    if (!user?.id) return;
 
     let mounted = true;
     setLoadingContacts(true);
@@ -81,15 +79,8 @@ export default function Vault() {
       mounted = false;
       supabase.removeChannel(channel);
     };
-  }, [isUnlocked, user?.id]);
+  }, [user?.id]);
 
-  if (!isUnlocked) {
-    return (
-      <div className="p-6">
-        <BiometricVerification onUnlockSuccess={() => setIsUnlocked(true)} sectionName="Smart Vault" />
-      </div>
-    );
-  }
 
   return (
     <div className="p-6 space-y-6">

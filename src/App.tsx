@@ -58,7 +58,6 @@ import VoiceCall from "./pages/VoiceCall";
 const queryClient = new QueryClient();
 
 function TopNav() {
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [notifications, setNotifications] = useState<Array<{ id: string | number; type: string; text: string; time: string }>>([]);
@@ -68,7 +67,7 @@ function TopNav() {
   const tabs = [
     { path: "/", icon: QrCode, label: "Dashboard" },
     { path: "/vault", icon: Contact, label: "Vault" },
-    { path: "/editor", icon: Zap, label: "AI Studio" },
+    { path: "/editor", icon: Zap, label: "Studio" },
     { path: "/chat", icon: MessageSquare, label: "Google Chat" },
     { path: "/meet", icon: Video, label: "Google Meet" },
   ];
@@ -151,7 +150,6 @@ function TopNav() {
           onClick={() => {
             setShowMobileMenu(!showMobileMenu);
             setShowNotifications(false);
-            setShowProfileMenu(false);
           }}
           className="text-white/50 hover:text-white transition-colors p-1"
         >
@@ -193,6 +191,47 @@ function TopNav() {
               );
             })}
           </div>
+          <div className="border-t border-white/5 p-2 flex flex-col gap-1">
+            {isAdmin && (
+              <Link
+                to="/admin"
+                onClick={() => setShowMobileMenu(false)}
+                className="flex items-center gap-3 px-3 py-2 text-sm text-cyan-400 hover:text-cyan-300 hover:bg-white/5 rounded-lg transition-colors font-semibold"
+              >
+                <Shield className="w-4 h-4" /> Admin Console
+              </Link>
+            )}
+            <Link
+              to="/settings"
+              onClick={() => setShowMobileMenu(false)}
+              className="flex items-center gap-3 px-3 py-2 text-sm text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+            >
+              <UserIcon className="w-4 h-4" /> Edit Profile
+            </Link>
+            <Link
+              to="/my-cards"
+              onClick={() => setShowMobileMenu(false)}
+              className="flex items-center gap-3 px-3 py-2 text-sm text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+            >
+              <Contact className="w-4 h-4" /> Edit Cards
+            </Link>
+            <Link
+              to="/settings"
+              onClick={() => setShowMobileMenu(false)}
+              className="flex items-center gap-3 px-3 py-2 text-sm text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+            >
+              <SettingsIcon className="w-4 h-4" /> Settings
+            </Link>
+            <button
+              onClick={async () => {
+                await logout();
+                setShowMobileMenu(false);
+              }}
+              className="flex items-center w-full gap-3 px-3 py-2 text-sm text-red-500/80 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors text-left"
+            >
+              <Zap className="w-4 h-4" /> Sign Out
+            </button>
+          </div>
         </div>
       )}
 
@@ -201,7 +240,6 @@ function TopNav() {
           <button 
             onClick={() => {
               setShowNotifications(!showNotifications);
-              setShowProfileMenu(false);
             }} 
             className="relative text-white/50 hover:text-white transition-colors"
           >
@@ -237,66 +275,8 @@ function TopNav() {
             </div>
           )}
         </div>
-
-        <div className="relative">
-          <div
-            onClick={() => {
-              setShowProfileMenu(!showProfileMenu);
-              setShowNotifications(false);
-            }}
-            className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-black text-[10px] text-white/50 tracking-widest uppercase hover:bg-cyan-500/20 hover:text-cyan-400 hover:border-cyan-500/30 transition-all cursor-pointer"
-          >
-            {profile.full_name ? profile.full_name.substring(0, 2).toUpperCase() : 'ME'}
-          </div>
-
-          {showProfileMenu && (
-            <div className="absolute right-0 top-12 w-48 glass-menu rounded-xl overflow-hidden z-50">
-              <div className="p-2 flex flex-col gap-1">
-                {isAdmin && (
-                  <Link
-                    to="/admin"
-                    onClick={() => setShowProfileMenu(false)}
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-cyan-400 hover:text-cyan-300 hover:bg-white/5 rounded-lg transition-colors font-semibold border-b border-white/5 mb-1"
-                  >
-                    <Shield className="w-4 h-4" /> Admin Console
-                  </Link>
-                )}
-                <Link
-                  to="/settings"
-                  onClick={() => setShowProfileMenu(false)}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-                >
-                  <UserIcon className="w-4 h-4" /> Edit Profile
-                </Link>
-                <Link
-                  to="/my-cards"
-                  onClick={() => setShowProfileMenu(false)}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-                >
-                  <Contact className="w-4 h-4" /> Edit Cards
-                </Link>
-                <Link
-                  to="/settings"
-                  onClick={() => setShowProfileMenu(false)}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-                >
-                  <SettingsIcon className="w-4 h-4" /> Settings
-                </Link>
-                <button
-                  onClick={async () => {
-                    await logout();
-                    setShowProfileMenu(false);
-                  }}
-                  className="flex items-center w-full gap-2 px-3 py-2 text-sm text-red-500/80 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors text-left"
-                >
-                  <Zap className="w-4 h-4" /> Sign Out
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
-    </div>
   );
 }
 

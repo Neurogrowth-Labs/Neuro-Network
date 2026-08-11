@@ -31,7 +31,7 @@ export default function Scanner() {
     setScanning(true);
     setExtractedData(null);
     try {
-      // In a real app we would pass the image to Gemini Vision API
+      // In a real app we would pass the image to a vision API
       // Here we simulate standard business card extraction using LLM
       const res = await base44.integrations.Core.InvokeLLM({
         prompt: `Simulate an AI vision model extracting text from a business card image. Generate a realistic parsed contact:

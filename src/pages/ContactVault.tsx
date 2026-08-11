@@ -28,11 +28,9 @@ const normalizeContact = (contact: any) => ({
   contact_score: Number(contact.contact_score || 0),
 });
 
-import BiometricVerification from "../components/BiometricVerification";
 
 export default function ContactVault() {
   const { user } = useUser();
-  const [isUnlocked, setIsUnlocked] = useState(false);
   const [contacts, setContacts] = useState<any[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -42,7 +40,7 @@ export default function ContactVault() {
   const [showImportDialog, setShowImportDialog] = useState(false);
 
   useEffect(() => {
-    if (!isUnlocked || !user?.id) return;
+    if (!user?.id) return;
 
     let mounted = true;
     setLoadingContacts(true);
@@ -86,15 +84,8 @@ export default function ContactVault() {
       mounted = false;
       supabase.removeChannel(channel);
     };
-  }, [isUnlocked, user?.id]);
+  }, [user?.id]);
 
-  if (!isUnlocked) {
-    return (
-      <div className="p-6">
-        <BiometricVerification onUnlockSuccess={() => setIsUnlocked(true)} sectionName="Smart Vault" />
-      </div>
-    );
-  }
 
   const handleAddTag = (contactId: string) => {
     const tag = newTagInput[contactId]?.trim();
