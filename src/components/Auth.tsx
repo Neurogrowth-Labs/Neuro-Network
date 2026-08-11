@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, ArrowRight, Eye, Fingerprint, Lock, Mail, User } from 'lucide-react';
 import { toast } from 'sonner';
 import BiometricVerification from './BiometricVerification';
 
@@ -16,9 +15,6 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [showBiometric, setShowBiometric] = useState(false);
   const [returningVisit, setReturningVisit] = useState(false);
-  const [recoverySent, setRecoverySent] = useState(false);
-  const [recoveryCountdown, setRecoveryCountdown] = useState(0);
-  const [recoveryPulse, setRecoveryPulse] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -26,17 +22,6 @@ export default function Auth() {
     setReturningVisit(hasVisited);
     localStorage.setItem(VISIT_KEY, 'true');
   }, []);
-
-  const isSignUp = authMode === 'sign-up';
-  const isRecovering = authMode === 'recover';
-
-  useEffect(() => {
-    if (recoveryCountdown <= 0) return;
-    const timer = window.setInterval(() => {
-      setRecoveryCountdown((value) => Math.max(0, value - 1));
-    }, 1000);
-    return () => window.clearInterval(timer);
-  }, [recoveryCountdown]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -141,35 +126,6 @@ export default function Auth() {
     };
   }, [returningVisit]);
 
-
-  const maskEmail = (value: string) => {
-    const [name = '', domain = 'network'] = value.split('@');
-    if (!name || !domain) return 'your email';
-    return `${name.charAt(0)}•••••@${domain}`;
-  };
-
-  const handleRecovery = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setRecoveryPulse(true);
-
-    try {
-      await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/settings`,
-      });
-    } catch (err) {
-      console.warn('Password recovery request completed with a generic response:', err);
-    } finally {
-      setTimeout(() => {
-        setRecoverySent(true);
-        setRecoveryCountdown(42);
-        setRecoveryPulse(false);
-        setLoading(false);
-        toast.success('If an account matches that email, a recovery link has been sent.');
-      }, 900);
-    }
-  };
-
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSignUp && password !== confirmPassword) {
@@ -206,7 +162,6 @@ export default function Auth() {
         const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName } } });
         if (error) throw error;
         toast.success('Account created! You can now sign in.');
-        setAuthMode('sign-in');
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -230,72 +185,12 @@ export default function Auth() {
             <img src="/icon.png" alt="Neuro Networks logo" onError={(e) => e.currentTarget.src = '/logo.png'} className="h-10 w-10 rounded-xl object-cover" />
           </div>
           <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-cyan-200/70">Neuro Networks</p>
-          {!isSignUp && (
-            <>
-              <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">{isRecovering ? (recoverySent ? 'Recovery link sent' : 'Reconnect your access') : 'Welcome back'}</h1>
-              <p className="mt-2 text-sm text-white/55">{isRecovering ? (recoverySent ? 'We have sent a secure recovery link to' : "No worries. We'll help you get back into your network.") : 'Continue your neural journey.'}</p>
-              {isRecovering && recoverySent && <p className="mt-2 text-sm font-semibold text-cyan-100">{maskEmail(email)}</p>}
-            </>
-          )}
-        </div>
-
-        {isRecovering ? (
-          recoverySent ? (
-            <div className="space-y-5 text-center animate-fade-in">
-              <div className="mx-auto text-cyan-200 text-lg tracking-[0.35em]">·──◉──·</div>
-              <a href={`mailto:${email}`} className="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-400 text-sm font-bold text-slate-950 shadow-[0_0_26px_rgba(34,211,238,0.24)] transition hover:shadow-[0_0_36px_rgba(124,58,237,0.35)]">
-                Open email <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-              </a>
-              <div className="text-sm text-white/48">
-                Didn't receive it?{' '}
-                <button type="button" disabled={recoveryCountdown > 0 || loading} onClick={handleRecovery} className="font-semibold text-cyan-200 disabled:text-white/30">Resend email</button>
-                {recoveryCountdown > 0 && <p className="mt-2 text-xs text-white/35">Resend available in {recoveryCountdown}s</p>}
-              </div>
-              <button type="button" onClick={() => { setAuthMode('sign-in'); setRecoverySent(false); }} className="inline-flex items-center gap-2 text-xs font-semibold text-white/55 hover:text-white"><ArrowLeft className="h-3.5 w-3.5" /> Back to sign in</button>
-            </div>
-          ) : (
-            <form onSubmit={handleRecovery} className="space-y-5">
-              <div className="text-center text-cyan-200 text-lg tracking-[0.35em]">◉</div>
-              <p className="mx-auto max-w-xs text-center text-sm leading-6 text-white/55">Enter the email associated with your Neuro Networks account.</p>
-              <AuthInput icon={<Mail />} label="Email" type="email" value={email} onChange={setEmail} placeholder="name@example.com" required />
-              <button type="submit" disabled={loading} className={`group relative flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-violet-500 to-cyan-400 text-sm font-bold text-slate-950 shadow-[0_0_26px_rgba(34,211,238,0.24)] transition hover:shadow-[0_0_36px_rgba(124,58,237,0.35)] disabled:opacity-70 ${recoveryPulse ? 'animate-recovery-pulse' : ''}`}>
-                {loading ? 'Sending secure pulse' : 'Send recovery link'} <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-              </button>
-              {recoveryPulse && <div className="h-1 w-1 rounded-full bg-cyan-200 shadow-[0_0_18px_8px_rgba(34,211,238,0.35)] animate-recovery-node" />}
-              <button type="button" onClick={() => setAuthMode('sign-in')} className="mx-auto flex items-center gap-2 text-xs font-semibold text-white/55 hover:text-white"><ArrowLeft className="h-3.5 w-3.5" /> Back to sign in</button>
-            </form>
-          )
-        ) : (
-        <form onSubmit={handleAuth} className="space-y-4">
-          {isSignUp && <AuthInput icon={<User />} label="Full name" value={fullName} onChange={setFullName} placeholder="Ada Lovelace" required />}
-          <AuthInput icon={<Mail />} label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" required />
-          <AuthInput icon={<Lock />} label="Password" type={showPassword ? 'text' : 'password'} value={password} onChange={setPassword} placeholder="••••••••••••" required right={<button type="button" onClick={() => setShowPassword(!showPassword)} className="text-white/45 hover:text-cyan-200"><Eye className="h-4 w-4" /></button>} />
-          {isSignUp && <AuthInput icon={<Lock />} label="Confirm password" type="password" value={confirmPassword} onChange={setConfirmPassword} placeholder="••••••••••••" required />}
-
-          {!isSignUp && <div className="text-right"><button type="button" onClick={() => { setAuthMode('recover'); setRecoverySent(false); }} className="text-xs font-medium text-cyan-200/70 hover:text-cyan-100">Forgot password?</button></div>}
-
           <button type="submit" disabled={loading} className="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-400 text-sm font-bold text-slate-950 shadow-[0_0_26px_rgba(34,211,238,0.24)] transition hover:shadow-[0_0_36px_rgba(124,58,237,0.35)] disabled:opacity-60">
             {loading ? 'Securing channel' : isSignUp ? 'Create my account' : 'Sign in'} <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
           </button>
         </form>
         )}
 
-        {!isRecovering && <div className="my-5 flex items-center gap-3 text-[11px] uppercase tracking-[0.28em] text-white/28"><span className="h-px flex-1 bg-white/10" />or<span className="h-px flex-1 bg-white/10" /></div>}
-
-        {!isRecovering && (
-          <button type="button" onClick={() => setShowBiometric(true)} className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] text-xs font-semibold text-white/72 transition hover:border-cyan-300/35 hover:bg-cyan-300/10 hover:text-white">
-            <Fingerprint className="h-4 w-4 text-cyan-200" /> {isSignUp ? 'Sign up with Biometric' : 'Continue with Biometric'}
-          </button>
-        )}
-
-        {isSignUp && <div className="mt-5 flex items-center justify-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-white/45"><span className="text-cyan-300">● Account</span><span>—</span><span>○ Profile</span><span>—</span><span>○ Network</span></div>}
-
-        {!isRecovering && (
-          <div className="mt-6 text-center text-sm text-white/48">
-            {isSignUp ? 'Already have an account?' : "Don't have an account?"}
-            <button type="button" onClick={() => setAuthMode(isSignUp ? 'sign-in' : 'sign-up')} className="ml-2 font-semibold text-cyan-200 hover:text-white">{isSignUp ? 'Log in' : 'Create account'}</button>
-          </div>
-        )}
       </div>
 
       {showBiometric && (
