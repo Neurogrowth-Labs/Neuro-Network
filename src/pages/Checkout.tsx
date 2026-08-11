@@ -3,6 +3,7 @@ import { CheckCircle2, CreditCard, Lock, ShieldCheck, Wallet } from "lucide-reac
 import { toast } from "sonner";
 import GooglePayButton from "../components/payments/GooglePayButton";
 import { useUser } from "../lib/UserContext";
+import { Link } from "react-router-dom";
 
 import { PREMIUM_PLAN } from "../lib/subscription";
 
@@ -90,9 +91,9 @@ export default function Checkout() {
             <p><strong className="text-white">Payment:</strong> {receipt.provider}</p>
             <p><strong className="text-white">Receipt:</strong> {receipt.id}</p>
           </div>
-          <a href="/" className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-cyan-400 px-4 py-3 text-xs font-black uppercase tracking-widest text-black hover:bg-cyan-300">
+          <Link to="/" className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-cyan-400 px-4 py-3 text-xs font-black uppercase tracking-widest text-black hover:bg-cyan-300">
             Enter platform
-          </a>
+          </Link>
         </div>
       </div>
     );

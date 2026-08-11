@@ -14,6 +14,7 @@ import { MY_CARD } from "./Dashboard";
 import AddToCalendarButton from "../components/AddToCalendarButton";
 import { supabase } from "@/lib/supabase";
 import { useUser } from "@/lib/UserContext";
+import { useNavigate } from "react-router-dom";
 
 const normalizeContact = (contact: any) => ({
   ...contact,
@@ -36,6 +37,7 @@ const normalizeContact = (contact: any) => ({
 
 export default function Vault() {
   const { user } = useUser();
+  const navigate = useNavigate();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [contacts, setContacts] = useState<any[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(false);
@@ -169,7 +171,7 @@ export default function Vault() {
                     </div>
                     
                     <button 
-                      onClick={() => window.location.href = "/voice-call"} 
+                      onClick={() => navigate("/voice-call")}
                       className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 transition-all text-cyan-400 group"
                     >
                       <Phone className="w-4 h-4 group-hover:scale-110 transition-transform" />
