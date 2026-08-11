@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "../lib/supabase";
 import { useUser } from "../lib/UserContext";
 import { useAdminState } from "../lib/AdminStateProvider";
+import { useNavigate } from "react-router-dom";
 import { ensureUUID } from "../lib/uuid";
 import {
   Shield,
@@ -105,6 +106,7 @@ interface DbNoteRecord {
 
 export default function Admin() {
   const { profile, user: authUser } = useUser();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"health" | "analytics" | "users" | "data" | "broadcast" | "settings" | "logs">("health");
 
   // Health Stats & Telemetry
@@ -796,7 +798,7 @@ export default function Admin() {
           This high-security console is reserved strictly for designated platform owners.
         </p>
         <button 
-          onClick={() => { window.location.href = "/user-dashboard"; }}
+          onClick={() => navigate("/")}
           className="text-xs font-semibold px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all cursor-pointer mt-2"
         >
           Return to Member Profile

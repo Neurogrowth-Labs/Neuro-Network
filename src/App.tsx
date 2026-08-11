@@ -3,6 +3,7 @@ import {
   Routes,
   Route,
   Link,
+  Navigate,
   useLocation,
 } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -54,6 +55,7 @@ import Settings from "./pages/Settings";
 import Team from "./pages/Team";
 import Templates from "./pages/Templates";
 import VoiceCall from "./pages/VoiceCall";
+import PageNotFound from "./components/PageNotFound";
 
 const queryClient = new QueryClient();
 
@@ -182,6 +184,7 @@ function TopNav() {
                 <Link
                   key={t.path}
                   to={t.path}
+                  replace={active}
                   onClick={() => setShowMobileMenu(false)}
                   className={`flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors ${active ? "bg-cyan-500/10 text-cyan-400 font-medium" : "text-white/60 hover:text-white hover:bg-white/5"}`}
                 >
@@ -386,7 +389,7 @@ function AppContent() {
         <div className="h-full overflow-y-auto pt-16 pb-6 scrollbar-hide">
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/user-dashboard" element={<Dashboard />} />
+            <Route path="/user-dashboard" element={<Navigate to="/" replace />} />
             <Route path="/vault" element={<Vault />} />
             <Route path="/editor" element={<Editor />} />
             <Route path="/admin" element={<Admin />} />
@@ -395,7 +398,7 @@ function AppContent() {
             <Route path="/card-builder" element={<CardBuilder />} />
             <Route path="/card-view" element={<CardView />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/subscribe" element={<Checkout />} />
+            <Route path="/subscribe" element={<Navigate to="/checkout" replace />} />
             <Route path="/contact-vault" element={<ContactVault />} />
             <Route path="/crm-integration" element={<CRMIntegration />} />
             <Route path="/map" element={<GeoMap />} />
@@ -410,6 +413,7 @@ function AppContent() {
             <Route path="/voice-call" element={<VoiceCall />} />
             <Route path="/chat" element={<GoogleChat />} />
             <Route path="/meet" element={<GoogleMeet />} />
+            <Route path="*" element={<PageNotFound />} />
           </Routes>
         </div>
       </div>
