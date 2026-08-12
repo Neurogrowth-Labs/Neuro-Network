@@ -57,6 +57,7 @@ ALTER TABLE workspaces ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workspace_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workspace_contacts ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view workspaces they own or are members of" ON workspaces;
 -- Workspaces policies
 CREATE POLICY "Users can view workspaces they own or are members of"
   ON workspaces FOR SELECT
