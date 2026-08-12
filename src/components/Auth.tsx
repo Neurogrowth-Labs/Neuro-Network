@@ -188,8 +188,6 @@ export default function Auth() {
           <button type="submit" disabled={loading} className="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-400 text-sm font-bold text-slate-950 shadow-[0_0_26px_rgba(34,211,238,0.24)] transition hover:shadow-[0_0_36px_rgba(124,58,237,0.35)] disabled:opacity-60">
             {loading ? 'Securing channel' : isSignUp ? 'Create my account' : 'Sign in'} <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
           </button>
-        </form>
-        )}
 
       </div>
 
