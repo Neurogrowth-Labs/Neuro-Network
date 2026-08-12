@@ -52,13 +52,12 @@ CREATE INDEX IF NOT EXISTS idx_workspace_contacts_contact ON workspace_contacts(
 -- Row Level Security (RLS)
 -- =====================================================
 
--- Enable RLS
 ALTER TABLE workspaces ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workspace_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workspace_contacts ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Users can view workspaces they own or are members of" ON workspaces;
 -- Workspaces policies
+DROP POLICY IF EXISTS "Users can view workspaces they own or are members of" ON workspaces;
 CREATE POLICY "Users can view workspaces they own or are members of"
   ON workspaces FOR SELECT
   USING (
@@ -71,19 +70,23 @@ CREATE POLICY "Users can view workspaces they own or are members of"
     )
   );
 
+DROP POLICY IF EXISTS "Users can create workspaces" ON workspaces;
 CREATE POLICY "Users can create workspaces"
   ON workspaces FOR INSERT
   WITH CHECK (auth.uid() = owner_id);
 
+DROP POLICY IF EXISTS "Only owners can update workspaces" ON workspaces;
 CREATE POLICY "Only owners can update workspaces"
   ON workspaces FOR UPDATE
   USING (owner_id = auth.uid());
 
+DROP POLICY IF EXISTS "Only owners can delete workspaces" ON workspaces;
 CREATE POLICY "Only owners can delete workspaces"
   ON workspaces FOR DELETE
   USING (owner_id = auth.uid());
 
 -- Workspace members policies
+DROP POLICY IF EXISTS "Members can view workspace membership" ON workspace_members;
 CREATE POLICY "Members can view workspace membership"
   ON workspace_members FOR SELECT
   USING (
@@ -101,6 +104,7 @@ CREATE POLICY "Members can view workspace membership"
     )
   );
 
+DROP POLICY IF EXISTS "Owners and editors can add members" ON workspace_members;
 CREATE POLICY "Owners and editors can add members"
   ON workspace_members FOR INSERT
   WITH CHECK (
@@ -118,6 +122,7 @@ CREATE POLICY "Owners and editors can add members"
     )
   );
 
+DROP POLICY IF EXISTS "Owners and editors can update members" ON workspace_members;
 CREATE POLICY "Owners and editors can update members"
   ON workspace_members FOR UPDATE
   USING (
@@ -135,6 +140,7 @@ CREATE POLICY "Owners and editors can update members"
     )
   );
 
+DROP POLICY IF EXISTS "Owners can remove members" ON workspace_members;
 CREATE POLICY "Owners can remove members"
   ON workspace_members FOR DELETE
   USING (
@@ -148,6 +154,7 @@ CREATE POLICY "Owners can remove members"
   );
 
 -- Workspace contacts policies
+DROP POLICY IF EXISTS "Members can view shared contacts" ON workspace_contacts;
 CREATE POLICY "Members can view shared contacts"
   ON workspace_contacts FOR SELECT
   USING (
@@ -164,6 +171,7 @@ CREATE POLICY "Members can view shared contacts"
     )
   );
 
+DROP POLICY IF EXISTS "Owners and editors can share contacts" ON workspace_contacts;
 CREATE POLICY "Owners and editors can share contacts"
   ON workspace_contacts FOR INSERT
   WITH CHECK (
@@ -181,6 +189,7 @@ CREATE POLICY "Owners and editors can share contacts"
     )
   );
 
+DROP POLICY IF EXISTS "Owners and editors can unshare contacts" ON workspace_contacts;
 CREATE POLICY "Owners and editors can unshare contacts"
   ON workspace_contacts FOR DELETE
   USING (
@@ -210,6 +219,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_workspaces_updated_at ON workspaces;
 CREATE TRIGGER update_workspaces_updated_at
   BEFORE UPDATE ON workspaces
   FOR EACH ROW
@@ -219,7 +229,6 @@ CREATE TRIGGER update_workspaces_updated_at
 -- Analytics tables for Dashboard stats
 -- =====================================================
 
--- Profile views tracking
 CREATE TABLE IF NOT EXISTS profile_views (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   profile_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
@@ -228,7 +237,6 @@ CREATE TABLE IF NOT EXISTS profile_views (
   viewed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Card saves tracking
 CREATE TABLE IF NOT EXISTS card_saves (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   card_owner_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
@@ -236,7 +244,6 @@ CREATE TABLE IF NOT EXISTS card_saves (
   saved_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Business cards table (if not exists)
 CREATE TABLE IF NOT EXISTS business_cards (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
@@ -248,37 +255,37 @@ CREATE TABLE IF NOT EXISTS business_cards (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Indexes for analytics
 CREATE INDEX IF NOT EXISTS idx_profile_views_profile ON profile_views(profile_id);
 CREATE INDEX IF NOT EXISTS idx_profile_views_viewed_at ON profile_views(viewed_at);
 CREATE INDEX IF NOT EXISTS idx_card_saves_owner ON card_saves(card_owner_id);
 CREATE INDEX IF NOT EXISTS idx_card_saves_saved_at ON card_saves(saved_at);
 CREATE INDEX IF NOT EXISTS idx_business_cards_user ON business_cards(user_id);
 
--- RLS for analytics tables
 ALTER TABLE profile_views ENABLE ROW LEVEL SECURITY;
 ALTER TABLE card_saves ENABLE ROW LEVEL SECURITY;
 ALTER TABLE business_cards ENABLE ROW LEVEL SECURITY;
 
--- Profile views: owners can see their views
+DROP POLICY IF EXISTS "Users can view their own profile views" ON profile_views;
 CREATE POLICY "Users can view their own profile views"
   ON profile_views FOR SELECT
   USING (profile_id = auth.uid());
 
+DROP POLICY IF EXISTS "Anyone can insert profile views" ON profile_views;
 CREATE POLICY "Anyone can insert profile views"
   ON profile_views FOR INSERT
   WITH CHECK (true);
 
--- Card saves: owners can see saves
+DROP POLICY IF EXISTS "Users can view their card saves" ON card_saves;
 CREATE POLICY "Users can view their card saves"
   ON card_saves FOR SELECT
   USING (card_owner_id = auth.uid());
 
+DROP POLICY IF EXISTS "Anyone can insert card saves" ON card_saves;
 CREATE POLICY "Anyone can insert card saves"
   ON card_saves FOR INSERT
   WITH CHECK (true);
 
--- Business cards: users manage their own
+DROP POLICY IF EXISTS "Users can manage their own business cards" ON business_cards;
 CREATE POLICY "Users can manage their own business cards"
   ON business_cards FOR ALL
   USING (user_id = auth.uid());
