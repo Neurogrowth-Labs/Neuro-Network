@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 import BiometricVerification from './BiometricVerification';
@@ -16,6 +17,9 @@ export default function Auth() {
   const [showBiometric, setShowBiometric] = useState(false);
   const [returningVisit, setReturningVisit] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  const isSignUp = authMode === 'sign-up';
+  const isRecover = authMode === 'recover';
 
   useEffect(() => {
     const hasVisited = localStorage.getItem(VISIT_KEY) === 'true';
@@ -128,6 +132,22 @@ export default function Auth() {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isRecover) {
+      setLoading(true);
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(email);
+        if (error) throw error;
+        toast.success('Password reset email sent. Check your inbox.');
+        setAuthMode('sign-in');
+      } catch (error: any) {
+        toast.error(error.message || 'Could not send reset email');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     if (isSignUp && password !== confirmPassword) {
       toast.error('Passwords do not match');
       return;
@@ -182,32 +202,186 @@ export default function Auth() {
       <div className={`relative z-20 w-full max-w-[410px] rounded-[24px] border border-white/10 bg-white/[0.04] p-6 shadow-[0_28px_90px_rgba(0,0,0,0.5)] backdrop-blur-2xl sm:p-8 ${returningVisit ? 'animate-auth-card-return' : 'animate-auth-card-awake'}`}>
         <div className="mb-7 text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-300/20 bg-gradient-to-br from-violet-500/25 to-cyan-400/20 shadow-[0_0_32px_rgba(34,211,238,0.22)]">
-            <img src="/icon.png" alt="Neuro Networks logo" onError={(e) => e.currentTarget.src = '/logo.png'} className="h-10 w-10 rounded-xl object-cover" />
+            <img src="/icon.png" alt="Neuro Networks logo" onError={(e) => (e.currentTarget.src = '/logo.png')} className="h-10 w-10 rounded-xl object-cover" />
           </div>
           <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-cyan-200/70">Neuro Networks</p>
-          <button type="submit" disabled={loading} className="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-400 text-sm font-bold text-slate-950 shadow-[0_0_26px_rgba(34,211,238,0.24)] transition hover:shadow-[0_0_36px_rgba(124,58,237,0.35)] disabled:opacity-60">
-            {loading ? 'Securing channel' : isSignUp ? 'Create my account' : 'Sign in'} <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-          </button>
+          <h1 className="mt-2 text-lg font-bold text-white">
+            {isRecover ? 'Reset your password' : isSignUp ? 'Create your account' : 'Welcome back'}
+          </h1>
+        </div>
 
+        <form onSubmit={handleAuth} className="space-y-4">
+          {isSignUp && (
+            <AuthInput
+              icon={<User />}
+              label="Full name"
+              value={fullName}
+              onChange={setFullName}
+              placeholder="Jane Doe"
+              required
+            />
+          )}
+
+          <AuthInput
+            icon={<Mail />}
+            label="Email"
+            type="email"
+            value={email}
+            onChange={setEmail}
+            placeholder="you@example.com"
+            required
+          />
+
+          {!isRecover && (
+            <AuthInput
+              icon={<Lock />}
+              label="Password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={setPassword}
+              placeholder="••••••••"
+              required
+              right={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="ml-2 text-white/40 hover:text-white/70"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              }
+            />
+          )}
+
+          {isSignUp && (
+            <AuthInput
+              icon={<Lock />}
+              label="Confirm password"
+              type={showPassword ? 'text' : 'password'}
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              placeholder="••••••••"
+              required
+            />
+          )}
+
+          {authMode === 'sign-in' && (
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() => setAuthMode('recover')}
+                className="text-xs font-medium text-cyan-300/80 hover:text-cyan-200"
+              >
+                Forgot password?
+              </button>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-400 text-sm font-bold text-slate-950 shadow-[0_0_26px_rgba(34,211,238,0.24)] transition hover:shadow-[0_0_36px_rgba(124,58,237,0.35)] disabled:opacity-60"
+          >
+            {loading
+              ? 'Securing channel'
+              : isRecover
+              ? 'Send reset link'
+              : isSignUp
+              ? 'Create my account'
+              : 'Sign in'}
+            <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+          </button>
+        </form>
+
+        <div className="mt-5 text-center text-xs text-white/50">
+          {isRecover ? (
+            <button onClick={() => setAuthMode('sign-in')} className="font-semibold text-cyan-300/80 hover:text-cyan-200">
+              Back to sign in
+            </button>
+          ) : isSignUp ? (
+            <>
+              Already have an account?{' '}
+              <button onClick={() => setAuthMode('sign-in')} className="font-semibold text-cyan-300/80 hover:text-cyan-200">
+                Sign in
+              </button>
+            </>
+          ) : (
+            <>
+              Don't have an account?{' '}
+              <button onClick={() => setAuthMode('sign-up')} className="font-semibold text-cyan-300/80 hover:text-cyan-200">
+                Create one
+              </button>
+            </>
+          )}
+        </div>
+
+        {!isRecover && (
+          <button
+            onClick={() => setShowBiometric(true)}
+            className="mt-3 w-full text-center text-[11px] font-semibold uppercase tracking-widest text-white/40 hover:text-white/70"
+          >
+            Use biometric {isSignUp ? 'setup' : 'sign in'} instead
+          </button>
+        )}
       </div>
 
       {showBiometric && (
         <div className="absolute inset-0 z-40 overflow-y-auto bg-black/75 p-4 backdrop-blur-xl">
-          <div className="mx-auto flex max-w-[410px] justify-end pb-3 pt-4"><button onClick={() => setShowBiometric(false)} className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white/70 hover:text-white">Back</button></div>
-          <BiometricVerification sectionName={isSignUp ? 'Create Biometric Identity' : 'Biometric Sign In'} userEmail={email} displayName={fullName || email} onUnlockSuccess={() => setShowBiometric(false)} />
+          <div className="mx-auto flex max-w-[410px] justify-end pb-3 pt-4">
+            <button
+              onClick={() => setShowBiometric(false)}
+              className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white/70 hover:text-white"
+            >
+              Back
+            </button>
+          </div>
+          <BiometricVerification
+            sectionName={isSignUp ? 'Create Biometric Identity' : 'Biometric Sign In'}
+            userEmail={email}
+            displayName={fullName || email}
+            onUnlockSuccess={() => setShowBiometric(false)}
+          />
         </div>
       )}
-    </div>
     </div>
   );
 }
 
-function AuthInput({ icon, label, value, onChange, type = 'text', placeholder, required, right }: { icon: React.ReactElement<{ className?: string }>; label: string; value: string; onChange: (value: string) => void; type?: string; placeholder?: string; required?: boolean; right?: React.ReactNode }) {
+function AuthInput({
+  icon,
+  label,
+  value,
+  onChange,
+  type = 'text',
+  placeholder,
+  required,
+  right,
+}: {
+  icon: React.ReactElement<{ className?: string }>;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  placeholder?: string;
+  required?: boolean;
+  right?: React.ReactNode;
+}) {
   return (
     <label className="group block space-y-2">
-      <span className="flex items-center gap-2 text-xs font-semibold text-white/68 transition group-focus-within:text-cyan-200">{React.cloneElement(icon, { className: 'h-4 w-4' })}{label}</span>
+      <span className="flex items-center gap-2 text-xs font-semibold text-white/68 transition group-focus-within:text-cyan-200">
+        {React.cloneElement(icon, { className: 'h-4 w-4' })}
+        {label}
+      </span>
       <span className="flex h-12 items-center rounded-xl border border-white/10 bg-black/20 px-4 transition group-focus-within:border-cyan-300/50 group-focus-within:shadow-[0_0_22px_rgba(34,211,238,0.12)]">
-        <input type={type} required={required} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="min-w-0 flex-1 bg-transparent text-sm text-white placeholder:text-white/22 focus:outline-none" />
+        <input
+          type={type}
+          required={required}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="min-w-0 flex-1 bg-transparent text-sm text-white placeholder:text-white/22 focus:outline-none"
+        />
         {right}
       </span>
     </label>
