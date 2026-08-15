@@ -1,104 +1,12 @@
-import React, { useState } from "react";
-import { CheckCircle2, CreditCard, Lock, ShieldCheck, Wallet } from "lucide-react";
-import { toast } from "sonner";
-import GooglePayButton from "../components/payments/GooglePayButton";
-import { useUser } from "../lib/UserContext";
-import { Link } from "react-router-dom";
+import React from "react";
+import { ArrowUpRight, CheckCircle2, Lock, ShieldCheck } from "lucide-react";
 
 import { PREMIUM_PLAN } from "../lib/subscription";
 
 const PLAN = PREMIUM_PLAN;
-
-type PaymentMethod = "stripe" | "paypal" | "google-pay";
+const WHOP_CHECKOUT_URL = "https://whop.com/checkout/plan_rR52fx0lQyBUs";
 
 export default function Checkout() {
-  const { user, profile, setProfile } = useUser();
-  const [method, setMethod] = useState<PaymentMethod>("stripe");
-  const [loading, setLoading] = useState(false);
-  const [receipt, setReceipt] = useState<any>(null);
-  const [cardName, setCardName] = useState(profile.full_name || "");
-  const [paypalEmail, setPaypalEmail] = useState(user?.email || profile.email || "");
-
-  const activateSubscription = (nextReceipt: any) => {
-    const activeUntil = new Date();
-    activeUntil.setMonth(activeUntil.getMonth() + 1);
-    const subscription = {
-      subscription_status: "active",
-      subscription_plan: PLAN.name,
-      subscription_amount_cents: PLAN.priceCents,
-      subscription_interval: PLAN.interval,
-      subscription_provider: nextReceipt.provider,
-      subscription_receipt_id: nextReceipt.id,
-      provider_subscription_id: nextReceipt.providerSubscriptionId || nextReceipt.id,
-      subscription_transaction_id: nextReceipt.transactionId || nextReceipt.id,
-      subscription_started_at: nextReceipt.startedAt,
-      next_billing_date: nextReceipt.nextBillingDate || activeUntil.toISOString(),
-      subscription_active_until: nextReceipt.nextBillingDate || activeUntil.toISOString(),
-    };
-
-    localStorage.setItem(`subscription_${user?.id || "guest"}`, JSON.stringify(subscription));
-    setProfile((prev: any) => ({ ...prev, ...subscription }));
-    setReceipt({ ...nextReceipt, activeUntil: activeUntil.toISOString() });
-    toast.success("Subscription active. Welcome to Neuro NetWorks!");
-  };
-
-  const submitPayment = async (provider: "stripe" | "paypal") => {
-    setLoading(true);
-    try {
-      if (provider === "stripe" && !cardName) {
-        throw new Error("Enter the billing name to continue. Card details are collected by Stripe Checkout in production.");
-      }
-      if (provider === "paypal" && !paypalEmail.includes("@")) {
-        throw new Error("Enter a valid PayPal email address.");
-      }
-
-      const res = await fetch(`/api/payments/${provider}-subscription`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: user?.id,
-          email: user?.email || profile.email,
-          payerEmail: provider === "paypal" ? paypalEmail : user?.email || profile.email,
-          planName: PLAN.name,
-          amountCents: PLAN.priceCents,
-          currency: PLAN.currency,
-          interval: PLAN.interval,
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || "Subscription payment failed.");
-      }
-
-      activateSubscription(await res.json());
-    } catch (err: any) {
-      toast.error(err.message || "Payment failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (receipt) {
-    return (
-      <div className="p-6 space-y-6 min-h-full bg-[#0a0a0c]">
-        <div className="rounded-3xl border border-emerald-400/20 bg-emerald-400/10 p-6 text-center">
-          <CheckCircle2 className="mx-auto mb-4 h-14 w-14 text-emerald-300" />
-          <h1 className="text-2xl font-black tracking-tight text-white">Access unlocked</h1>
-          <p className="mt-2 text-sm text-white/60">Your R250 monthly subscription is active.</p>
-          <div className="mt-5 rounded-2xl bg-black/30 p-4 text-left text-xs text-white/70 space-y-2">
-            <p><strong className="text-white">Plan:</strong> {PLAN.name}</p>
-            <p><strong className="text-white">Payment:</strong> {receipt.provider}</p>
-            <p><strong className="text-white">Receipt:</strong> {receipt.id}</p>
-          </div>
-          <Link to="/" className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-cyan-400 px-4 py-3 text-xs font-black uppercase tracking-widest text-black hover:bg-cyan-300">
-            Enter platform
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="p-6 space-y-6 min-h-full bg-[#0a0a0c]">
       <div>
@@ -120,58 +28,42 @@ export default function Checkout() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
-        {[
-          ["stripe", CreditCard, "Stripe"],
-          ["paypal", Wallet, "PayPal"],
-          ["google-pay", Wallet, "G Pay"],
-        ].map(([key, Icon, label]: any) => (
-          <button
-            key={key}
-            onClick={() => setMethod(key)}
-            className={`rounded-2xl border p-3 text-xs font-bold transition ${method === key ? "border-cyan-300 bg-cyan-300 text-black" : "border-white/10 bg-white/5 text-white/70 hover:text-white"}`}
-          >
-            <Icon className="mx-auto mb-2 h-4 w-4" />
-            {label}
-          </button>
-        ))}
-      </div>
-
       <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 space-y-4">
-        {method === "stripe" && (
-          <div className="space-y-3">
-            <h3 className="font-bold text-white">Stripe card subscription</h3>
-<input value={cardName} onChange={(e) => setCardName(e.target.value)} placeholder="Billing name" className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400" />
-            <p className="text-[11px] leading-relaxed text-white/45">Card numbers are never stored by Neuro NetWorks. In production this button creates a Stripe Billing Checkout Session using tokenized payment details.</p>
-            <button disabled={loading} onClick={() => submitPayment("stripe")} className="w-full rounded-xl bg-cyan-400 py-3 text-xs font-black uppercase tracking-widest text-black disabled:opacity-50">
-              {loading ? "Processing…" : "Subscribe with Stripe"}
-            </button>
-          </div>
-        )}
+        <div className="space-y-3">
+          <h3 className="font-bold text-white">Complete checkout with Whop</h3>
+          <p className="text-[11px] leading-relaxed text-white/45">
+            You'll be redirected to Whop to securely complete your {PLAN.displayPrice}/month subscription.
+          </p>
+          <a
+            href={WHOP_CHECKOUT_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-400 py-3 text-xs font-black uppercase tracking-widest text-black transition hover:bg-cyan-300"
+          >
+            Subscribe with Whop
+            <ArrowUpRight className="h-4 w-4" />
+          </a>
+        </div>
 
-        {method === "paypal" && (
-          <div className="space-y-3">
-            <h3 className="font-bold text-white">PayPal billing agreement</h3>
-            <input value={paypalEmail} onChange={(e) => setPaypalEmail(e.target.value)} placeholder="PayPal email" type="email" className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400" />
-            <button disabled={loading} onClick={() => submitPayment("paypal")} className="w-full rounded-xl bg-[#ffc439] py-3 text-xs font-black uppercase tracking-widest text-black disabled:opacity-50">
-              {loading ? "Processing…" : "Subscribe with PayPal"}
-            </button>
-          </div>
-        )}
-
-        {method === "google-pay" && (
-          <div className="space-y-3">
-            <h3 className="font-bold text-white">Google Pay through Stripe</h3>
-            <GooglePayButton plan={PLAN} userEmail={user?.email || profile.email} onSuccess={activateSubscription} onError={(err) => toast.error(err.message || "Google Pay failed")} />
-          </div>
-        )}
+        <div className="grid gap-2 text-[11px] text-white/55">
+          {[
+            "Secure hosted checkout through Whop",
+            "Monthly recurring access for the Neuro NetWorks platform",
+            "Return to the app after checkout to continue using your account",
+          ].map((item) => (
+            <div key={item} className="flex items-start gap-2 rounded-2xl border border-white/10 bg-black/20 p-3">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
+              <span>{item}</span>
+            </div>
+          ))}
+        </div>
 
         <div className="flex gap-2 rounded-2xl border border-white/10 bg-black/20 p-3 text-[11px] leading-relaxed text-white/50">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
-          <p><strong className="text-white">Secure recurring access:</strong> server-side status is verified before premium access. Replace the demo endpoints with live Stripe Billing, PayPal Subscriptions, and Google Pay processor credentials before production.</p>
+          <p><strong className="text-white">Secure recurring access:</strong> payments are processed by Whop. Subscription access should be verified server-side before granting premium access in production.</p>
         </div>
         <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-white/35">
-          <Lock className="h-3 w-3" /> TEST MODE · ZAR · Monthly auto-renewing
+          <Lock className="h-3 w-3" /> WHOP CHECKOUT · ZAR · Monthly auto-renewing
         </div>
       </div>
     </div>

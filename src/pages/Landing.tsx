@@ -58,7 +58,7 @@ export default function Landing() {
       a: "Neuro NetWorks is a high-fidelity intelligence and design catalyst. It weaves together secure AI generation pipelines (powered by secure creative services) with your existing Google Workspace channels (Google Chat and Google Meet) for real-time collaboration and secure brand card sharing."
     },
     {
-      q: "How does the $2.99 subscription work?",
+      q: "How does the R250 subscription work?",
       a: "Our single Pro Catalyst tier gives you unlimited personal card creation, real-time chat nodes, high-fidelity Imagen artwork rendering, and access to the cryptographic vault with absolutely no hidden parameters or data limits."
     },
     {
@@ -143,7 +143,7 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* 3. Transparent $2.99 Pricing Section */}
+      {/* 3. Transparent R250 Pricing Section */}
       <div className="bg-gradient-to-r from-cyan-950/20 to-blue-950/20 border border-cyan-500/20 rounded-2xl p-5 relative overflow-hidden" id="pricing-tier">
         <div className="absolute top-3 right-3 px-2 py-0.5 bg-cyan-500 text-black text-[8px] font-black uppercase tracking-widest rounded-md">
           Most Popular
@@ -153,7 +153,7 @@ export default function Landing() {
         <h2 className="text-lg font-extrabold uppercase tracking-tight text-white mb-3">The Pro Catalyst Plan</h2>
 
         <div className="flex items-baseline gap-1.5 mb-4 border-b border-white/5 pb-4">
-          <span className="text-3xl font-black text-cyan-400">$2.99</span>
+          <span className="text-3xl font-black text-cyan-400">R250</span>
           <span className="text-xs text-white/50 font-mono">/ per month</span>
         </div>
 
