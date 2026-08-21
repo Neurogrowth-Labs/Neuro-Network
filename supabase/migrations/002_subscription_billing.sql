@@ -18,7 +18,7 @@ ALTER TABLE public.profiles
 
 UPDATE public.profiles
 SET trial_started_at = COALESCE(trial_started_at, created_at, timezone('utc', now())),
-    trial_expires_at = COALESCE(trial_expires_at, COALESCE(created_at, timezone('utc', now())) + interval '15 days')
+    trial_expires_at = COALESCE(trial_expires_at, COALESCE(created_at, timezone('utc', now())) + interval '7 days')
 WHERE trial_started_at IS NULL OR trial_expires_at IS NULL;
 
 CREATE TABLE IF NOT EXISTS public.subscription_events (

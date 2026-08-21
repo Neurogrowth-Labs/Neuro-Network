@@ -4,7 +4,7 @@ import { ArrowUpRight, CheckCircle2, Lock, ShieldCheck } from "lucide-react";
 import { PREMIUM_PLAN } from "../lib/subscription";
 
 const PLAN = PREMIUM_PLAN;
-const WHOP_CHECKOUT_URL = "https://whop.com/checkout/plan_rR52fx0lQyBUs";
+const WHOP_CHECKOUT_URL = "https://whop.com/checkout/plan_43cIN67cFSmVh";
 
 export default function Checkout() {
   return (
@@ -12,7 +12,7 @@ export default function Checkout() {
       <div>
         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-300">Subscription required</p>
         <h1 className="mt-2 text-3xl font-light tracking-tighter text-white">Unlock Neuro NetWorks</h1>
-        <p className="mt-2 text-sm text-white/60">Your 15-day free trial has expired. Subscribe for R250/month to continue enjoying full access to all features.</p>
+        <p className="mt-2 text-sm text-white/60">Your 7-day free trial has expired. Subscribe for R250/month to continue enjoying full access to all features.</p>
       </div>
 
       <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/10 p-5">
