@@ -21,7 +21,8 @@ import {
   Menu,
   X,
   Video,
-  MessageSquare
+  MessageSquare,
+  Radar
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { UserProvider, useUser } from "./lib/UserContext";
@@ -39,6 +40,7 @@ import Vault from "./pages/Vault";
 import Editor from "./pages/Editor";
 import Admin from "./pages/Admin";
 import AINetworking from "./pages/AINetworking";
+import Connect from "./pages/Connect";
 import Analytics from "./pages/Analytics";
 import CardBuilder from "./pages/CardBuilder";
 import CardView from "./pages/CardView";
@@ -70,6 +72,7 @@ function TopNav() {
     { path: "/", icon: QrCode, label: "Dashboard" },
     { path: "/vault", icon: Contact, label: "Vault" },
     { path: "/editor", icon: Zap, label: "Studio" },
+    { path: "/connect", icon: Radar, label: "Connect" },
     { path: "/chat", icon: MessageSquare, label: "Google Chat" },
     { path: "/meet", icon: Video, label: "Google Meet" },
   ];
@@ -370,6 +373,7 @@ function AppContent() {
             <Route path="/editor" element={<Editor />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/ai-networking" element={<AINetworking />} />
+            <Route path="/connect" element={<Connect />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/card-builder" element={<CardBuilder />} />
             <Route path="/card-view" element={<CardView />} />
