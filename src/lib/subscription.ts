@@ -6,7 +6,7 @@ export const PREMIUM_PLAN = {
   displayPrice: "R250.00",
   interval: "monthly",
   billingCycleDays: 30,
-  trialDays: 15,
+  trialDays: 7,
 };
 
 export type SubscriptionStatus = "trial" | "active" | "expired" | "cancelled" | "past_due" | "inactive";

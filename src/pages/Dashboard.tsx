@@ -176,7 +176,7 @@ export default function Dashboard() {
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest text-cyan-300">Subscription</p>
           <h2 className="text-lg font-bold text-white">{subscriptionState.status === "trial" ? `${trialDays} trial day${trialDays === 1 ? "" : "s"} remaining` : subscriptionState.status}</h2>
-          <p className="text-[11px] text-white/55">{PREMIUM_PLAN.name} · {PREMIUM_PLAN.displayPrice}/month · Full premium access during trial.</p>
+          <p className="text-[11px] text-white/55">{PREMIUM_PLAN.name} · {PREMIUM_PLAN.displayPrice}/month · Full premium access during the 7-day trial countdown.</p>
         </div>
         <button onClick={() => navigate("/checkout")} className="rounded-xl bg-cyan-400 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-black">Manage</button>
       </div>
