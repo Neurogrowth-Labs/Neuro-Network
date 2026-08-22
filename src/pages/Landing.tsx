@@ -21,7 +21,7 @@ import {
   HeartHandshake
 } from "lucide-react";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Landing() {
   const navigate = useNavigate();

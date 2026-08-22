@@ -23,7 +23,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface MeetSpace {
   name: string; // Space identifier (e.g., spaces/AAA-BBB-CCC)

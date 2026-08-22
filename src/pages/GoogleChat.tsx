@@ -20,7 +20,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ChatSpace {
   name: string; // Resource name like "spaces/AAAAMOCK"
