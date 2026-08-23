@@ -36,15 +36,6 @@ async function startServer() {
       const eventId = String(event.id || event.data?.id || "");
       const userId = event.data?.metadata?.supabase_user_id || event.data?.user?.metadata?.supabase_user_id;
       if (!eventId || !userId) return res.status(400).json({ error: "Missing event identity or platform user" });
-      const type = String(event.type || "").toLowerCase();
-      const subscriptionId = String(event.data?.membership?.id || event.data?.id || "");
-      if (!subscriptionId) return res.status(400).json({ error: "Missing subscription identity" });
-      const { data: applied, error } = await adminSupabase.rpc("process_whop_event", {
-        p_event_id: eventId, p_payload: event, p_user_id: userId, p_user_email: event.data?.user?.email || "",
-        p_subscription_id: subscriptionId, p_event_type: type, p_period_end: event.data?.membership?.expires_at || null,
-      });
-      if (error) throw error;
-      res.status(200).json({ received: true, duplicate: !applied });
     } catch (error) { console.error("Whop webhook processing failed", error); res.status(400).json({ error: "Invalid webhook payload" }); }
   });
   app.use(express.json({ limit: "1mb" }));
