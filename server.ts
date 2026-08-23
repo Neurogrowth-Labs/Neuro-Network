@@ -36,9 +36,6 @@ async function startServer() {
       const eventId = String(event.id || event.data?.id || "");
       const userId = event.data?.metadata?.supabase_user_id || event.data?.user?.metadata?.supabase_user_id;
       if (!eventId || !userId) return res.status(400).json({ error: "Missing event identity or platform user" });
-    } catch (error) { console.error("Whop webhook processing failed", error); res.status(400).json({ error: "Invalid webhook payload" }); }
-  });
-  app.use(express.json({ limit: "1mb" }));
 
   // API constraints check
   const apiKey = process.env.GEMINI_API_KEY;
