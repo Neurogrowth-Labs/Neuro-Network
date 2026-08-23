@@ -36,17 +36,6 @@ async function startServer() {
       const eventId = String(event.id || event.data?.id || "");
       const userId = event.data?.metadata?.supabase_user_id || event.data?.user?.metadata?.supabase_user_id;
       if (!eventId || !userId) return res.status(400).json({ error: "Missing event identity or platform user" });
-      const { error: eventError } = await adminSupabase.from("webhook_events").insert({ provider: "whop", event_id: eventId, payload: event });
-      if (eventError?.code === "23505") return res.status(200).json({ received: true, duplicate: true });
-      if (eventError) throw eventError;
-      const type = String(event.type || "").toLowerCase();
-      const active = /(payment_succeeded|membership_activated|membership_renewed)/.test(type);
-      const inactive = /(cancelled|expired|refunded|payment_failed)/.test(type);
-      if (active || inactive) {
-        const { error } = await adminSupabase.from("subscriptions").upsert({ user_id: userId, user_email: event.data?.user?.email || "", provider: "whop", provider_subscription_id: String(event.data?.membership?.id || event.data?.id || ""), status: active ? "active" : "inactive", entitlement_active: active, current_period_end: event.data?.membership?.expires_at || null }, { onConflict: "provider,provider_subscription_id" });
-        if (error) throw error;
-      }
-      res.status(200).json({ received: true });
     } catch (error) { console.error("Whop webhook processing failed", error); res.status(400).json({ error: "Invalid webhook payload" }); }
   });
   app.use(express.json({ limit: "1mb" }));
