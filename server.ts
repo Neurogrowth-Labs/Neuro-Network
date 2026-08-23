@@ -36,43 +36,6 @@ async function startServer() {
       const eventId = String(event.id || event.data?.id || "");
       const userId = event.data?.metadata?.supabase_user_id || event.data?.user?.metadata?.supabase_user_id;
       if (!eventId || !userId) return res.status(400).json({ error: "Missing event identity or platform user" });
-      const type = String(event.type || "").toLowerCase();
-      const subscriptionId = String(event.data?.membership?.id || event.data?.id || "");
-      if (!subscriptionId) return res.status(400).json({ error: "Missing subscription identity" });
-      const { data: applied, error } = await adminSupabase.rpc("process_whop_event", {
-        p_event_id: eventId, p_payload: event, p_user_id: userId, p_user_email: event.data?.user?.email || "",
-        p_subscription_id: subscriptionId, p_event_type: type, p_period_end: event.data?.membership?.expires_at || null,
-      });
-      if (error) throw error;
-      res.status(200).json({ received: true, duplicate: !applied });
-    } catch (error) { console.error("Whop webhook processing failed", error); res.status(400).json({ error: "Invalid webhook payload" }); }
-  });
-  app.use(express.json({ limit: "1mb" }));
-  const prospectRequests = new Map<string, number[]>();
-  app.post("/api/prospects/analyze", async (req, res) => {
-    const token = req.header("authorization")?.replace(/^Bearer\s+/i, "");
-    const url = typeof req.body?.profileUrl === "string" ? req.body.profileUrl.trim() : "";
-    let parsed: URL;
-    try { parsed = new URL(url); } catch { return res.status(400).json({ error: "Please enter a valid LinkedIn profile URL." }); }
-    if (!/^([a-z]{2,3}\.)?linkedin\.com$/i.test(parsed.hostname) || !/^\/in\/[^/]+\/?$/i.test(parsed.pathname)) return res.status(400).json({ error: "Please enter a valid LinkedIn profile URL." });
-    if (!token || !supabaseUrl || !supabaseKey) return res.status(401).json({ error: "Authentication required." });
-    const authClient = createClient(supabaseUrl, supabaseKey, { global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false } });
-    const { data: { user } } = await authClient.auth.getUser();
-    if (!user) return res.status(401).json({ error: "Authentication required." });
-    const now = Date.now(), recent = (prospectRequests.get(user.id) || []).filter(t => now - t < 60_000);
-    if (recent.length >= 10) return res.status(429).json({ error: "Too many analyses. Please try again shortly." });
-    prospectRequests.set(user.id, [...recent, now]);
-    const providerUrl = process.env.PROSPECT_DATA_PROVIDER_URL, providerKey = process.env.PROSPECT_DATA_PROVIDER_KEY;
-    if (!providerUrl || !providerKey) return res.status(503).json({ error: "Prospect intelligence is not configured. No profile data was retrieved." });
-    try {
-      const provider = new URL(providerUrl);
-      if (provider.protocol !== "https:") throw new Error("Provider must use HTTPS");
-      const response = await fetch(provider, { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${providerKey}` }, body: JSON.stringify({ profile_url: `https://www.linkedin.com/in/${parsed.pathname.split("/")[2]}` }), signal: AbortSignal.timeout(8_000) });
-      if (!response.ok) throw new Error("Provider unavailable");
-      const data = await response.json();
-      res.json({ profileUrl: `https://www.linkedin.com/in/${parsed.pathname.split("/")[2]}`, source: data.source || provider.hostname, retrievedAt: new Date().toISOString(), data });
-    } catch { res.status(502).json({ error: "We couldn't retrieve enough information from this profile." }); }
-  });
 
   // API constraints check
   const apiKey = process.env.GEMINI_API_KEY;
