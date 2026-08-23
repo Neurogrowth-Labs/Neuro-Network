@@ -55,7 +55,7 @@ export default function Landing() {
   const faqItems = [
     {
       q: "What is the core of Neuro NetWorks?",
-      a: "Neuro NetWorks is a high-fidelity intelligence and design catalyst. It weaves together secure AI generation pipelines (powered by secure creative services) with your existing Google Workspace channels (Google Chat and Google Meet) for real-time collaboration and secure brand card sharing."
+      a: "Neuro NetWorks is a networking and digital-card platform with secure, consent-based collaboration and real-time card sharing."
     },
     {
       q: "How does the R250 subscription work?",
@@ -124,7 +124,7 @@ export default function Landing() {
             <div>
               <h3 className="text-xs font-bold text-white uppercase tracking-wide">Workspace Collaboration</h3>
               <p className="text-[11px] text-white/50 mt-1 leading-relaxed">
-                Connect and broadcast coordinates natively via Google Meet and Google Chat directly from your digital profile.
+                Connect with consent-based profiles and share digital cards directly from your profile.
               </p>
             </div>
           </div>
@@ -161,7 +161,7 @@ export default function Landing() {
           {[
             "Full access to AI Laboratory & Imagen Art Engine",
             "Unlimited Digital Business Card Customizations",
-            "Real-time Google Chat & Meet Port Nodes",
+            "Real-time connection requests and notifications",
             "Cryptographic Data Vault & Vault Comments",
             "No telemetry tracking or commercial ads"
           ].map((feat, i) => (

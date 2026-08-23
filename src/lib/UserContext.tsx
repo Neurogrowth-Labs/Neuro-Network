@@ -84,72 +84,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    let activeUser: any = null;
-    let activeSession: any = null;
-
-    try {
-      const stored = localStorage.getItem("admin_onboarding_session");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        // Correct legacy invalid ID to valid UUID to avoid PostgreSQL constraint errors
-        if (parsed.id === "simao-admin-uuid-99a") {
-          parsed.id = "99a99999-99aa-499a-a99a-99999999999a";
-          localStorage.setItem("admin_onboarding_session", JSON.stringify(parsed));
-        }
-        activeUser = parsed;
-        activeSession = {
-          access_token: "admin-session-v1",
-          refresh_token: "admin-session-v1",
-          expires_in: 3600,
-          expires_at: Math.floor(Date.now() / 1000) + 3600,
-          token_type: "bearer",
-          user: parsed,
-        };
-      }
-    } catch (e) {
-      console.error("Error reading admin_onboarding_session:", e);
-    }
-
-    if (activeUser) {
-      setUser(activeUser);
-      setSession(activeSession);
+    // Browser storage is not an authentication boundary. Only accept Supabase-issued sessions.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+    }).catch(error => {
+      console.error("Supabase getSession error:", error);
+    }).finally(() => {
       setLoading(false);
-    } else {
-      // Get initial session
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-      }).catch(error => {
-        console.error("Supabase getSession error:", error);
-      }).finally(() => {
-        setLoading(false);
-      });
-    }
+    });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      const stored = localStorage.getItem("admin_onboarding_session");
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (parsed.id === "simao-admin-uuid-99a") {
-            parsed.id = "99a99999-99aa-499a-a99a-99999999999a";
-            localStorage.setItem("admin_onboarding_session", JSON.stringify(parsed));
-          }
-          setSession({
-            access_token: "admin-session-v1",
-            refresh_token: "admin-session-v1",
-            expires_in: 3600,
-            expires_at: Math.floor(Date.now() / 1000) + 3600,
-            token_type: "bearer",
-            user: parsed,
-          });
-          setUser(parsed);
-          return;
-        } catch {
-          // fallback
-        }
-      }
       setSession(session);
       setUser(session?.user ?? null);
     });
@@ -329,7 +275,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    localStorage.removeItem("admin_onboarding_session");
     await supabase.auth.signOut();
   };
 
