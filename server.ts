@@ -6,7 +6,7 @@ import { GoogleGenAI } from "@google/genai";
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, query, where, getDoc, setLogLevel } from "firebase/firestore";
 import { createClient } from "@supabase/supabase-js";
-import { randomUUID } from "crypto";
+import { createHmac, randomUUID, timingSafeEqual } from "crypto";
 import firebaseConfig from "./firebase-applet-config.json" with { type: "json" };
 
 // Quiet down internal Firestore connection retry logs on projects with the Firestore API disabled
@@ -16,13 +16,63 @@ async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT || 3000);
 
-  // Middleware to parse JSON bodies
   app.disable("x-powered-by");
-  app.use(express.json({ limit: "10mb" }));
 
   // Supabase configuration
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const adminSupabase = supabaseUrl && serviceRoleKey ? createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } }) : null;
+
+  // Whop signs the unparsed payload. This endpoint is deliberately registered before JSON parsing.
+  app.post("/api/webhooks/whop", express.raw({ type: "application/json", limit: "1mb" }), async (req, res) => {
+    const signature = req.header("whop-signature");
+    const secret = process.env.WHOP_WEBHOOK_SECRET;
+    if (!adminSupabase || !secret || !signature) return res.status(503).json({ error: "Webhook unavailable" });
+    const expected = createHmac("sha256", secret).update(req.body).digest("hex");
+    if (signature.length !== expected.length || !timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return res.status(401).json({ error: "Invalid signature" });
+    try {
+      const event = JSON.parse(req.body.toString("utf8"));
+      const eventId = String(event.id || event.data?.id || "");
+      const userId = event.data?.metadata?.supabase_user_id || event.data?.user?.metadata?.supabase_user_id;
+      if (!eventId || !userId) return res.status(400).json({ error: "Missing event identity or platform user" });
+      const type = String(event.type || "").toLowerCase();
+      const subscriptionId = String(event.data?.membership?.id || event.data?.id || "");
+      if (!subscriptionId) return res.status(400).json({ error: "Missing subscription identity" });
+      const { data: applied, error } = await adminSupabase.rpc("process_whop_event", {
+        p_event_id: eventId, p_payload: event, p_user_id: userId, p_user_email: event.data?.user?.email || "",
+        p_subscription_id: subscriptionId, p_event_type: type, p_period_end: event.data?.membership?.expires_at || null,
+      });
+      if (error) throw error;
+      res.status(200).json({ received: true, duplicate: !applied });
+    } catch (error) { console.error("Whop webhook processing failed", error); res.status(400).json({ error: "Invalid webhook payload" }); }
+  });
+  app.use(express.json({ limit: "1mb" }));
+  const prospectRequests = new Map<string, number[]>();
+  app.post("/api/prospects/analyze", async (req, res) => {
+    const token = req.header("authorization")?.replace(/^Bearer\s+/i, "");
+    const url = typeof req.body?.profileUrl === "string" ? req.body.profileUrl.trim() : "";
+    let parsed: URL;
+    try { parsed = new URL(url); } catch { return res.status(400).json({ error: "Please enter a valid LinkedIn profile URL." }); }
+    if (!/^([a-z]{2,3}\.)?linkedin\.com$/i.test(parsed.hostname) || !/^\/in\/[^/]+\/?$/i.test(parsed.pathname)) return res.status(400).json({ error: "Please enter a valid LinkedIn profile URL." });
+    if (!token || !supabaseUrl || !supabaseKey) return res.status(401).json({ error: "Authentication required." });
+    const authClient = createClient(supabaseUrl, supabaseKey, { global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false } });
+    const { data: { user } } = await authClient.auth.getUser();
+    if (!user) return res.status(401).json({ error: "Authentication required." });
+    const now = Date.now(), recent = (prospectRequests.get(user.id) || []).filter(t => now - t < 60_000);
+    if (recent.length >= 10) return res.status(429).json({ error: "Too many analyses. Please try again shortly." });
+    prospectRequests.set(user.id, [...recent, now]);
+    const providerUrl = process.env.PROSPECT_DATA_PROVIDER_URL, providerKey = process.env.PROSPECT_DATA_PROVIDER_KEY;
+    if (!providerUrl || !providerKey) return res.status(503).json({ error: "Prospect intelligence is not configured. No profile data was retrieved." });
+    try {
+      const provider = new URL(providerUrl);
+      if (provider.protocol !== "https:") throw new Error("Provider must use HTTPS");
+      const response = await fetch(provider, { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${providerKey}` }, body: JSON.stringify({ profile_url: `https://www.linkedin.com/in/${parsed.pathname.split("/")[2]}` }), signal: AbortSignal.timeout(8_000) });
+      if (!response.ok) throw new Error("Provider unavailable");
+      const data = await response.json();
+      res.json({ profileUrl: `https://www.linkedin.com/in/${parsed.pathname.split("/")[2]}`, source: data.source || provider.hostname, retrievedAt: new Date().toISOString(), data });
+    } catch { res.status(502).json({ error: "We couldn't retrieve enough information from this profile." }); }
+  });
 
   // API constraints check
   const apiKey = process.env.GEMINI_API_KEY;
@@ -36,36 +86,6 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
-  const buildSubscriptionReceipt = (provider: string, body: any) => {
-    const startedAt = new Date();
-    const nextBillingDate = new Date(startedAt);
-    nextBillingDate.setDate(nextBillingDate.getDate() + 30);
-
-    return {
-      id: `${provider}_sub_${randomUUID()}`,
-      provider,
-      status: "active",
-      planName: body.planName || "Premium Monthly",
-      amountCents: Number(body.amountCents || 25000),
-      currency: body.currency || "ZAR",
-      interval: body.interval || "monthly",
-      payerEmail: body.payerEmail || body.email,
-      transactionId: `${provider}_txn_${randomUUID()}`,
-      providerSubscriptionId: `${provider}_billing_${randomUUID()}`,
-      startedAt: startedAt.toISOString(),
-      nextBillingDate: nextBillingDate.toISOString(),
-      mode: "test",
-    };
-  };
-
-  app.post("/api/payments/stripe-subscription", (req, res) => {
-    res.json(buildSubscriptionReceipt("stripe", req.body));
-  });
-
-  app.post("/api/payments/paypal-subscription", (req, res) => {
-    res.json(buildSubscriptionReceipt("paypal", req.body));
-  });
-
   app.get("/api/subscriptions/validate", (req, res) => {
     const trialExpiresAt = req.query.trial_expires_at ? new Date(String(req.query.trial_expires_at)).getTime() : 0;
     const activeUntil = req.query.subscription_active_until ? new Date(String(req.query.subscription_active_until)).getTime() : 0;
@@ -75,18 +95,6 @@ async function startServer() {
     res.json({ access, status: access ? status : "expired" });
   });
 
-  app.post("/api/payments/webhook/:provider", (req, res) => {
-    // Production: verify Stripe/PayPal signatures, persist event idempotently, then update Supabase subscription rows.
-    res.json({ received: true, provider: req.params.provider });
-  });
-
-  app.post("/api/payments/google-pay-subscription", (req, res) => {
-    if (!req.body?.googlePayToken) {
-      return res.status(400).json({ message: "Google Pay token is required." });
-    }
-
-    res.json(buildSubscriptionReceipt("google-pay", req.body));
-  });
 
   // LLM endpoint simulating base44 InvokeLLM
   app.post("/api/llm", async (req, res) => {
