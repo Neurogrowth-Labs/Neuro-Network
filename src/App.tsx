@@ -20,8 +20,6 @@ import {
   MessageCircle,
   Menu,
   X,
-  Video,
-  MessageSquare,
   Radar
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
@@ -34,8 +32,6 @@ import { hasPremiumAccess } from "./lib/subscription";
 
 // Pages
 import Dashboard from "./pages/Dashboard";
-import GoogleMeet from "./pages/GoogleMeet";
-import GoogleChat from "./pages/GoogleChat";
 import Vault from "./pages/Vault";
 import Editor from "./pages/Editor";
 import Admin from "./pages/Admin";
@@ -73,8 +69,6 @@ function TopNav() {
     { path: "/vault", icon: Contact, label: "Vault" },
     { path: "/editor", icon: Zap, label: "Studio" },
     { path: "/connect", icon: Radar, label: "Connect" },
-    { path: "/chat", icon: MessageSquare, label: "Google Chat" },
-    { path: "/meet", icon: Video, label: "Google Meet" },
   ];
 
   useEffect(() => {
@@ -391,8 +385,6 @@ function AppContent() {
             <Route path="/team" element={<Team />} />
             <Route path="/templates" element={<Templates />} />
             <Route path="/voice-call" element={<VoiceCall />} />
-            <Route path="/chat" element={<GoogleChat />} />
-            <Route path="/meet" element={<GoogleMeet />} />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
         </div>
