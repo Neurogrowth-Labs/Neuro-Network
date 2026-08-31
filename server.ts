@@ -81,6 +81,37 @@ async function startServer() {
     ai = new GoogleGenAI({ apiKey });
   }
 
+  // Research is deliberately limited to search-grounded, professional information. The
+  // model is instructed not to treat a search result as identity verification by itself.
+  app.post("/api/prospect-intelligence", async (req, res) => {
+    try {
+      const token = req.header("authorization")?.replace(/^Bearer\s+/i, "");
+      if (!token || !supabaseUrl || !supabaseKey) return res.status(401).json({ error: "Authentication required." });
+      const authClient = createClient(supabaseUrl, supabaseKey, { global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false } });
+      const { data: { user } } = await authClient.auth.getUser();
+      if (!user) return res.status(401).json({ error: "Authentication required." });
+      if (!ai) return res.status(503).json({ error: "Prospect intelligence is not configured." });
+
+      const input = req.body || {};
+      const name = typeof input.prospectName === "string" ? input.prospectName.trim().slice(0, 160) : "";
+      if (!name) return res.status(400).json({ error: "A prospect name is required." });
+      const details = ["company", "jobTitle", "industry", "location", "website", "userContext", "goal", "knownInformation", "channel", "additionalContext"]
+        .map(key => `${key}: ${typeof input[key] === "string" ? input[key].trim().slice(0, 2000) : ""}`).join("\n");
+      const prompt = `Research this professional prospect using Google Search and prepare a networking intelligence brief.\n\nProspect name: ${name}\n${details}\n\nUse only publicly available, professionally relevant information. Identity resolution comes first: if the name is ambiguous or a match cannot be reasonably corroborated by the supplied company, role, location, or career history, begin with a clear clarification request and possible matches rather than guessing. Never include private emails, phone numbers, home addresses, family information, financial information, credentials, private communications, or non-public location. Never invent facts, links, shared experiences, or personality traits.\n\nWrite in Markdown with exactly these numbered sections: 1. Prospect Overview; 2. Career History (include a compact table and label facts vs AI Interpretation); 3. Public Professional Links; 4. Recent Public Activity and Interests; 5. Connection Opportunity Analysis; 6. Communication Strategy; 7. Email Opening Strategy (3 subjects plus concise email); 8. In-Person Event Strategy (three opener variations, or say not applicable); 9. Conversation Roadmap; 10. Personalized Conversation Openers (five, ranked by relevance, each with risk level); 11. Neuro Network Recommendation. Include confidence labels (High, Moderate, or Low / requires verification) beside important claims. Cite sources inline as markdown links when available. Clearly separate Verified Information, Public Signals, and AI Interpretation. Recommendations must be authentic, low-pressure, and grounded in either source-backed or supplied context.`;
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: { tools: [{ googleSearch: {} }] },
+      });
+      const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+      const sources = chunks.map((chunk: any) => ({ title: chunk.web?.title, uri: chunk.web?.uri })).filter((source: any) => source.title && source.uri);
+      res.json({ report: response.text, sources });
+    } catch (err: any) {
+      console.error("Prospect intelligence error:", err);
+      res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Unable to generate the prospect brief." : err.message });
+    }
+  });
+
   // API routes
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
