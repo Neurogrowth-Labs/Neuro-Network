@@ -5,6 +5,7 @@ import {
   Link,
   Navigate,
   useLocation,
+  useNavigate,
 } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
@@ -62,6 +63,7 @@ function TopNav() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [notifications, setNotifications] = useState<Array<{ id: string | number; type: string; text: string; time: string }>>([]);
   const location = useLocation();
+  const navigate = useNavigate();
   const { profile, logout, isOnline } = useUser();
   const isAdmin = profile?.role === 'super_admin' || profile?.email === 'lusimadio12@gmail.com' || profile?.email === 'simao@neurogrowthlabs.co.za';
   const tabs = [
@@ -255,7 +257,16 @@ function TopNav() {
                   <div className="p-4 text-center text-xs text-white/40">No new notifications</div>
                 ) : (
                   notifications.map(n => (
-                    <div key={n.id} className="p-3 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer flex gap-3">
+                    <div
+                      key={n.id}
+                      className="p-3 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer flex gap-3"
+                      onClick={() => {
+                        if (n.type === "connection_request" || n.text.includes("connection request")) {
+                          navigate("/connect");
+                          setShowNotifications(false);
+                        }
+                      }}
+                    >
                       <div className="mt-1">
                         {n.type === "message" ? <MessageCircle className="w-4 h-4 text-cyan-400" /> : <Bell className="w-4 h-4 text-white/40" />}
                       </div>
