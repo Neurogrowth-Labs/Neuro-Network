@@ -46,7 +46,9 @@ export default function Connect() {
     const { data: profiles, error } = await supabase.rpc("discover_profiles", { p_query: term, p_limit: 30 });
     const { data: relationships } = await supabase.from("connections").select("id,requester_id,recipient_id,status").or(`requester_id.eq.${user.id},recipient_id.eq.${user.id}`);
     if (error) toast.error("Unable to load people. Please try again.");
-    setPeople((profiles || []) as Profile[]);
+    // The database RPC excludes the authenticated profile, but retain this client-side
+    // guard for installations that have not yet applied the Connect migrations.
+    setPeople(((profiles || []) as Profile[]).filter(profile => profile.id !== user.id));
     setConnections((relationships || []) as Connection[]);
     setLoading(false);
   };
@@ -167,7 +169,7 @@ export default function Connect() {
         </div>
       ) : people.length === 0 ? (
         <div className="rounded-xl border border-white/10 p-8 text-center text-sm text-white/50">
-          No active members match this search.
+          No other active members match this search.
         </div>
       ) : (
         <div className="space-y-3">
