@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 import BiometricVerification from './BiometricVerification';
 
-const VISIT_KEY = 'neuro_networks_auth_awakened';
+const INTRO_DURATION_MS = 10_000;
 
 export default function Auth() {
   const [loading, setLoading] = useState(false);
@@ -15,16 +15,15 @@ export default function Auth() {
   const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showBiometric, setShowBiometric] = useState(false);
-  const [returningVisit, setReturningVisit] = useState(false);
+  const [introComplete, setIntroComplete] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const isSignUp = authMode === 'sign-up';
   const isRecover = authMode === 'recover';
 
   useEffect(() => {
-    const hasVisited = localStorage.getItem(VISIT_KEY) === 'true';
-    setReturningVisit(hasVisited);
-    localStorage.setItem(VISIT_KEY, 'true');
+    const timer = window.setTimeout(() => setIntroComplete(true), INTRO_DURATION_MS);
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -59,8 +58,7 @@ export default function Auth() {
 
     const draw = () => {
       frame += 1;
-      const duration = returningVisit ? 60 : 252;
-      const progress = Math.min(frame / duration, 1);
+      const progress = Math.min(frame / 600, 1);
       const cx = width / 2;
       const cy = height / 2;
       const radius = Math.min(width, height) * 0.42;
@@ -70,14 +68,14 @@ export default function Auth() {
       ctx.fillRect(0, 0, width, height);
 
       const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 1.4);
-      glow.addColorStop(0, `rgba(124,58,237,${0.05 + progress * 0.12})`);
+      glow.addColorStop(0, `rgba(30,104,189,${0.06 + progress * 0.16})`);
       glow.addColorStop(0.45, 'rgba(8,145,178,0.08)');
       glow.addColorStop(1, 'rgba(2,3,10,0)');
       ctx.fillStyle = glow;
       ctx.fillRect(0, 0, width, height);
 
-      const awakening = returningVisit ? Math.min(progress * 2.8, 1) : Math.max(0, Math.min((progress - 0.18) / 0.32, 1));
-      const logoPulse = returningVisit ? Math.sin(progress * Math.PI) : Math.max(0, Math.sin((progress - 0.66) * Math.PI * 3));
+      const awakening = Math.max(0, Math.min((progress - 0.08) / 0.28, 1));
+      const logoPulse = Math.max(0, Math.sin((progress - 0.48) * Math.PI * 2));
       const positions = nodes.map((node) => {
         node.drift += node.speed;
         const wave = Math.sin(frame * 0.012 + node.phase) * 14;
@@ -105,7 +103,7 @@ export default function Auth() {
       positions.forEach((p, index) => {
         ctx.beginPath();
         ctx.arc(p.x, p.y, index % 9 === 0 ? 2.1 : 1.3, 0, Math.PI * 2);
-        ctx.fillStyle = index % 7 === 0 ? `rgba(167,139,250,${p.a + logoPulse * 0.18})` : `rgba(103,232,249,${p.a})`;
+        ctx.fillStyle = index % 7 === 0 ? `rgba(186,230,253,${p.a + logoPulse * 0.18})` : `rgba(103,232,249,${p.a})`;
         ctx.shadowColor = '#67e8f9';
         ctx.shadowBlur = 10 * awakening + 20 * logoPulse;
         ctx.fill();
@@ -128,7 +126,7 @@ export default function Auth() {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', resize);
     };
-  }, [returningVisit]);
+  }, []);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -197,11 +195,24 @@ export default function Auth() {
   return (
     <div className="relative flex h-screen min-h-screen w-full items-center justify-center overflow-hidden bg-[#02030a] p-4 text-white">
       <canvas ref={canvasRef} className="absolute inset-0 z-0 h-full w-full" />
-      <div className={`pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(2,3,10,0.18)_46%,rgba(2,3,10,0.82)_100%)] ${returningVisit ? 'animate-neural-return' : 'animate-neural-awakening'}`} />
+      <div className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,8,18,0.22)_46%,rgba(0,0,0,0.88)_100%)]" />
 
-      <div className={`relative z-20 w-full max-w-[410px] rounded-[24px] border border-white/10 bg-white/[0.04] p-6 shadow-[0_28px_90px_rgba(0,0,0,0.5)] backdrop-blur-2xl sm:p-8 ${returningVisit ? 'animate-auth-card-return' : 'animate-auth-card-awake'}`}>
+      {!introComplete && (
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-8 text-center animate-brand-intro">
+          <div className="brand-logo-orbit relative flex h-28 w-28 items-center justify-center rounded-[2rem] border border-white/30 bg-white/[0.10] shadow-[0_0_75px_rgba(96,165,250,0.38)] backdrop-blur-xl">
+            <span className="absolute -inset-3 rounded-[2.35rem] border border-sky-300/20" />
+            <img src="/icon.png" alt="Neuro Networks" onError={(e) => (e.currentTarget.src = '/logo.png')} className="relative h-20 w-20 rounded-2xl object-cover" />
+          </div>
+          <p className="mt-8 text-[11px] font-bold uppercase tracking-[0.55em] text-sky-100">Neuro Networks</p>
+          <p className="mt-3 max-w-[250px] text-sm leading-6 text-white/60">Premium relationship intelligence for modern business.</p>
+          <div className="mt-9 h-px w-40 overflow-hidden rounded-full bg-white/15"><span className="block h-full bg-gradient-to-r from-transparent via-sky-200 to-transparent animate-intro-progress" /></div>
+          <p className="mt-3 text-[9px] font-semibold uppercase tracking-[0.24em] text-white/35">Preparing your workspace</p>
+        </div>
+      )}
+
+      {introComplete && <div className="relative z-20 w-full max-w-[410px] rounded-[24px] border border-white/20 bg-slate-950/70 p-6 shadow-[0_28px_90px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-2xl animate-auth-card-return sm:p-8">
         <div className="mb-7 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-300/20 bg-gradient-to-br from-violet-500/25 to-cyan-400/20 shadow-[0_0_32px_rgba(34,211,238,0.22)]">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/30 bg-gradient-to-br from-blue-500/30 to-sky-200/20 shadow-[0_0_32px_rgba(96,165,250,0.28)]">
             <img src="/icon.png" alt="Neuro Networks logo" onError={(e) => (e.currentTarget.src = '/logo.png')} className="h-10 w-10 rounded-xl object-cover" />
           </div>
           <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-cyan-200/70">Neuro Networks</p>
@@ -281,7 +292,7 @@ export default function Auth() {
           <button
             type="submit"
             disabled={loading}
-            className="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-400 text-sm font-bold text-slate-950 shadow-[0_0_26px_rgba(34,211,238,0.24)] transition hover:shadow-[0_0_36px_rgba(124,58,237,0.35)] disabled:opacity-60"
+            className="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-sky-100 text-sm font-bold text-slate-950 shadow-[0_0_26px_rgba(96,165,250,0.28)] transition hover:from-blue-400 hover:to-white hover:shadow-[0_0_36px_rgba(96,165,250,0.42)] disabled:opacity-60"
           >
             {loading
               ? 'Securing channel'
@@ -324,7 +335,7 @@ export default function Auth() {
             Use biometric {isSignUp ? 'setup' : 'sign in'} instead
           </button>
         )}
-      </div>
+      </div>}
 
       {showBiometric && (
         <div className="absolute inset-0 z-40 overflow-y-auto bg-black/75 p-4 backdrop-blur-xl">
