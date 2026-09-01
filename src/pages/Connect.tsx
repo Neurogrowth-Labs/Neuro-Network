@@ -126,9 +126,6 @@ export default function Connect() {
         </section>
       )}
 
-      <section className="overflow-hidden rounded-2xl border border-blue-300/25 bg-gradient-to-br from-blue-500/[.16] to-sky-200/[.07]">
-        <button onClick={() => setShowIntelligence(!showIntelligence)} className="flex w-full items-center gap-3 p-4 text-left">
-          <div className="rounded-xl border border-sky-200/30 bg-blue-400/10 p-2"><BrainCircuit className="h-5 w-5 text-sky-100" /></div>
           <div className="min-w-0 flex-1"><h2 className="text-sm font-bold text-white">Prospect Intelligence</h2><p className="mt-0.5 text-xs text-white/55">Research public signals and prepare an authentic conversation.</p></div>
           <ChevronDown className={`h-4 w-4 text-white/50 transition-transform ${showIntelligence ? "rotate-180" : ""}`} />
         </button>
@@ -141,13 +138,11 @@ export default function Connect() {
               <div className="grid grid-cols-2 gap-3"><Field label="Industry" value={prospectForm.industry} onChange={value => updateProspect("industry", value)} placeholder="Optional" /><Field label="City or country" value={prospectForm.location} onChange={value => updateProspect("location", value)} placeholder="Optional" /></div>
               <Field label="Website or profile URL" value={prospectForm.website} onChange={value => updateProspect("website", value)} placeholder="Optional" />
             </div>
-            <div className="border-t border-white/10 pt-4"><p className="mb-3 text-xs font-bold uppercase tracking-wider text-sky-100">Tell Neuro Network about yourself</p>
               <TextField label="Your role, project, background, and expertise *" value={prospectForm.userContext} onChange={value => updateProspect("userContext", value)} placeholder="What do you do, and what experience or skills are relevant?" />
               <div className="mt-3 grid grid-cols-2 gap-3"><SelectField label="Your goal" value={prospectForm.goal} onChange={value => updateProspect("goal", value)} options={["Build a professional relationship", "Sales or business development", "Partnership", "Fundraising", "Investment", "Mentorship", "Recruitment", "Career opportunity", "Media or podcast invitation", "Community building", "General networking", "Other"]} /><SelectField label="Contact channel" value={prospectForm.channel} onChange={value => updateProspect("channel", value)} options={["Email", "LinkedIn", "X", "Networking event", "Conference", "Private meeting", "Other"]} /></div>
               <div className="mt-3"><TextField label="What do you know about the prospect already?" value={prospectForm.knownInformation} onChange={value => updateProspect("knownInformation", value)} placeholder="Optional: known work, articles, shared interests, or prior interaction" /></div>
               <div className="mt-3"><TextField label="Additional context" value={prospectForm.additionalContext} onChange={value => updateProspect("additionalContext", value)} placeholder="Optional: mutual contacts, upcoming event, constraints, or reason for reaching out" /></div>
             </div>
-            <button onClick={generateBrief} disabled={researching} className="flex w-full items-center justify-center gap-2 rounded-xl bg-sky-100 px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-950 transition hover:bg-white disabled:opacity-60">{researching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}{researching ? "Researching public sources…" : "Generate connection strategy"}</button>
             {research && <ResearchBrief research={research} />}
           </div>
         )}
@@ -218,14 +213,4 @@ export default function Connect() {
 }
 
 function Field({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder: string }) {
-  return <label className="block text-[11px] font-medium text-white/65">{label}<input value={value} onChange={event => onChange(event.target.value)} placeholder={placeholder} className="mt-1.5 w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none placeholder:text-white/25 focus:border-sky-200/60" /></label>;
-}
-function TextField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder: string }) {
-  return <label className="block text-[11px] font-medium text-white/65">{label}<textarea value={value} onChange={event => onChange(event.target.value)} placeholder={placeholder} rows={3} className="mt-1.5 w-full resize-y rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none placeholder:text-white/25 focus:border-sky-200/60" /></label>;
-}
-function SelectField({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: string[] }) {
-  return <label className="block text-[11px] font-medium text-white/65">{label}<select value={value} onChange={event => onChange(event.target.value)} className="mt-1.5 w-full rounded-lg border border-white/10 bg-[#17151d] px-3 py-2 text-sm text-white outline-none focus:border-sky-200/60">{options.map(option => <option key={option}>{option}</option>)}</select></label>;
-}
-function ResearchBrief({ research }: { research: ResearchResult }) {
-  return <article className="rounded-xl border border-white/10 bg-black/25 p-4"><div className="mb-3 flex items-center gap-2"><BrainCircuit className="h-4 w-4 text-sky-100" /><h3 className="text-xs font-bold uppercase tracking-wider text-sky-100">Connection strategy</h3></div><div className="whitespace-pre-wrap text-sm leading-6 text-white/80">{research.report}</div>{research.sources.length > 0 && <div className="mt-5 border-t border-white/10 pt-3"><p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-white/45">Search-grounded sources</p><div className="space-y-1.5">{research.sources.map(source => <a key={source.uri} href={source.uri} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-xs text-cyan-200 hover:text-cyan-100"><ExternalLink className="h-3 w-3 shrink-0" /><span className="truncate">{source.title}</span></a>)}</div></div>}</article>;
 }
