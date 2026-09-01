@@ -302,7 +302,7 @@ function AppContent() {
   if (!user) {
     return (
       <div className="min-h-screen app-aurora text-white flex justify-center">
-        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative glass-panel shadow-2xl">
+        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 relative glass-panel premium-device-frame">
           <Auth />
         </div>
       </div>
@@ -315,7 +315,7 @@ function AppContent() {
   if (isSuspended) {
     return (
       <div className="min-h-screen app-aurora text-white flex justify-center">
-        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative bg-red-950/30 glass-panel shadow-2xl flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 relative bg-red-950/30 glass-panel premium-device-frame flex flex-col items-center justify-center p-6 text-center">
           <div className="w-16 h-16 rounded-full bg-red-950/50 border border-red-500/30 flex items-center justify-center mb-6 text-red-500 animate-pulse animate-duration-1000">
             <Shield className="w-8 h-8" />
           </div>
@@ -337,7 +337,7 @@ function AppContent() {
   if (!isAdmin && !hasAccess) {
     return (
       <div className="min-h-screen app-aurora text-white flex justify-center">
-        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative glass-panel shadow-2xl">
+        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 relative glass-panel premium-device-frame">
           <div className="h-full overflow-y-auto scrollbar-hide">
             <Checkout />
           </div>
@@ -349,7 +349,7 @@ function AppContent() {
   if (maintenanceMode && !isAdmin) {
     return (
       <div className="min-h-screen app-aurora text-white flex justify-center">
-        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative bg-amber-950/25 glass-panel shadow-2xl flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 relative bg-amber-950/25 glass-panel premium-device-frame flex flex-col items-center justify-center p-6 text-center">
           <div className="w-16 h-16 rounded-full bg-amber-950/50 border border-amber-500/30 flex items-center justify-center mb-6 text-amber-500 animate-pulse">
             <BrainCircuit className="w-8 h-8" />
           </div>
@@ -368,7 +368,7 @@ function AppContent() {
   return (
     <div className="min-h-screen app-aurora text-white flex justify-center">
       {/* Mobile frame container */}
-      <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 md:border-[#1a1a24] relative glass-panel shadow-2xl">
+      <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 relative glass-panel premium-device-frame">
         <TopNav />
         <div className="h-full overflow-y-auto pt-16 pb-6 scrollbar-hide">
           <Routes>
