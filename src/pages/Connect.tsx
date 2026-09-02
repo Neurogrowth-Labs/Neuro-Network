@@ -29,15 +29,18 @@ export default function Connect() {
   const [research, setResearch] = useState<ResearchResult | null>(null);
 
   useEffect(() => {
-    if (!prospectForm.userContext && (profile.job_title || profile.company || profile.industry || profile.bio)) {
-      setProspectForm(form => ({ ...form, userContext: [
-        profile.job_title && `Role: ${profile.job_title}`,
-        profile.company && `Company: ${profile.company}`,
-        profile.industry && `Industry: ${profile.industry}`,
-        profile.bio && `Background: ${profile.bio}`,
-      ].filter(Boolean).join("\n") }));
+    if (!prospectForm.userContext && (profile?.job_title || profile?.company || profile?.industry || profile?.bio)) {
+      setProspectForm(form => ({
+        ...form,
+        userContext: [
+          profile.job_title && `Role: ${profile.job_title}`,
+          profile.company && `Company: ${profile.company}`,
+          profile.industry && `Industry: ${profile.industry}`,
+          profile.bio && `Background: ${profile.bio}`,
+        ].filter(Boolean).join("\n")
+      }));
     }
-  }, [profile.job_title, profile.company, profile.industry, profile.bio]);
+  }, [profile?.job_title, profile?.company, profile?.industry, profile?.bio]);
 
   const load = async () => {
     if (!user) return;
@@ -46,21 +49,28 @@ export default function Connect() {
     const { data: profiles, error } = await supabase.rpc("discover_profiles", { p_query: term, p_limit: 30 });
     const { data: relationships } = await supabase.from("connections").select("id,requester_id,recipient_id,status").or(`requester_id.eq.${user.id},recipient_id.eq.${user.id}`);
     if (error) toast.error("Unable to load people. Please try again.");
-    // The database RPC excludes the authenticated profile, but retain this client-side
-    // guard for installations that have not yet applied the Connect migrations.
-    setPeople(((profiles || []) as Profile[]).filter(profile => profile.id !== user.id));
+    
+    setPeople(((profiles || []) as Profile[]).filter(p => p.id !== user.id));
     setConnections((relationships || []) as Connection[]);
     setLoading(false);
   };
 
-  useEffect(() => { const timer = window.setTimeout(load, 250); return () => window.clearTimeout(timer); }, [user?.id, query]);
+  useEffect(() => { 
+    const timer = window.setTimeout(load, 250); 
+    return () => window.clearTimeout(timer); 
+  }, [user?.id, query]);
+
   useEffect(() => {
     if (!user) return;
-    const channel = supabase.channel(`connections:${user.id}`).on("postgres_changes", { event: "*", schema: "public", table: "connections", filter: `requester_id=eq.${user.id}` }, load).on("postgres_changes", { event: "*", schema: "public", table: "connections", filter: `recipient_id=eq.${user.id}` }, load).subscribe();
+    const channel = supabase.channel(`connections:${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "connections", filter: `requester_id=eq.${user.id}` }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "connections", filter: `recipient_id=eq.${user.id}` }, load)
+      .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user?.id]);
 
   const relationship = (id: string) => connections.find(c => c.requester_id === id || c.recipient_id === id);
+
   const request = async (recipientId: string) => {
     setSubmitting(recipientId);
     const { error } = await supabase.rpc("request_connection", { p_recipient_id: recipientId });
@@ -68,13 +78,17 @@ export default function Connect() {
     else { toast.success("Connection request sent."); await load(); }
     setSubmitting(null);
   };
+
   const accept = async (id: string) => {
     setSubmitting(id);
     const { error } = await supabase.rpc("respond_to_connection", { p_connection_id: id, p_accept: true });
     error ? toast.error("Could not accept request.") : toast.success("Connection accepted and added to your Vault.");
-    await load(); setSubmitting(null);
+    await load(); 
+    setSubmitting(null);
   };
+
   const updateProspect = (key: keyof ProspectForm, value: string) => setProspectForm(form => ({ ...form, [key]: value }));
+
   const generateBrief = async () => {
     if (!prospectForm.prospectName.trim()) return toast.error("Enter the prospect's full name first.");
     if (!prospectForm.userContext.trim()) return toast.error("Tell Neuro Network a little about your professional context.");
@@ -94,6 +108,7 @@ export default function Connect() {
       toast.error(error instanceof Error ? error.message : "Unable to generate the prospect brief.");
     } finally { setResearching(false); }
   };
+
   const pendingReceived = useMemo(() => connections.filter(c => c.recipient_id === user?.id && c.status === "pending"), [connections, user?.id]);
 
   return (
@@ -126,28 +141,68 @@ export default function Connect() {
         </section>
       )}
 
-          <div className="min-w-0 flex-1"><h2 className="text-sm font-bold text-white">Prospect Intelligence</h2><p className="mt-0.5 text-xs text-white/55">Research public signals and prepare an authentic conversation.</p></div>
+      {/* Prospect Intelligence Accordion Section */}
+      <section className="rounded-2xl border border-white/10 bg-white/[.02] overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setShowIntelligence(!showIntelligence)}
+          className="flex w-full items-center justify-between p-4 text-left"
+        >
+          <div className="min-w-0 flex-1">
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <BrainCircuit className="h-4 w-4 text-cyan-400" />
+              Prospect Intelligence
+            </h2>
+            <p className="mt-0.5 text-xs text-white/55">Research public signals and prepare an authentic conversation.</p>
+          </div>
           <ChevronDown className={`h-4 w-4 text-white/50 transition-transform ${showIntelligence ? "rotate-180" : ""}`} />
         </button>
+
         {showIntelligence && (
           <div className="space-y-4 border-t border-white/10 p-4">
-            <div className="rounded-xl border border-amber-300/15 bg-amber-300/[.06] p-3 text-xs leading-relaxed text-amber-50/75"><ShieldCheck className="mr-1 inline h-3.5 w-3.5 text-amber-200" /> Uses public, professionally relevant sources only. Verify important details and do not use private or sensitive information.</div>
+            <div className="rounded-xl border border-amber-300/15 bg-amber-300/[.06] p-3 text-xs leading-relaxed text-amber-50/75">
+              <ShieldCheck className="mr-1 inline h-3.5 w-3.5 text-amber-200" /> 
+              Uses public, professionally relevant sources only. Verify important details and do not use private or sensitive information.
+            </div>
+            
             <div className="grid grid-cols-1 gap-3">
               <Field label="Who do you want to connect with? *" value={prospectForm.prospectName} onChange={value => updateProspect("prospectName", value)} placeholder="Full name" />
-              <div className="grid grid-cols-2 gap-3"><Field label="Company" value={prospectForm.company} onChange={value => updateProspect("company", value)} placeholder="Optional" /><Field label="Job title" value={prospectForm.jobTitle} onChange={value => updateProspect("jobTitle", value)} placeholder="Optional" /></div>
-              <div className="grid grid-cols-2 gap-3"><Field label="Industry" value={prospectForm.industry} onChange={value => updateProspect("industry", value)} placeholder="Optional" /><Field label="City or country" value={prospectForm.location} onChange={value => updateProspect("location", value)} placeholder="Optional" /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Company" value={prospectForm.company} onChange={value => updateProspect("company", value)} placeholder="Optional" />
+                <Field label="Job title" value={prospectForm.jobTitle} onChange={value => updateProspect("jobTitle", value)} placeholder="Optional" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Industry" value={prospectForm.industry} onChange={value => updateProspect("industry", value)} placeholder="Optional" />
+                <Field label="City or country" value={prospectForm.location} onChange={value => updateProspect("location", value)} placeholder="Optional" />
+              </div>
               <Field label="Website or profile URL" value={prospectForm.website} onChange={value => updateProspect("website", value)} placeholder="Optional" />
             </div>
-              <TextField label="Your role, project, background, and expertise *" value={prospectForm.userContext} onChange={value => updateProspect("userContext", value)} placeholder="What do you do, and what experience or skills are relevant?" />
-              <div className="mt-3 grid grid-cols-2 gap-3"><SelectField label="Your goal" value={prospectForm.goal} onChange={value => updateProspect("goal", value)} options={["Build a professional relationship", "Sales or business development", "Partnership", "Fundraising", "Investment", "Mentorship", "Recruitment", "Career opportunity", "Media or podcast invitation", "Community building", "General networking", "Other"]} /><SelectField label="Contact channel" value={prospectForm.channel} onChange={value => updateProspect("channel", value)} options={["Email", "LinkedIn", "X", "Networking event", "Conference", "Private meeting", "Other"]} /></div>
-              <div className="mt-3"><TextField label="What do you know about the prospect already?" value={prospectForm.knownInformation} onChange={value => updateProspect("knownInformation", value)} placeholder="Optional: known work, articles, shared interests, or prior interaction" /></div>
-              <div className="mt-3"><TextField label="Additional context" value={prospectForm.additionalContext} onChange={value => updateProspect("additionalContext", value)} placeholder="Optional: mutual contacts, upcoming event, constraints, or reason for reaching out" /></div>
+
+            <TextField label="Your role, project, background, and expertise *" value={prospectForm.userContext} onChange={value => updateProspect("userContext", value)} placeholder="What do you do, and what experience or skills are relevant?" />
+            
+            <div className="grid grid-cols-2 gap-3">
+              <SelectField label="Your goal" value={prospectForm.goal} onChange={value => updateProspect("goal", value)} options={["Build a professional relationship", "Sales or business development", "Partnership", "Fundraising", "Investment", "Mentorship", "Recruitment", "Career opportunity", "Media or podcast invitation", "Community building", "General networking", "Other"]} />
+              <SelectField label="Contact channel" value={prospectForm.channel} onChange={value => updateProspect("channel", value)} options={["Email", "LinkedIn", "X", "Networking event", "Conference", "Private meeting", "Other"]} />
             </div>
+
+            <TextField label="What do you know about the prospect already?" value={prospectForm.knownInformation} onChange={value => updateProspect("knownInformation", value)} placeholder="Optional: known work, articles, shared interests, or prior interaction" />
+            <TextField label="Additional context" value={prospectForm.additionalContext} onChange={value => updateProspect("additionalContext", value)} placeholder="Optional: mutual contacts, upcoming event, constraints, or reason for reaching out" />
+
+            <button
+              onClick={generateBrief}
+              disabled={researching}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-400 px-4 py-3 text-xs font-bold text-black transition hover:bg-cyan-300 disabled:opacity-50"
+            >
+              {researching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {researching ? "Generating Intelligence Brief..." : "Generate Brief"}
+            </button>
+
             {research && <ResearchBrief research={research} />}
           </div>
         )}
       </section>
 
+      {/* Profile Discovery Search & Cards */}
       <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-3">
         <Search className="h-4 w-4 text-white/40" />
         <input
@@ -212,5 +267,73 @@ export default function Connect() {
   );
 }
 
-function Field({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder: string }) {
+{/* Helper UI Components */}
+function Field({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder: string }) {
+  return (
+    <div>
+      <label className="block text-[11px] font-medium text-white/60 mb-1">{label}</label>
+      <input
+        type="text"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white placeholder:text-white/20 focus:border-cyan-400/50 focus:outline-none"
+      />
+    </div>
+  );
+}
+
+function TextField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder: string }) {
+  return (
+    <div>
+      <label className="block text-[11px] font-medium text-white/60 mb-1">{label}</label>
+      <textarea
+        rows={3}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white placeholder:text-white/20 focus:border-cyan-400/50 focus:outline-none"
+      />
+    </div>
+  );
+}
+
+function SelectField({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: string[] }) {
+  return (
+    <div>
+      <label className="block text-[11px] font-medium text-white/60 mb-1">{label}</label>
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white focus:border-cyan-400/50 focus:outline-none"
+      >
+        {options.map(opt => (
+          <option key={opt} value={opt} className="bg-[#0a0a0c] text-white">
+            {opt}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function ResearchBrief({ research }: { research: ResearchResult }) {
+  return (
+    <div className="mt-4 rounded-xl border border-cyan-500/20 bg-cyan-950/20 p-4 text-xs space-y-3">
+      <h3 className="font-bold text-cyan-400 flex items-center gap-1.5">
+        <Sparkles className="h-3.5 w-3.5" /> Intelligence Brief
+      </h3>
+      <div className="whitespace-pre-wrap leading-relaxed text-white/80">{research.report}</div>
+      {research.sources && research.sources.length > 0 && (
+        <div className="border-t border-white/10 pt-2 space-y-1">
+          <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Sources</p>
+          {research.sources.map((src, idx) => (
+            <a key={idx} href={src.uri} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[11px] text-cyan-300 hover:underline">
+              <ExternalLink className="h-3 w-3" /> {src.title || src.uri}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
