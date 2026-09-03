@@ -200,7 +200,12 @@ export default function Auth() {
       {!introComplete && (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-8 text-center animate-brand-intro">
          <div className="brand-logo-orbit relative flex h-28 w-28 items-center justify-center">
-            <img src="/icon.png" alt="Neuro Networks" onError={(e) => (e.currentTarget.src = '/logo.png')} className="relative h-20 w-20 rounded-2xl object-cover" />
+            <img 
+              src="/icon.png" 
+              alt="Neuro Networks" 
+              onError={(e) => (e.currentTarget.src = '/logo.png')} 
+              className="relative h-24 w-24 object-contain mix-blend-screen" 
+            />
           </div>
           <p className="mt-8 text-[11px] font-bold uppercase tracking-[0.55em] text-sky-100">Neuro Networks</p>
           <p className="mt-3 max-w-[250px] text-sm leading-6 text-white/60">Premium relationship intelligence for modern business.</p>
