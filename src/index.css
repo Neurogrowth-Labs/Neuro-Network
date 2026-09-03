@@ -282,8 +282,8 @@
   .animate-brand-intro { animation: brand-intro 10s ease forwards; }
 
   @keyframes logo-orbit {
-    0%, 100% { transform: translateY(0) scale(1); box-shadow: 0 0 75px rgba(96, 165, 250, 0.30); }
-    50% { transform: translateY(-10px) scale(1.035); box-shadow: 0 0 105px rgba(186, 230, 253, 0.44); }
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-10px) scale(1.035); }
   }
   .brand-logo-orbit { animation: logo-orbit 3.5s ease-in-out infinite; }
 
