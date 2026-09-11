@@ -34,8 +34,8 @@ export default function Auth() {
 
     let frame = 0;
     let animationFrameId: number;
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
+    let width = canvas.clientWidth;
+    let height = canvas.clientHeight;
 
     const nodes = Array.from({ length: 58 }).map((_, index) => {
       const angle = (Math.PI * 2 * index) / 58;
@@ -50,26 +50,31 @@ export default function Auth() {
     });
 
     const resize = () => {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      width = canvas.clientWidth;
+      height = canvas.clientHeight;
+      canvas.width = width * ratio;
+      canvas.height = height * ratio;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     };
 
     window.addEventListener('resize', resize);
+    resize();
 
     const draw = () => {
       frame += 1;
       const progress = Math.min(frame / 600, 1);
       const cx = width / 2;
-      const cy = height / 2;
-      const radius = Math.min(width, height) * 0.42;
+      const cy = height * 1.1;
+      const radius = Math.max(width, height) * 0.58;
 
       ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = '#02030a';
+      ctx.fillStyle = '#01050d';
       ctx.fillRect(0, 0, width, height);
 
-      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 1.4);
-      glow.addColorStop(0, `rgba(30,104,189,${0.06 + progress * 0.16})`);
-      glow.addColorStop(0.45, 'rgba(8,145,178,0.08)');
+      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 1.15);
+      glow.addColorStop(0, `rgba(6,92,190,${0.13 + progress * 0.14})`);
+      glow.addColorStop(0.55, 'rgba(12,47,128,0.10)');
       glow.addColorStop(1, 'rgba(2,3,10,0)');
       ctx.fillStyle = glow;
       ctx.fillRect(0, 0, width, height);
@@ -80,7 +85,7 @@ export default function Auth() {
         node.drift += node.speed;
         const wave = Math.sin(frame * 0.012 + node.phase) * 14;
         const orbit = node.angle + Math.sin(node.drift) * 0.08;
-        const r = radius * node.ring * awakening + wave;
+        const r = radius * (0.92 + node.ring) * awakening + wave;
         return { x: cx + Math.cos(orbit) * r, y: cy + Math.sin(orbit) * r, a: 0.04 + awakening * 0.08 };
       });
 
@@ -89,8 +94,11 @@ export default function Auth() {
           const p1 = positions[i];
           const p2 = positions[j];
           const d = Math.hypot(p1.x - p2.x, p1.y - p2.y);
-          if (d < 150) {
-            ctx.strokeStyle = `rgba(103,232,249,${(1 - d / 150) * 0.09 * awakening})`;
+          if (d < 220) {
+            const purple = (p1.x + p2.x) / 2 > cx;
+            ctx.strokeStyle = purple
+              ? `rgba(139,48,255,${(1 - d / 220) * 0.28 * awakening})`
+              : `rgba(0,151,255,${(1 - d / 220) * 0.28 * awakening})`;
             ctx.lineWidth = 0.6;
             ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
@@ -102,21 +110,14 @@ export default function Auth() {
 
       positions.forEach((p, index) => {
         ctx.beginPath();
-        ctx.arc(p.x, p.y, index % 9 === 0 ? 2.1 : 1.3, 0, Math.PI * 2);
-        ctx.fillStyle = index % 7 === 0 ? `rgba(186,230,253,${p.a + logoPulse * 0.18})` : `rgba(103,232,249,${p.a})`;
-        ctx.shadowColor = '#67e8f9';
-        ctx.shadowBlur = 10 * awakening + 20 * logoPulse;
+        ctx.arc(p.x, p.y, index % 9 === 0 ? 3.5 : 2, 0, Math.PI * 2);
+        const purple = p.x > cx;
+        ctx.fillStyle = purple ? `rgba(175,50,255,${p.a * 3 + logoPulse * 0.18})` : `rgba(0,164,255,${p.a * 3})`;
+        ctx.shadowColor = purple ? '#9c2dff' : '#00a4ff';
+        ctx.shadowBlur = 12 * awakening + 20 * logoPulse;
         ctx.fill();
         ctx.shadowBlur = 0;
       });
-
-      ctx.beginPath();
-      ctx.arc(cx, cy, 2.5 + Math.sin(frame * 0.08) * 1.2 + logoPulse * 6, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${0.55 + progress * 0.28})`;
-      ctx.shadowColor = '#22d3ee';
-      ctx.shadowBlur = 18 + logoPulse * 36;
-      ctx.fill();
-      ctx.shadowBlur = 0;
 
       animationFrameId = requestAnimationFrame(draw);
     };
@@ -198,19 +199,18 @@ export default function Auth() {
       <div className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,8,18,0.22)_46%,rgba(0,0,0,0.88)_100%)]" />
 
       {!introComplete && (
-        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-8 text-center animate-brand-intro">
-         <div className="brand-logo-orbit relative flex h-28 w-28 items-center justify-center overflow-hidden">
-            <img 
-              src="/icon-clean.png" 
-              alt="Neuro Networks" 
-              onError={(e) => (e.currentTarget.src = '/logo.png')} 
-              className="relative h-24 w-24 object-contain" 
-            />
-          </div>
-          <p className="mt-8 text-[11px] font-bold uppercase tracking-[0.55em] text-sky-100">Neuro Networks</p>
-          <p className="mt-3 max-w-[250px] text-sm leading-6 text-white/60">Premium relationship intelligence for modern business.</p>
-          <div className="mt-9 h-px w-40 overflow-hidden rounded-full bg-white/15"><span className="block h-full bg-gradient-to-r from-transparent via-sky-200 to-transparent animate-intro-progress" /></div>
-          <p className="mt-3 text-[9px] font-semibold uppercase tracking-[0.24em] text-white/35">Preparing your workspace</p>
+        <div className="splash-intro absolute inset-0 z-30 flex flex-col items-center px-7 text-center animate-brand-intro">
+          <img
+            src="/icon-clean.png"
+            alt="Neuro Networks neural network logo"
+            className="splash-logo brand-logo-orbit object-contain mix-blend-screen"
+          />
+          <h1 className="splash-wordmark" aria-label="Neuro Networks">
+            <span>NEURO</span><span className="splash-gradient">NETWORKS</span>
+          </h1>
+          <p className="splash-tagline">Premium relationship intelligence for<br />modern business.</p>
+          <div className="splash-progress" aria-label="Loading"><span className="animate-intro-progress" /></div>
+          <p className="splash-status">Preparing your workspace</p>
         </div>
       )}
 
