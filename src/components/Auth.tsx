@@ -110,7 +110,7 @@ export default function Auth() {
   };
 
   return (
-    <div className="auth-page relative flex min-h-[100svh] w-full items-center justify-center overflow-y-auto bg-[#f3f6f8] p-4 text-slate-900 sm:p-6">
+    <div className="auth-page relative flex h-full min-h-[100svh] w-full items-start justify-center overflow-y-auto bg-[#f3f6f8] p-4 text-slate-900 sm:items-center sm:min-h-full sm:p-6">
       <div className="auth-shell relative z-20 w-full max-w-[430px] rounded-2xl p-6 sm:p-8">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-5 flex justify-center"><NeuralLogo /></div>
@@ -129,8 +129,8 @@ export default function Auth() {
           {authMode === 'sign-in' && <div className="text-right"><button type="button" onClick={() => setAuthMode('recover')} className="text-xs font-semibold text-[#0a66c2] hover:underline">Forgot password?</button></div>}
           <button type="submit" disabled={loading} className="auth-primary group flex h-12 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">{loading ? (isSignUp ? 'Creating workspace' : 'Signing in') : isRecover ? 'Send reset link' : isSignUp ? 'Create workspace' : 'Sign in'}<ArrowRight className="h-4 w-4" /></button>
         </form>
-        <div className="mt-5 text-center text-xs text-slate-600">{isRecover ? <button onClick={() => setAuthMode('sign-in')} className="font-semibold text-[#0a66c2] hover:underline">Back to sign in</button> : isSignUp ? <>Already have an account? <button onClick={() => setAuthMode('sign-in')} className="font-semibold text-[#0a66c2] hover:underline">Sign in</button></> : <>Don't have an account? <button onClick={() => setAuthMode('sign-up')} className="font-semibold text-[#0a66c2] hover:underline">Create one</button></>}</div>
-        {!isRecover && <button onClick={() => setShowBiometric(true)} className="auth-biometric mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-lg text-[10px] font-semibold uppercase tracking-[0.12em]"><Fingerprint className="h-4 w-4" /> Use biometric {isSignUp ? 'setup' : 'sign in'}</button>}
+        <div className="mt-5 text-center text-xs text-slate-600">{isRecover ? <button type="button" onClick={() => setAuthMode('sign-in')} className="font-semibold text-[#0a66c2] hover:underline">Back to sign in</button> : isSignUp ? <>Already have an account? <button type="button" onClick={() => setAuthMode('sign-in')} className="font-semibold text-[#0a66c2] hover:underline">Sign in</button></> : <>Don't have an account? <button type="button" onClick={() => setAuthMode('sign-up')} className="font-semibold text-[#0a66c2] hover:underline">Create one</button></>}</div>
+        {!isRecover && <button type="button" onClick={() => setShowBiometric(true)} className="auth-biometric mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-lg text-[10px] font-semibold uppercase tracking-[0.12em]"><Fingerprint className="h-4 w-4" /> Use biometric {isSignUp ? 'setup' : 'sign in'}</button>}
         <p className="mt-5 flex items-center justify-center gap-2 text-[11px] text-slate-500"><ShieldCheck className="h-3.5 w-3.5 text-[#0a66c2]" /> Protected by enterprise-grade security</p>
       </div>
 
