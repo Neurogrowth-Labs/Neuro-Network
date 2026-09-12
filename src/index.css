@@ -277,9 +277,9 @@
 
   @keyframes brand-intro {
     0%, 72% { opacity: 1; }
-    100% { opacity: 0; transform: scale(1.03); }
+    100% { opacity: 0; transform: scale(1.01); }
   }
-  .animate-brand-intro { animation: brand-intro 10s ease forwards; }
+  .animate-brand-intro { animation: brand-intro 7.5s ease forwards; }
 
   @keyframes logo-orbit {
     0%, 100% { transform: translateY(0) scale(1); }
@@ -287,6 +287,78 @@
   }
   .brand-logo-orbit { animation: logo-orbit 3.5s ease-in-out infinite; }
 
-  @keyframes intro-progress { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
-  .animate-intro-progress { animation: intro-progress 10s linear forwards; }
+  @keyframes intro-progress { from { transform: scaleX(0); transform-origin: left; } to { transform: scaleX(1); transform-origin: left; } }
+  .animate-intro-progress { animation: intro-progress 7.5s linear forwards; }
+
+  .splash-intro {
+    padding-top: clamp(10.5rem, 27vh, 18rem);
+  }
+
+  .splash-logo {
+    width: clamp(10.5rem, 47vw, 14.5rem);
+    height: auto;
+    filter: drop-shadow(0 0 15px rgba(12, 145, 255, 0.25));
+  }
+
+  .splash-wordmark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.65rem, 3vw, 1.2rem);
+    margin-top: clamp(2.3rem, 5vh, 3.5rem);
+    color: #f8f9ff;
+    font-size: clamp(1.45rem, 7vw, 2.1rem);
+    font-weight: 600;
+    letter-spacing: clamp(0.3rem, 1.7vw, 0.52rem);
+    line-height: 1;
+  }
+
+  .splash-gradient {
+    background: linear-gradient(90deg, #08a9f5 0%, #2161f5 46%, #bd28ee 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .splash-tagline {
+    margin-top: clamp(2.2rem, 4vh, 3.1rem);
+    color: rgba(243, 246, 255, 0.9);
+    font-size: clamp(1.05rem, 4.8vw, 1.52rem);
+    font-weight: 400;
+    line-height: 1.6;
+  }
+
+  .splash-progress {
+    width: min(51vw, 27rem);
+    height: 0.34rem;
+    margin-top: clamp(3rem, 6.3vh, 4.8rem);
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(93, 107, 142, 0.3);
+  }
+
+  .splash-progress span {
+    display: block;
+    width: 72%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #00aef5 0%, #2455f5 51%, #c22ced 100%);
+    box-shadow: 0 0 12px rgba(13, 128, 255, 0.55);
+  }
+
+  .splash-status {
+    margin-top: clamp(3.1rem, 6.2vh, 4.8rem);
+    color: rgba(244, 247, 255, 0.84);
+    font-size: clamp(0.68rem, 2.8vw, 0.86rem);
+    font-weight: 700;
+    letter-spacing: clamp(0.27rem, 1.45vw, 0.48rem);
+    text-transform: uppercase;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-brand-intro, .animate-intro-progress, .brand-logo-orbit {
+      animation-duration: 1ms;
+      animation-iteration-count: 1;
+    }
+  }
 }
