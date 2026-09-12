@@ -45,7 +45,7 @@ export default function Auth() {
   const [showBiometric, setShowBiometric] = useState(false);
   const [introComplete, setIntroComplete] = useState(false);
   const [loadingStateIndex, setLoadingStateIndex] = useState(0);
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const isSignUp = authMode === 'sign-up';
