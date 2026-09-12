@@ -302,7 +302,7 @@ function AppContent() {
   if (!user) {
     return (
       <div className="min-h-screen app-aurora text-white flex justify-center">
-        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 relative glass-panel premium-device-frame">
+        <div className="w-full h-full md:h-[760px] md:max-w-[980px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 relative glass-panel premium-device-frame">
           <Auth />
         </div>
       </div>

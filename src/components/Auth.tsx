@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mail, Lock, User, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Fingerprint, ShieldCheck, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 import BiometricVerification from './BiometricVerification';
@@ -45,10 +45,12 @@ export default function Auth() {
   const [showBiometric, setShowBiometric] = useState(false);
   const [introComplete, setIntroComplete] = useState(false);
   const [loadingStateIndex, setLoadingStateIndex] = useState(0);
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const isSignUp = authMode === 'sign-up';
   const isRecover = authMode === 'recover';
+  const passwordScore = [password.length >= 8, /[A-Z]/.test(password), /\d/.test(password), /[^A-Za-z0-9]/.test(password)].filter(Boolean).length;
 
   useEffect(() => {
     const timer = window.setTimeout(() => setIntroComplete(true), INTRO_DURATION_MS);
@@ -185,6 +187,10 @@ export default function Auth() {
       toast.error('Passwords do not match');
       return;
     }
+    if (isSignUp && !acceptedTerms) {
+      toast.error('Please accept the Terms of Service and Privacy Policy to continue.');
+      return;
+    }
     setLoading(true);
 
     const isSimaoAdmin = email.trim().toLowerCase() === 'simao@neurogrowthlabs.co.za' && password === 'NeuroNetWork';
@@ -244,15 +250,24 @@ export default function Auth() {
         </div>
       )}
 
-      {introComplete && <div className="relative z-20 w-full max-w-[410px] rounded-[24px] border border-white/20 bg-slate-950/70 p-6 shadow-[0_28px_90px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-2xl animate-auth-card-return sm:p-8">
-        <div className="mb-7 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/30 bg-gradient-to-br from-blue-500/30 to-sky-200/20 shadow-[0_0_32px_rgba(96,165,250,0.28)]">
-            <img src="/icon.png" alt="Neuro Networks logo" onError={(e) => (e.currentTarget.src = '/logo.png')} className="h-10 w-10 rounded-xl object-cover" />
+      {introComplete && <div className="auth-shell relative z-20 grid w-full max-w-[980px] overflow-hidden rounded-[28px] animate-auth-card-return md:grid-cols-[0.9fr_1.1fr]">
+        <section className="auth-story hidden flex-col justify-between p-10 md:flex">
+          <div>
+            <NeuralLogo />
+            <p className="mt-8 text-[11px] font-semibold uppercase tracking-[0.42em] text-cyan-100/70">Neuro Networks</p>
+            <h2 className="mt-4 max-w-sm text-3xl font-medium leading-tight text-white">Relationship intelligence for the people who move business forward.</h2>
+            <p className="mt-5 max-w-sm text-sm leading-6 text-slate-300/70">A private workspace for the relationships, context, and connections that matter most.</p>
           </div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-cyan-200/70">Neuro Networks</p>
-          <h1 className="mt-2 text-lg font-bold text-white">
-            {isRecover ? 'Reset your password' : isSignUp ? 'Create your account' : 'Welcome back'}
+          <div className="flex items-center gap-3 text-xs text-slate-300/75"><ShieldCheck className="h-4 w-4 text-cyan-300" /> Protected by enterprise-grade security</div>
+        </section>
+        <section className="auth-card p-6 sm:p-8 md:p-10">
+        <div className="mb-7 text-center md:text-left">
+          <div className="mb-5 flex items-center justify-center md:hidden"><NeuralLogo /></div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.42em] text-cyan-200/70 md:hidden">Neuro Networks</p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white">
+            {isRecover ? 'Reset your password' : isSignUp ? 'Create your workspace' : 'Welcome back'}
           </h1>
+          <p className="mt-2 text-sm text-slate-300/65">{isRecover ? 'We’ll send a secure password reset link.' : isSignUp ? 'Start building smarter business relationships.' : 'Sign in to continue to your workspace.'}</p>
         </div>
 
         <form onSubmit={handleAuth} className="space-y-4">
@@ -262,7 +277,7 @@ export default function Auth() {
               label="Full name"
               value={fullName}
               onChange={setFullName}
-              placeholder="Jane Doe"
+              placeholder="Your full name"
               required
             />
           )}
@@ -284,7 +299,7 @@ export default function Auth() {
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={setPassword}
-              placeholder="••••••••"
+            placeholder={isSignUp ? 'Create a secure password' : 'Enter your password'}
               required
               right={
                 <button
@@ -300,15 +315,22 @@ export default function Auth() {
           )}
 
           {isSignUp && (
-            <AuthInput
-              icon={<Lock />}
-              label="Confirm password"
-              type={showPassword ? 'text' : 'password'}
-              value={confirmPassword}
-              onChange={setConfirmPassword}
-              placeholder="••••••••"
-              required
-            />
+            <>
+              <PasswordStrength score={passwordScore} />
+              <AuthInput
+                icon={<Lock />}
+                label="Confirm password"
+                type={showPassword ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={setConfirmPassword}
+                placeholder="Confirm your password"
+                required
+              />
+              <label className="flex cursor-pointer items-start gap-3 pt-1 text-xs leading-5 text-slate-300/65">
+                <input type="checkbox" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} className="mt-1 h-4 w-4 rounded border-white/20 bg-slate-950 accent-cyan-400" />
+                <span>By creating an account, you agree to our <button type="button" className="font-medium text-cyan-200 hover:text-white">Terms of Service</button> and <button type="button" className="font-medium text-cyan-200 hover:text-white">Privacy Policy</button>.</span>
+              </label>
+            </>
           )}
 
           {authMode === 'sign-in' && (
@@ -326,14 +348,14 @@ export default function Auth() {
           <button
             type="submit"
             disabled={loading}
-            className="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-sky-100 text-sm font-bold text-slate-950 shadow-[0_0_26px_rgba(96,165,250,0.28)] transition hover:from-blue-400 hover:to-white hover:shadow-[0_0_36px_rgba(96,165,250,0.42)] disabled:opacity-60"
+            className="auth-primary group flex h-13 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading
-              ? 'Securing channel'
+              ? (isSignUp ? 'Creating workspace' : 'Signing in')
               : isRecover
               ? 'Send reset link'
               : isSignUp
-              ? 'Create my account'
+              ? 'Create workspace'
               : 'Sign in'}
             <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
           </button>
@@ -364,11 +386,12 @@ export default function Auth() {
         {!isRecover && (
           <button
             onClick={() => setShowBiometric(true)}
-            className="mt-3 w-full text-center text-[11px] font-semibold uppercase tracking-widest text-white/40 hover:text-white/70"
+            className="auth-biometric mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-200/75"
           >
-            Use biometric {isSignUp ? 'setup' : 'sign in'} instead
+            <Fingerprint className="h-4 w-4 text-cyan-300" /> Use biometric {isSignUp ? 'setup' : 'sign in'}
           </button>
         )}
+        </section>
       </div>}
 
       {showBiometric && (
@@ -414,11 +437,11 @@ function AuthInput({
 }) {
   return (
     <label className="group block space-y-2">
-      <span className="flex items-center gap-2 text-xs font-semibold text-white/68 transition group-focus-within:text-cyan-200">
+      <span className="flex items-center gap-2 text-xs font-medium text-slate-200/80 transition group-focus-within:text-cyan-100">
         {React.cloneElement(icon, { className: 'h-4 w-4' })}
         {label}
       </span>
-      <span className="flex h-12 items-center rounded-xl border border-white/10 bg-black/20 px-4 transition group-focus-within:border-cyan-300/50 group-focus-within:shadow-[0_0_22px_rgba(34,211,238,0.12)]">
+      <span className="auth-input flex h-12 items-center rounded-xl px-4">
         <input
           type={type}
           required={required}
@@ -430,5 +453,17 @@ function AuthInput({
         {right}
       </span>
     </label>
+  );
+}
+
+function PasswordStrength({ score }: { score: number }) {
+  const labels = ['Weak', 'Fair', 'Strong', 'Excellent'];
+  const requirements = ['8+ characters', 'Uppercase letter', 'Number', 'Special character'];
+  return (
+    <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-3.5">
+      <div className="flex items-center justify-between text-[11px]"><span className="text-slate-300/70">Password strength</span><span className="font-medium text-cyan-200">{score ? labels[score - 1] : '—'}</span></div>
+      <div className="mt-2.5 grid grid-cols-4 gap-1.5">{[1, 2, 3, 4].map((level) => <span key={level} className={`h-1 rounded-full transition-colors ${level <= score ? 'bg-gradient-to-r from-cyan-400 to-violet-500' : 'bg-white/10'}`} />)}</div>
+      <div className="mt-3 grid grid-cols-2 gap-x-2 gap-y-1.5">{requirements.map((requirement, index) => <span key={requirement} className={`flex items-center gap-1.5 text-[10px] ${index < score ? 'text-cyan-100' : 'text-slate-500'}`}><Check className="h-3 w-3" />{requirement}</span>)}</div>
+    </div>
   );
 }

@@ -312,7 +312,7 @@
   }
 
   .splash-tagline {
-main
+
     color: rgba(243, 246, 255, 0.9);
     font-size: clamp(1.05rem, 4.8vw, 1.52rem);
     font-weight: 400;
@@ -345,5 +345,3 @@ main
     letter-spacing: clamp(0.27rem, 1.45vw, 0.48rem);
     text-transform: uppercase;
   }
-
-}
