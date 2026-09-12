@@ -240,13 +240,13 @@ export default function Auth() {
 
       {!introComplete && (
         <div className="splash-intro absolute inset-0 z-30 flex flex-col items-center px-7 text-center animate-brand-intro">
-          <NeuralLogo />
+
           <h1 className="splash-wordmark" aria-label="Neuro Networks">
             <span>NEURO</span><span className="splash-gradient">NETWORKS</span>
           </h1>
           <p className="splash-tagline">Premium relationship intelligence for<br />modern business.</p>
           <div className="splash-progress" aria-label="Loading"><span className="animate-intro-progress" /></div>
-          <p className="splash-status" aria-live="polite">{loadingStates[loadingStateIndex]}</p>
+
         </div>
       )}
 

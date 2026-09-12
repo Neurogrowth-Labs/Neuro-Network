@@ -288,16 +288,7 @@
   .brand-logo-orbit { animation: logo-orbit 3.5s ease-in-out infinite; }
 
   @keyframes intro-progress { from { transform: scaleX(0); transform-origin: left; } to { transform: scaleX(1); transform-origin: left; } }
-  .animate-intro-progress { animation: intro-progress 7.5s linear forwards; }
 
-  .splash-intro {
-    padding-top: clamp(10.5rem, 27vh, 18rem);
-  }
-
-  .splash-logo {
-    width: clamp(10.5rem, 47vw, 14.5rem);
-    height: auto;
-    filter: drop-shadow(0 0 15px rgba(12, 145, 255, 0.25));
   }
 
   .splash-wordmark {
@@ -305,7 +296,7 @@
     align-items: center;
     justify-content: center;
     gap: clamp(0.65rem, 3vw, 1.2rem);
-    margin-top: clamp(2.3rem, 5vh, 3.5rem);
+
     color: #f8f9ff;
     font-size: clamp(1.45rem, 7vw, 2.1rem);
     font-weight: 600;
@@ -321,7 +312,7 @@
   }
 
   .splash-tagline {
-    margin-top: clamp(2.2rem, 4vh, 3.1rem);
+
     color: rgba(243, 246, 255, 0.9);
     font-size: clamp(1.05rem, 4.8vw, 1.52rem);
     font-weight: 400;
@@ -331,7 +322,7 @@
   .splash-progress {
     width: min(51vw, 27rem);
     height: 0.34rem;
-    margin-top: clamp(3rem, 6.3vh, 4.8rem);
+
     overflow: hidden;
     border-radius: 999px;
     background: rgba(93, 107, 142, 0.3);
@@ -347,73 +338,10 @@
   }
 
   .splash-status {
-    margin-top: clamp(3.1rem, 6.2vh, 4.8rem);
+
     color: rgba(244, 247, 255, 0.84);
     font-size: clamp(0.68rem, 2.8vw, 0.86rem);
     font-weight: 700;
     letter-spacing: clamp(0.27rem, 1.45vw, 0.48rem);
     text-transform: uppercase;
   }
-
-  @media (prefers-reduced-motion: reduce) {
-    .animate-brand-intro, .animate-intro-progress, .brand-logo-orbit {
-      animation-duration: 1ms;
-      animation-iteration-count: 1;
-    }
-  }
-
-  .auth-shell {
-    border: 1px solid rgba(155, 196, 255, 0.2);
-    background: linear-gradient(135deg, rgba(9, 20, 39, 0.94), rgba(3, 8, 20, 0.97));
-    box-shadow: 0 35px 100px rgba(0, 0, 0, 0.64), 0 0 50px rgba(39, 97, 255, 0.11), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(24px);
-  }
-
-  .auth-story {
-    position: relative;
-    overflow: hidden;
-    border-right: 1px solid rgba(151, 190, 255, 0.12);
-    background: radial-gradient(circle at 10% 10%, rgba(0, 178, 255, 0.16), transparent 42%), radial-gradient(circle at 100% 88%, rgba(132, 44, 255, 0.15), transparent 46%), rgba(2, 10, 27, 0.62);
-  }
-
-  .auth-story::after {
-    position: absolute;
-    inset: auto -14% -36% -14%;
-    height: 52%;
-    content: "";
-    opacity: 0.75;
-    background: repeating-radial-gradient(ellipse at center, transparent 0 13px, rgba(65, 113, 255, 0.18) 14px 15px, transparent 16px 29px);
-    mask-image: linear-gradient(to top, black, transparent);
-  }
-
-  .auth-story > * { position: relative; z-index: 1; }
-
-  .auth-card { background: rgba(3, 10, 25, 0.64); }
-
-  .auth-input {
-    border: 1px solid rgba(190, 211, 255, 0.12);
-    background: rgba(0, 5, 17, 0.42);
-    transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
-  }
-
-  .group:focus-within .auth-input {
-    border-color: rgba(91, 211, 255, 0.74);
-    background: rgba(2, 16, 37, 0.75);
-    box-shadow: 0 0 0 3px rgba(29, 159, 255, 0.1), 0 0 22px rgba(34, 211, 238, 0.12);
-  }
-
-  .auth-primary {
-    background: linear-gradient(100deg, #079ce9 0%, #315eea 48%, #a535eb 100%);
-    box-shadow: 0 10px 26px rgba(38, 98, 240, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.26);
-    transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
-  }
-  .auth-primary:hover:not(:disabled) { filter: brightness(1.1); box-shadow: 0 14px 32px rgba(75, 86, 242, 0.42); }
-  .auth-primary:active:not(:disabled) { transform: scale(0.985); }
-
-  .auth-biometric {
-    border: 1px solid rgba(111, 157, 255, 0.26);
-    background: rgba(35, 71, 138, 0.1);
-    transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease;
-  }
-  .auth-biometric:hover { border-color: rgba(90, 209, 255, 0.6); background: rgba(44, 106, 195, 0.16); color: white; }
-}
