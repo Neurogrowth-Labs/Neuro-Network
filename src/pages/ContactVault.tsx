@@ -274,7 +274,7 @@ opportunity_type (one of: client, partner, investor, supplier, media, friend, ot
                     {/* AI Tags Section */}
                     <div className="space-y-2 pt-2 border-t border-white/5">
                       <p className="text-[10px] font-black uppercase tracking-widest text-white/40">
-                        AI Generated Tags
+                        Contact Tags
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {c.ai_tags.map((tag) => (
