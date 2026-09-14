@@ -55,6 +55,7 @@ import Team from "./pages/Team";
 import Templates from "./pages/Templates";
 import VoiceCall from "./pages/VoiceCall";
 import PageNotFound from "./components/PageNotFound";
+import NeuralLogo from "./components/NeuralLogo";
 
 const queryClient = new QueryClient();
 
@@ -145,19 +146,19 @@ function TopNav() {
   }, [profile?.id]);
 
   return (
-    <div className="fixed top-0 w-full md:w-[400px] h-16 border-b border-white/5 bg-transparent z-50 flex items-center justify-between px-4 backdrop-blur-md">
+    <div className="fixed top-0 w-full md:w-[400px] h-16 border-b border-[#d0d7de] bg-white/95 z-50 flex items-center justify-between px-4 backdrop-blur-md">
       <div className="flex items-center gap-3">
         <button 
           onClick={() => {
             setShowMobileMenu(!showMobileMenu);
             setShowNotifications(false);
           }}
-          className="text-white/50 hover:text-white transition-colors p-1"
+          className="text-[#5f6b7a] hover:text-[#0a66c2] transition-colors p-1"
         >
           {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
         <div className="flex items-center gap-2">
-          <img src="/icon.png" alt="Logo" onError={(e) => e.currentTarget.src = '/logo.png'} className="w-8 h-8 rounded-lg drop-shadow-[0_0_8px_rgba(59,130,246,0.3)] object-cover bg-white p-0.5" />
+          <NeuralLogo className="h-9 w-9" />
           {!isOnline && (
             <span className="text-[8px] text-amber-400 font-mono tracking-widest uppercase animate-pulse font-bold">
               Offline (IDB Cache)
@@ -180,7 +181,7 @@ function TopNav() {
                   to={t.path}
                   replace={active}
                   onClick={() => setShowMobileMenu(false)}
-                  className={`flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors ${active ? "bg-cyan-500/10 text-cyan-400 font-medium" : "text-white/60 hover:text-white hover:bg-white/5"}`}
+                  className={`flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors ${active ? "bg-[#e8f3ff] text-[#0a66c2] font-medium" : "text-[#5f6b7a] hover:text-[#0a66c2] hover:bg-[#e8f3ff]"}`}
                 >
                   <t.icon className={`w-4 h-4 ${active ? "drop-shadow-[0_0_12px_rgba(34,211,238,0.8)]" : ""}`} />
                   {t.label}
@@ -188,7 +189,7 @@ function TopNav() {
               );
             })}
           </div>
-          <div className="border-t border-white/5 p-2 flex flex-col gap-1">
+          <div className="border-t border-[#d0d7de] p-2 flex flex-col gap-1">
             {isAdmin && (
               <Link
                 to="/admin"
@@ -201,21 +202,21 @@ function TopNav() {
             <Link
               to="/settings"
               onClick={() => setShowMobileMenu(false)}
-              className="flex items-center gap-3 px-3 py-2 text-sm text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+              className="flex items-center gap-3 px-3 py-2 text-sm text-[#5f6b7a] hover:text-[#0a66c2] hover:bg-[#e8f3ff] rounded-lg transition-colors"
             >
               <UserIcon className="w-4 h-4" /> Edit Profile
             </Link>
             <Link
               to="/my-cards"
               onClick={() => setShowMobileMenu(false)}
-              className="flex items-center gap-3 px-3 py-2 text-sm text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+              className="flex items-center gap-3 px-3 py-2 text-sm text-[#5f6b7a] hover:text-[#0a66c2] hover:bg-[#e8f3ff] rounded-lg transition-colors"
             >
               <Contact className="w-4 h-4" /> Edit Cards
             </Link>
             <Link
               to="/settings"
               onClick={() => setShowMobileMenu(false)}
-              className="flex items-center gap-3 px-3 py-2 text-sm text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+              className="flex items-center gap-3 px-3 py-2 text-sm text-[#5f6b7a] hover:text-[#0a66c2] hover:bg-[#e8f3ff] rounded-lg transition-colors"
             >
               <SettingsIcon className="w-4 h-4" /> Settings
             </Link>
@@ -238,7 +239,7 @@ function TopNav() {
             onClick={() => {
               setShowNotifications(!showNotifications);
             }} 
-            className="relative text-white/50 hover:text-white transition-colors"
+            className="relative text-[#5f6b7a] hover:text-[#0a66c2] transition-colors"
           >
             <Bell className="w-5 h-5" />
             {notifications.length > 0 && (
@@ -248,18 +249,18 @@ function TopNav() {
           
           {showNotifications && (
             <div className="absolute right-0 top-12 w-64 glass-menu rounded-xl overflow-hidden z-50">
-              <div className="p-3 border-b border-white/5 flex justify-between items-center">
+              <div className="p-3 border-b border-[#d0d7de] flex justify-between items-center">
                 <span className="text-xs font-bold text-white uppercase tracking-widest">Notifications</span>
                 <span className="text-[10px] text-cyan-400 cursor-pointer" onClick={() => setNotifications([])}>Mark all read</span>
               </div>
               <div className="max-h-64 overflow-y-auto">
                 {notifications.length === 0 ? (
-                  <div className="p-4 text-center text-xs text-white/40">No new notifications</div>
+                  <div className="p-4 text-center text-xs text-[#5f6b7a]">No new notifications</div>
                 ) : (
                   notifications.map(n => (
                     <div
                       key={n.id}
-                      className="p-3 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer flex gap-3"
+                      className="p-3 border-b border-[#d0d7de] hover:bg-white/5 transition-colors cursor-pointer flex gap-3"
                       onClick={() => {
                         if (n.type === "connection_request" || n.text.includes("connection request")) {
                           navigate("/connect");
@@ -268,11 +269,11 @@ function TopNav() {
                       }}
                     >
                       <div className="mt-1">
-                        {n.type === "message" ? <MessageCircle className="w-4 h-4 text-cyan-400" /> : <Bell className="w-4 h-4 text-white/40" />}
+                        {n.type === "message" ? <MessageCircle className="w-4 h-4 text-cyan-400" /> : <Bell className="w-4 h-4 text-[#5f6b7a]" />}
                       </div>
                       <div>
-                        <div className="text-xs text-white/80 font-medium">{n.text}</div>
-                        <div className="text-[9px] text-white/30 uppercase tracking-widest mt-1">{n.time}</div>
+                        <div className="text-xs text-[#1d2226] font-medium">{n.text}</div>
+                        <div className="text-[9px] text-[#5f6b7a] uppercase tracking-widest mt-1">{n.time}</div>
                       </div>
                     </div>
                   ))
@@ -301,8 +302,8 @@ function AppContent() {
 
   if (!user) {
     return (
-      <div className="min-h-screen app-aurora text-white flex justify-center">
-        <div className="w-full h-full md:h-[760px] md:max-w-[980px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 relative glass-panel premium-device-frame">
+      <div className="min-h-screen bg-[#f3f2ef] flex justify-center">
+        <div className="w-full min-h-screen relative">
           <Auth />
         </div>
       </div>

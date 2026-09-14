@@ -345,3 +345,24 @@
     letter-spacing: clamp(0.27rem, 1.45vw, 0.48rem);
     text-transform: uppercase;
   }
+
+/* Calm, professional authentication surfaces inspired by LinkedIn's visual hierarchy. */
+.auth-primary {
+  background: #0a66c2;
+  transition: background-color 160ms ease;
+}
+.auth-primary:hover { background: #004182; }
+.auth-input {
+  border: 1px solid #89939e;
+  background: #fff;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.auth-input:focus-within {
+  border-color: #0a66c2;
+  box-shadow: 0 0 0 1px #0a66c2;
+}
+.auth-biometric {
+  border: 1px solid #0a66c2;
+  background: #fff;
+}
+.auth-biometric:hover { background: #e8f3ff; }
