@@ -14,11 +14,13 @@ import {
   Contact,
   QrCode,
   Zap,
+
   Radar
 } from "lucide-react";
 import { UserProvider, useUser } from "./lib/UserContext";
 import { AdminStateProvider, useAdminState } from "./lib/AdminStateProvider";
 import { WorkspaceProvider } from "./lib/WorkspaceContext";
+
 import { hasPremiumAccess } from "./lib/subscription";
 
 // Pages
@@ -49,7 +51,7 @@ import PageNotFound from "./components/PageNotFound";
 const queryClient = new QueryClient();
 
 function BottomNav() {
-  const location = useLocation();
+
   const tabs = [
     { path: "/", icon: QrCode, label: "Dashboard" },
     { path: "/vault", icon: Contact, label: "Contacts" },
@@ -57,23 +59,7 @@ function BottomNav() {
     { path: "/connect", icon: Radar, label: "Connect" },
   ];
 
-  return (
-    <nav className="shrink-0 bg-white px-2 py-2" aria-label="Primary navigation">
-      <div className="mx-auto flex max-w-4xl items-center justify-around gap-1">
-        {tabs.map((tab) => {
-          const active = location.pathname === tab.path;
-          return (
-            <Link
-              key={tab.path}
-              to={tab.path}
-              replace={active}
-              className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-md px-2 py-1.5 text-[10px] font-semibold text-black transition-colors ${active ? "bg-[#dceefe]" : "hover:bg-[#eff7ff]"}`}
-            >
-              <tab.icon className="h-4 w-4" />
-              {tab.label}
-            </Link>
-          );
-        })}
+
       </div>
     </nav>
   );

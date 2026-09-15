@@ -207,14 +207,7 @@ export default function Dashboard() {
           <h1 className="mb-2 text-3xl font-semibold tracking-tight text-[#111827]">My Profile</h1>
           <div className="flex items-center gap-2"><PlanBadge plan="pro" /><span className="text-[10px] font-semibold uppercase tracking-widest text-[#64748b]">Active Card</span></div>
         </div>
-        <div className="relative flex items-center gap-2">
-          <button onClick={() => setShowNotifications((open) => !open)} className="inline-flex items-center gap-2 rounded-md bg-[#eff7ff] px-3 py-2 text-xs font-medium text-black"><Bell className="h-4 w-4" />Notifications {notifications.length > 0 && `(${notifications.length})`}</button>
-          <Link to="/settings" className="inline-flex items-center gap-2 rounded-md bg-[#eff7ff] px-3 py-2 text-xs font-medium text-black"><Settings className="h-4 w-4" />Settings</Link>
-          <CardPDFDownload card={cardData} />
-          {showNotifications && <div className="absolute right-0 top-11 z-20 w-72 rounded-md bg-white p-3 shadow-lg">
-            <div className="mb-2 flex items-center justify-between"><span className="text-xs font-semibold">Notifications</span><button onClick={() => setNotifications([])} className="text-xs">Clear</button></div>
-            <div className="max-h-64 space-y-2 overflow-y-auto">{notifications.length === 0 ? <p className="py-3 text-center text-xs">No new notifications</p> : notifications.map((notification) => <button key={notification.id} onClick={() => { if (notification.type === "connection_request") navigate("/connect"); setShowNotifications(false); }} className="block w-full rounded-md bg-[#f7fbff] p-2 text-left text-xs"><span className="block">{notification.content}</span><span className="mt-1 block text-[10px]">{notification.createdAt ? new Date(notification.createdAt).toLocaleString() : "Just now"}</span></button>)}</div>
-          </div>}
+
         </div>
       </div>
 

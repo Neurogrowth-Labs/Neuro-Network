@@ -210,34 +210,7 @@
 }
 
 @layer utilities {
-  .app-aurora { background: #ffffff; }
-  .premium-device-frame, .glass-panel, .glass-card, .glass-menu {
-    background: #ffffff;
-    border-color: transparent;
-    box-shadow: none;
-    backdrop-filter: none;
-  }
 
-  /* Keep every feature on a consistent, clean light surface. */
-  #root, #root * { color: #000000 !important; }
-  #root [class*="border"] { border-color: transparent !important; }
-  #root [class*="bg-black"],
-  #root [class*="bg-slate"],
-  #root [class*="bg-gray"],
-  #root [class*="bg-zinc"],
-  #root [class*="bg-neutral"],
-  #root [class*="bg-[#0"],
-  #root [class*="bg-[#1"],
-  #root [class*="bg-blue-9"],
-  #root [class*="bg-indigo-9"],
-  #root [class*="bg-cyan-9"],
-  #root [class*="bg-red-9"],
-  #root [class*="bg-amber-9"],
-  #root [class*="bg-purple-9"] {
-    background-color: #ffffff !important;
-    background-image: none !important;
-    box-shadow: none !important;
-  }
 }
 
 @layer utilities {
