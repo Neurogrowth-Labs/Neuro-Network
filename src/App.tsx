@@ -5,7 +5,6 @@ import {
   Link,
   Navigate,
   useLocation,
-  useNavigate,
 } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
@@ -15,15 +14,13 @@ import {
   Contact,
   QrCode,
   Zap,
-  Bell,
-  Settings as SettingsIcon,
+
   Radar
 } from "lucide-react";
-import React, { useState, useEffect } from "react";
 import { UserProvider, useUser } from "./lib/UserContext";
 import { AdminStateProvider, useAdminState } from "./lib/AdminStateProvider";
 import { WorkspaceProvider } from "./lib/WorkspaceContext";
-import { supabase } from "./lib/supabase";
+
 import { hasPremiumAccess } from "./lib/subscription";
 
 // Pages
@@ -54,11 +51,7 @@ import PageNotFound from "./components/PageNotFound";
 const queryClient = new QueryClient();
 
 function BottomNav() {
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState<Array<{ id: string | number; type: string; text: string; time: string }>>([]);
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { profile } = useUser();
+
   const tabs = [
     { path: "/", icon: QrCode, label: "Dashboard" },
     { path: "/vault", icon: Contact, label: "Contacts" },
@@ -66,70 +59,7 @@ function BottomNav() {
     { path: "/connect", icon: Radar, label: "Connect" },
   ];
 
-  useEffect(() => {
-    const appendNotification = (notification: { id?: string | number; type?: string; content?: string; subject?: string; body?: string }) => {
-      const message = notification.content || [notification.subject, notification.body].filter(Boolean).join(": ");
-      if (!message) return;
-      setNotifications((current) => [
-        { id: notification.id || Date.now(), type: notification.type || "system", text: message, time: "Just now" },
-        ...current,
-      ]);
-    };
-    const handleRealtimeNotification = (event: Event) => appendNotification((event as CustomEvent).detail || {});
-    const handleBroadcast = (event: Event) => appendNotification((event as CustomEvent).detail || {});
-    const openNotifications = () => setShowNotifications(true);
 
-    window.addEventListener("realtime-notification-received", handleRealtimeNotification);
-    window.addEventListener("admin-global-broadcast", handleBroadcast);
-    window.addEventListener("open-notifications", openNotifications);
-
-    if (!profile?.id) return () => {
-      window.removeEventListener("realtime-notification-received", handleRealtimeNotification);
-      window.removeEventListener("admin-global-broadcast", handleBroadcast);
-      window.removeEventListener("open-notifications", openNotifications);
-    };
-
-    supabase.from("notifications").select("id,type,content,created_at").eq("user_id", profile.id)
-      .order("created_at", { ascending: false }).limit(20)
-      .then(({ data }) => setNotifications((data || []).map((notification: any) => ({
-        id: notification.id,
-        type: notification.type || "system",
-        text: notification.content,
-        time: notification.created_at ? new Date(notification.created_at).toLocaleString() : "Just now",
-      }))));
-
-    const channel = supabase.channel("bottom-nav-notifications")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${profile.id}` },
-        (payload) => appendNotification(payload.new as { id?: string | number; type?: string; content?: string }))
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-      window.removeEventListener("realtime-notification-received", handleRealtimeNotification);
-      window.removeEventListener("admin-global-broadcast", handleBroadcast);
-      window.removeEventListener("open-notifications", openNotifications);
-    };
-  }, [profile?.id]);
-
-  return (
-    <nav className="relative shrink-0 border-t border-[#dbe3ec] bg-white px-2 py-2" aria-label="Primary navigation">
-      <div className="mx-auto flex max-w-4xl items-center justify-around gap-1">
-        {tabs.map((tab) => {
-          const active = location.pathname === tab.path;
-          return <Link key={tab.path} to={tab.path} replace={active} className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-md px-2 py-1.5 text-[10px] font-semibold transition-colors ${active ? "bg-[#eaf3fb] text-[#0a66c2]" : "text-[#475569] hover:bg-[#f6f9fc] hover:text-[#0a66c2]"}`}>
-            <tab.icon className="h-4 w-4" />{tab.label}
-          </Link>;
-        })}
-        <div className="relative flex min-w-0 flex-1 justify-center">
-          <button onClick={() => setShowNotifications((open) => !open)} className="flex w-full flex-col items-center gap-1 rounded-md px-2 py-1.5 text-[10px] font-semibold text-[#475569] transition-colors hover:bg-[#f6f9fc] hover:text-[#0a66c2]" aria-expanded={showNotifications} aria-label="Notifications">
-            <span className="relative"><Bell className="h-4 w-4" />{notifications.length > 0 && <span className="absolute -right-1.5 -top-1 h-2 w-2 rounded-full bg-[#0a66c2] ring-2 ring-white" />}</span>Notifications
-          </button>
-          {showNotifications && <div className="absolute bottom-12 right-0 z-50 w-72 overflow-hidden rounded-lg border border-[#dbe3ec] bg-white shadow-lg">
-            <div className="flex items-center justify-between border-b border-[#e7edf3] px-3 py-2"><span className="text-xs font-semibold text-[#111827]">Notifications</span><button className="text-[10px] font-medium text-[#0a66c2]" onClick={() => setNotifications([])}>Clear</button></div>
-            <div className="max-h-64 overflow-y-auto">{notifications.length === 0 ? <p className="p-4 text-center text-xs text-[#64748b]">No new notifications</p> : notifications.map((notification) => <button key={notification.id} className="flex w-full gap-2 border-b border-[#eef2f6] p-3 text-left hover:bg-[#f6f9fc]" onClick={() => { if (notification.type === "connection_request" || notification.text.includes("connection request")) navigate("/connect"); setShowNotifications(false); }}><Bell className="mt-0.5 h-4 w-4 shrink-0 text-[#0a66c2]" /><span><span className="block text-xs text-[#1f2937]">{notification.text}</span><span className="mt-1 block text-[10px] text-[#64748b]">{notification.time}</span></span></button>)}</div>
-          </div>}
-        </div>
-        <Link to="/settings" className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-md px-2 py-1.5 text-[10px] font-semibold transition-colors ${location.pathname === "/settings" ? "bg-[#eaf3fb] text-[#0a66c2]" : "text-[#475569] hover:bg-[#f6f9fc] hover:text-[#0a66c2]"}`}><SettingsIcon className="h-4 w-4" />Settings</Link>
       </div>
     </nav>
   );

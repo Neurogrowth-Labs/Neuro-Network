@@ -12,6 +12,13 @@ import { useUser } from "../lib/UserContext";
 import { supabase } from "../lib/supabase";
 import { normalizeSubscription, trialDaysRemaining, PREMIUM_PLAN } from "../lib/subscription";
 
+interface NotificationItem {
+  id: string | number;
+  type: string;
+  content: string;
+  createdAt: string;
+}
+
 interface DashboardStats {
   profileViews: number;
   saves: number;
@@ -41,6 +48,8 @@ export default function Dashboard() {
   const cardData = profile || MY_CARD;
   const [showQRModal, setShowQRModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     profileViews: 0,
     saves: 0,
@@ -134,6 +143,45 @@ export default function Dashboard() {
     };
   }, [user?.id, profile?.role]);
 
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const loadNotifications = async () => {
+      const { data } = await supabase
+        .from("notifications")
+        .select("id,type,content,created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      setNotifications((data || []).map((notification: any) => ({
+        id: notification.id,
+        type: notification.type || "system",
+        content: notification.content,
+        createdAt: notification.created_at,
+      })));
+    };
+
+    void loadNotifications();
+    const channel = supabase
+      .channel("dashboard-notifications")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const notification: any = payload.new;
+          setNotifications((current) => [{
+            id: notification.id,
+            type: notification.type || "system",
+            content: notification.content,
+            createdAt: notification.created_at,
+          }, ...current]);
+        },
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id]);
+
   const copyLink = () => {
     navigator.clipboard.writeText(cardUrl);
     toast.success("Profile link copied!");
@@ -159,10 +207,7 @@ export default function Dashboard() {
           <h1 className="mb-2 text-3xl font-semibold tracking-tight text-[#111827]">My Profile</h1>
           <div className="flex items-center gap-2"><PlanBadge plan="pro" /><span className="text-[10px] font-semibold uppercase tracking-widest text-[#64748b]">Active Card</span></div>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => window.dispatchEvent(new Event("open-notifications"))} className="inline-flex items-center gap-2 rounded-md border border-[#dbe3ec] px-3 py-2 text-xs font-medium text-[#475569] hover:border-[#0a66c2] hover:text-[#0a66c2]"><Bell className="h-4 w-4" />Notifications</button>
-          <Link to="/settings" className="inline-flex items-center gap-2 rounded-md border border-[#dbe3ec] px-3 py-2 text-xs font-medium text-[#475569] hover:border-[#0a66c2] hover:text-[#0a66c2]"><Settings className="h-4 w-4" />Settings</Link>
-          <CardPDFDownload card={cardData} />
+
         </div>
       </div>
 

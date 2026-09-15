@@ -210,9 +210,7 @@
 }
 
 @layer utilities {
-  .app-aurora { background: #f8fafc; }
-  .premium-device-frame { background: #ffffff; border-color: #dbe3ec; box-shadow: none; }
-  .glass-panel, .glass-card, .glass-menu { background: #ffffff; border-color: #dbe3ec; box-shadow: none; backdrop-filter: none; }
+
 }
 
 @layer utilities {
