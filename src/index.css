@@ -262,8 +262,6 @@
 
   @keyframes intro-progress { from { transform: scaleX(0); transform-origin: left; } to { transform: scaleX(1); transform-origin: left; } }
 
-  }
-
   .splash-wordmark {
     display: flex;
     align-items: center;
