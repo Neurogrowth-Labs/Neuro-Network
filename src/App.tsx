@@ -49,6 +49,7 @@ import Templates from "./pages/Templates";
 import VoiceCall from "./pages/VoiceCall";
 import PageNotFound from "./components/PageNotFound";
 import Auth from "./components/Auth";
+import NeuralLogo from "./components/NeuralLogo";
 
 const queryClient = new QueryClient();
 
@@ -89,7 +90,7 @@ function BottomNav() {
 /** A consistent top-right utility area keeps global actions discoverable on every page. */
 function AppHeader() {
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center justify-end border-b border-[#d9d9d9] bg-white px-6">
+
       <nav aria-label="Application utilities" className="flex items-center gap-2">
         <Link
           to="/alerts"
@@ -119,7 +120,7 @@ function AppContent() {
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-[#4169e1] border-t-transparent rounded-full animate-spin"></div>
+
       </div>
     );
   }
