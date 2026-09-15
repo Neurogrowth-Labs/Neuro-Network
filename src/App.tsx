@@ -90,10 +90,7 @@ function BottomNav() {
 /** A consistent top-right utility area keeps global actions discoverable on every page. */
 function AppHeader() {
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-[#d9d9d9] bg-white px-6">
-      <Link to="/" aria-label="Neuro Networks home" className="flex h-12 w-12 items-center justify-center">
-        <NeuralLogo className="h-11 w-11" />
-      </Link>
+
       <nav aria-label="Application utilities" className="flex items-center gap-2">
         <Link
           to="/alerts"
@@ -123,10 +120,7 @@ function AppContent() {
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <NeuralLogo className="h-28 w-28" />
-          <div className="w-8 h-8 border-4 border-[#4169e1] border-t-transparent rounded-full animate-spin"></div>
-        </div>
+
       </div>
     );
   }

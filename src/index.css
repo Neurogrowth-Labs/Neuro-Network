@@ -207,12 +207,6 @@ body,
   border-color: #000000 !important;
 }
 
-/* Keep the supplied PNG mark clean: it has no surrounding panel, fill, or edge. */
-#root .brand-logo {
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-}
 
 .dark {
   --background: oklch(0.145 0 0);
