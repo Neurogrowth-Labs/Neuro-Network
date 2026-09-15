@@ -204,39 +204,39 @@
 @layer base {
   body {
     min-height: 100vh;
-    background:
-      radial-gradient(circle at 12% 8%, rgba(30, 104, 189, 0.34), transparent 31rem),
-      radial-gradient(circle at 88% 18%, rgba(111, 188, 255, 0.16), transparent 28rem),
-      linear-gradient(135deg, #020304 0%, #050b12 60%, #0b2b55 100%);
+    background: #f8fafc;
+    color: #111827;
   }
 }
 
 @layer utilities {
-  .app-aurora {
-    background:
-      radial-gradient(circle at top left, rgba(30, 104, 189, 0.30), transparent 26rem),
-      radial-gradient(circle at bottom right, rgba(125, 211, 252, 0.14), transparent 24rem),
-      linear-gradient(145deg, #030609 0%, #061321 63%, #0b2b55 100%);
+  .app-aurora { background: #ffffff; }
+  .premium-device-frame, .glass-panel, .glass-card, .glass-menu {
+    background: #ffffff;
+    border-color: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
   }
 
-  .premium-device-frame {
-    background: linear-gradient(155deg, rgba(7, 15, 26, 0.96), rgba(2, 4, 8, 0.98));
-    border-color: rgba(224, 242, 254, 0.20);
-    box-shadow: 0 35px 120px rgba(0, 0, 0, 0.62), 0 0 0 1px rgba(96, 165, 250, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  }
-
-  .glass-panel {
-    @apply border border-white/15 bg-slate-950/60 shadow-2xl backdrop-blur-2xl;
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.50), inset 0 1px 0 rgba(255, 255, 255, 0.14);
-  }
-
-  .glass-card {
-    @apply border border-white/15 bg-blue-950/25 backdrop-blur-xl;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  }
-
-  .glass-menu {
-    @apply border border-white/10 bg-slate-950/70 shadow-2xl backdrop-blur-2xl;
+  /* Keep every feature on a consistent, clean light surface. */
+  #root, #root * { color: #000000 !important; }
+  #root [class*="border"] { border-color: transparent !important; }
+  #root [class*="bg-black"],
+  #root [class*="bg-slate"],
+  #root [class*="bg-gray"],
+  #root [class*="bg-zinc"],
+  #root [class*="bg-neutral"],
+  #root [class*="bg-[#0"],
+  #root [class*="bg-[#1"],
+  #root [class*="bg-blue-9"],
+  #root [class*="bg-indigo-9"],
+  #root [class*="bg-cyan-9"],
+  #root [class*="bg-red-9"],
+  #root [class*="bg-amber-9"],
+  #root [class*="bg-purple-9"] {
+    background-color: #ffffff !important;
+    background-image: none !important;
+    box-shadow: none !important;
   }
 }
 
