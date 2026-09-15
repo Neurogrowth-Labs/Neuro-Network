@@ -14,7 +14,6 @@ import {
   Contact,
   QrCode,
   Zap,
-
   Radar
 } from "lucide-react";
 import { UserProvider, useUser } from "./lib/UserContext";
@@ -47,10 +46,12 @@ import Team from "./pages/Team";
 import Templates from "./pages/Templates";
 import VoiceCall from "./pages/VoiceCall";
 import PageNotFound from "./components/PageNotFound";
+import Auth from "./components/Auth";
 
 const queryClient = new QueryClient();
 
 function BottomNav() {
+  const location = useLocation();
 
   const tabs = [
     { path: "/", icon: QrCode, label: "Dashboard" },
@@ -59,17 +60,34 @@ function BottomNav() {
     { path: "/connect", icon: Radar, label: "Connect" },
   ];
 
-
+  return (
+    <nav className="sticky bottom-0 z-50 border-t border-gray-200 bg-white">
+      <div className="flex items-center justify-around p-2">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = location.pathname === tab.path;
+          return (
+            <Link
+              key={tab.path}
+              to={tab.path}
+              className={`flex flex-col items-center gap-1 text-xs font-medium ${
+                isActive ? "text-cyan-600" : "text-gray-500 hover:text-gray-900"
+              }`}
+            >
+              <Icon className="h-5 w-5" />
+              <span>{tab.label}</span>
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );
 }
 
-import Auth from "./components/Auth";
-
 function AppContent() {
   const { user, loading, profile } = useUser();
   const { maintenanceMode } = useAdminState();
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0c] flex items-center justify-center">
@@ -80,7 +98,8 @@ function AppContent() {
 
   if (!user) {
     return (
-
+      <div className="min-h-screen bg-[#0a0a0c] flex items-center justify-center">
+        <div className="w-full max-w-md p-4">
           <Auth />
         </div>
       </div>
@@ -108,7 +127,6 @@ function AppContent() {
       </div>
     );
   }
-
 
   const hasAccess = hasPremiumAccess(profile);
 
