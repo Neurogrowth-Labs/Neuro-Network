@@ -188,27 +188,7 @@ body,
 .app-surface {
   background: rgb(255 255 255 / 0.8);
   box-shadow: 0 0 50px rgb(15 23 42 / 0.05);
-  color: #1746a2;
-}
 
-/* Keep copy readable against the platform's white content surfaces. The same
- * blue family is used for rules so sections retain a deliberate hierarchy. */
-.app-surface :where(h1, h2, h3, h4, h5, h6, p, span, label, li, dt, dd, td, th, a, input, textarea, select) {
-  color: #1746a2 !important;
-}
-
-.app-surface :where(hr, [class*="border-"], [class~="border"]) {
-  border-color: rgb(23 70 162 / 0.28) !important;
-}
-
-.app-surface :where(input, textarea, select)::placeholder {
-  color: rgb(23 70 162 / 0.58) !important;
-}
-
-@media (min-width: 1024px) {
-  .app-surface {
-    border-inline: 1px solid rgb(23 70 162 / 0.28);
-  }
 }
 
 
