@@ -201,13 +201,14 @@ export default function Dashboard() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-8 p-6 text-[#111827]">
-      {/* Header section */}
+     {/* Header section */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="mb-2 text-3xl font-semibold tracking-tight text-[#111827]">My Profile</h1>
-          <div className="flex items-center gap-2"><PlanBadge plan="pro" /><span className="text-[10px] font-semibold uppercase tracking-widest text-[#64748b]">Active Card</span></div>
-        </div>
-
+          <div className="flex items-center gap-2">
+            <PlanBadge plan="pro" />
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-[#64748b]">Active Card</span>
+          </div>
         </div>
       </div>
 
