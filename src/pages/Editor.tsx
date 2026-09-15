@@ -815,7 +815,7 @@ export default function Editor() {
                         ) : (
                           <Sparkles className="w-4 h-4" />
                         )}
-                        {imageLoading ? "Synthesizing pixels..." : "Generate AI Artwork"}
+                        {imageLoading ? "Synthesizing pixels..." : "Generate Artwork"}
                       </button>
                     </div>
 
@@ -831,7 +831,7 @@ export default function Editor() {
                         <div className="space-y-3 w-full text-center">
                           <img
                             src={generatedImg}
-                            alt="AI generated artwork"
+                            alt="Generated artwork"
                             className="max-h-[180px] object-contain rounded-xl mx-auto border border-white/10"
                             referrerPolicy="no-referrer"
                           />

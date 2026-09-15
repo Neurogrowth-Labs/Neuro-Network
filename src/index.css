@@ -204,40 +204,13 @@
 @layer base {
   body {
     min-height: 100vh;
-    background:
-      radial-gradient(circle at 12% 8%, rgba(30, 104, 189, 0.34), transparent 31rem),
-      radial-gradient(circle at 88% 18%, rgba(111, 188, 255, 0.16), transparent 28rem),
-      linear-gradient(135deg, #020304 0%, #050b12 60%, #0b2b55 100%);
+    background: #f8fafc;
+    color: #111827;
   }
 }
 
 @layer utilities {
-  .app-aurora {
-    background:
-      radial-gradient(circle at top left, rgba(30, 104, 189, 0.30), transparent 26rem),
-      radial-gradient(circle at bottom right, rgba(125, 211, 252, 0.14), transparent 24rem),
-      linear-gradient(145deg, #030609 0%, #061321 63%, #0b2b55 100%);
-  }
 
-  .premium-device-frame {
-    background: linear-gradient(155deg, rgba(7, 15, 26, 0.96), rgba(2, 4, 8, 0.98));
-    border-color: rgba(224, 242, 254, 0.20);
-    box-shadow: 0 35px 120px rgba(0, 0, 0, 0.62), 0 0 0 1px rgba(96, 165, 250, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  }
-
-  .glass-panel {
-    @apply border border-white/15 bg-slate-950/60 shadow-2xl backdrop-blur-2xl;
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.50), inset 0 1px 0 rgba(255, 255, 255, 0.14);
-  }
-
-  .glass-card {
-    @apply border border-white/15 bg-blue-950/25 backdrop-blur-xl;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  }
-
-  .glass-menu {
-    @apply border border-white/10 bg-slate-950/70 shadow-2xl backdrop-blur-2xl;
-  }
 }
 
 @layer utilities {
@@ -288,16 +261,7 @@
   .brand-logo-orbit { animation: logo-orbit 3.5s ease-in-out infinite; }
 
   @keyframes intro-progress { from { transform: scaleX(0); transform-origin: left; } to { transform: scaleX(1); transform-origin: left; } }
-  .animate-intro-progress { animation: intro-progress 7.5s linear forwards; }
 
-  .splash-intro {
-    padding-top: clamp(10.5rem, 27vh, 18rem);
-  }
-
-  .splash-logo {
-    width: clamp(10.5rem, 47vw, 14.5rem);
-    height: auto;
-    filter: drop-shadow(0 0 15px rgba(12, 145, 255, 0.25));
   }
 
   .splash-wordmark {
@@ -305,7 +269,7 @@
     align-items: center;
     justify-content: center;
     gap: clamp(0.65rem, 3vw, 1.2rem);
-    margin-top: clamp(2.3rem, 5vh, 3.5rem);
+
     color: #f8f9ff;
     font-size: clamp(1.45rem, 7vw, 2.1rem);
     font-weight: 600;
@@ -321,7 +285,7 @@
   }
 
   .splash-tagline {
-    margin-top: clamp(2.2rem, 4vh, 3.1rem);
+
     color: rgba(243, 246, 255, 0.9);
     font-size: clamp(1.05rem, 4.8vw, 1.52rem);
     font-weight: 400;
@@ -331,7 +295,7 @@
   .splash-progress {
     width: min(51vw, 27rem);
     height: 0.34rem;
-    margin-top: clamp(3rem, 6.3vh, 4.8rem);
+
     overflow: hidden;
     border-radius: 999px;
     background: rgba(93, 107, 142, 0.3);
@@ -347,7 +311,7 @@
   }
 
   .splash-status {
-    margin-top: clamp(3.1rem, 6.2vh, 4.8rem);
+
     color: rgba(244, 247, 255, 0.84);
     font-size: clamp(0.68rem, 2.8vw, 0.86rem);
     font-weight: 700;
@@ -355,48 +319,6 @@
     text-transform: uppercase;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .animate-brand-intro, .animate-intro-progress, .brand-logo-orbit {
-      animation-duration: 1ms;
-      animation-iteration-count: 1;
-    }
-  }
 
-  .auth-page { background: #f3f6f8; }
-
-  .auth-shell { background: transparent; }
-
-  .auth-logo {
-    width: 8rem;
-    height: auto;
-    filter: drop-shadow(0 5px 10px rgba(10, 102, 194, 0.14));
-  }
-
-  .auth-input {
-    border: 1px solid #cbd5e1;
-    background: #ffffff;
-    transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
-  }
-
-  .group:focus-within .auth-input {
-    border-color: #0a66c2;
-    background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.14);
-  }
-
-  .auth-primary {
-    background: #0a66c2;
-    box-shadow: none;
-    transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
-  }
-  .auth-primary:hover:not(:disabled) { background: #004182; filter: none; box-shadow: none; }
-  .auth-primary:active:not(:disabled) { transform: none; }
-
-  .auth-biometric {
-    border: 1px solid #0a66c2;
-    background: #ffffff;
-    color: #0a66c2;
-    transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease;
-  }
-  .auth-biometric:hover { border-color: #004182; background: #eef6ff; color: #004182; }
 }
+.auth-biometric:hover { background: #e8f3ff; }
