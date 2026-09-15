@@ -131,17 +131,18 @@
 }
 
 :root {
-  --neuro-black: #030609;
-  --neuro-blue: #0b2b55;
-  --crystal-white: #f4fbff;
+  /* Brand system: 60% white, 30% royal blue, 10% black. */
+  --neuro-black: #000000;
+  --neuro-blue: #4169e1;
+  --crystal-white: #ffffff;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: #4169e1;
+  --primary-foreground: #000000;
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -166,6 +167,51 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+}
+
+/*
+ * The application previously mixed several dark/cyan themes.  Keep the visual
+ * language deterministic even in older views: surfaces are white, content is
+ * black, and every actual button uses the single royal-blue action color.
+ */
+body,
+#root {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+#root *:not(button):not([role="button"]) {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  color: #000000 !important;
+}
+
+#root button,
+#root [role="button"] {
+  background-color: #4169e1 !important;
+  background-image: none !important;
+  border-color: #4169e1 !important;
+  color: #000000 !important;
+}
+
+#root button *,
+#root [role="button"] * {
+  color: #000000 !important;
+}
+
+#root input,
+#root textarea,
+#root select {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+/* Keep the supplied PNG mark clean: it has no surrounding panel, fill, or edge. */
+#root .brand-logo {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
 
 .dark {

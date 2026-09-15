@@ -1,8 +1,12 @@
 type NeuralLogoProps = { className?: string };
 
-/** A transparent brand mark that can sit directly on any surface. */
-export default function NeuralLogo({ className = '' }: NeuralLogoProps) {
-  const nodes = [[34,92,'#0a66c2'],[48,53,'#0a66c2'],[72,25,'#0a66c2'],[100,42,'#0a66c2'],[103,79,'#0a66c2'],[67,112,'#0a66c2'],[35,128,'#0a66c2'],[61,153,'#0a66c2'],[99,171,'#0a66c2'],[128,66,'#5361ee'],[151,25,'#7c3aed'],[181,44,'#7c3aed'],[197,92,'#7c3aed'],[176,126,'#7c3aed'],[201,128,'#7c3aed'],[176,155,'#7c3aed'],[146,160,'#7c3aed'],[130,171,'#6c50ee']];
-  const links = [[34,92,48,53],[48,53,72,25],[48,53,103,79],[72,25,100,42],[100,42,128,66],[103,79,128,66],[34,92,67,112],[48,53,67,112],[67,112,35,128],[67,112,61,153],[61,153,99,171],[35,128,99,171],[103,79,67,112],[128,66,151,25],[128,66,181,44],[128,66,146,160],[151,25,181,44],[181,44,197,92],[197,92,176,126],[197,92,201,128],[176,126,201,128],[176,126,176,155],[176,155,146,160],[146,160,130,171],[130,171,99,171],[146,160,128,66]];
-  return <svg className={className} viewBox="0 0 232 196" role="img" aria-label="Neuro Networks logo"><defs><linearGradient id="neural-logo-gradient" x1="0" x2="1"><stop stopColor="#0a66c2"/><stop offset=".5" stopColor="#3f68f4"/><stop offset="1" stopColor="#7c3aed"/></linearGradient></defs><g fill="none" stroke="url(#neural-logo-gradient)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">{links.map(([x1,y1,x2,y2]) => <path key={`${x1}-${y1}-${x2}-${y2}`} d={`M${x1} ${y1} L${x2} ${y2}`} />)}<path d="M113 140V84c0-5 6-7 10-3l31 30V78" strokeWidth="7"/><path d="M126 119l29 29c4 4 10 1 10-4V91" strokeWidth="7"/></g>{nodes.map(([cx,cy,fill]) => <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="5.7" fill={fill as string}/>)}</svg>;
+/** The supplied transparent logo asset, reusable anywhere the brand is shown. */
+export default function NeuralLogo({ className = "" }: NeuralLogoProps) {
+  return (
+    <img
+      src="/icon-clean.png"
+      alt="Neuro Networks"
+      className={`brand-logo object-contain ${className}`}
+    />
+  );
 }
