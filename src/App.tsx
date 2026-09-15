@@ -80,8 +80,7 @@ function AppContent() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#f3f2ef] flex justify-center">
-        <div className="w-full min-h-screen relative">
+
           <Auth />
         </div>
       </div>
