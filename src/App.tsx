@@ -14,7 +14,9 @@ import {
   Contact,
   QrCode,
   Zap,
-  Radar
+  Radar,
+  Bell,
+  Settings as SettingsIcon
 } from "lucide-react";
 import { UserProvider, useUser } from "./lib/UserContext";
 import { AdminStateProvider, useAdminState } from "./lib/AdminStateProvider";
@@ -71,7 +73,7 @@ function BottomNav() {
               key={tab.path}
               to={tab.path}
               className={`flex flex-col items-center gap-1 text-xs font-medium ${
-                isActive ? "text-cyan-600" : "text-gray-500 hover:text-gray-900"
+                isActive ? "text-[#4169e1]" : "text-black hover:text-black"
               }`}
             >
               <Icon className="h-5 w-5" />
@@ -84,21 +86,47 @@ function BottomNav() {
   );
 }
 
+/** A consistent top-right utility area keeps global actions discoverable on every page. */
+function AppHeader() {
+  return (
+    <header className="sticky top-0 z-40 flex h-16 items-center justify-end border-b border-[#d9d9d9] bg-white px-6">
+      <nav aria-label="Application utilities" className="flex items-center gap-2">
+        <Link
+          to="/alerts"
+          aria-label="Notifications"
+          title="Notifications"
+          className="relative inline-flex h-10 w-10 items-center justify-center rounded-md border border-[#4169e1] bg-[#4169e1] text-black hover:bg-[#4169e1]"
+        >
+          <Bell className="h-5 w-5" aria-hidden="true" />
+        </Link>
+        <Link
+          to="/settings"
+          aria-label="Settings"
+          title="Settings"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-[#4169e1] bg-[#4169e1] text-black hover:bg-[#4169e1]"
+        >
+          <SettingsIcon className="h-5 w-5" aria-hidden="true" />
+        </Link>
+      </nav>
+    </header>
+  );
+}
+
 function AppContent() {
   const { user, loading, profile } = useUser();
   const { maintenanceMode } = useAdminState();
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0c] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-[#4169e1] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#0a0a0c] flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="w-full max-w-md p-4">
           <Auth />
         </div>
@@ -111,16 +139,16 @@ function AppContent() {
 
   if (isSuspended) {
     return (
-      <div className="min-h-screen app-aurora text-white flex justify-center">
-        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 relative bg-red-950/30 glass-panel premium-device-frame flex flex-col items-center justify-center p-6 text-center">
-          <div className="w-16 h-16 rounded-full bg-red-950/50 border border-red-500/30 flex items-center justify-center mb-6 text-red-500 animate-pulse animate-duration-1000">
+      <div className="min-h-screen bg-white text-black flex justify-center">
+        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 relative bg-white flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-16 h-16 rounded-full bg-white border border-[#4169e1] flex items-center justify-center mb-6 text-black animate-pulse animate-duration-1000">
             <Shield className="w-8 h-8" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-red-400 mb-2">Account Suspended</h1>
-          <p className="text-xs text-white/60 leading-relaxed mb-6">
+          <h1 className="text-xl font-bold tracking-tight text-black mb-2">Account Suspended</h1>
+          <p className="text-xs text-black leading-relaxed mb-6">
             This user account has been suspended by the super administrator. Access to the platform's core registry has been restricted.
           </p>
-          <div className="text-[10px] font-mono text-white/30">
+          <div className="text-[10px] font-mono text-black">
             SECURITY TRACE ID: SUSP_STATE_ACTIVE
           </div>
         </div>
@@ -132,8 +160,8 @@ function AppContent() {
 
   if (!isAdmin && !hasAccess) {
     return (
-      <div className="min-h-screen app-aurora text-white flex justify-center">
-        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 relative glass-panel premium-device-frame">
+      <div className="min-h-screen bg-white text-black flex justify-center">
+        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 relative bg-white">
           <div className="h-full overflow-y-auto scrollbar-hide">
             <Checkout />
           </div>
@@ -144,16 +172,16 @@ function AppContent() {
 
   if (maintenanceMode && !isAdmin) {
     return (
-      <div className="min-h-screen app-aurora text-white flex justify-center">
-        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 relative bg-amber-950/25 glass-panel premium-device-frame flex flex-col items-center justify-center p-6 text-center">
-          <div className="w-16 h-16 rounded-full bg-amber-950/50 border border-amber-500/30 flex items-center justify-center mb-6 text-amber-500 animate-pulse">
+      <div className="min-h-screen bg-white text-black flex justify-center">
+        <div className="w-full h-full md:w-[400px] md:h-[800px] md:mt-10 md:rounded-[40px] md:overflow-hidden md:border-8 relative bg-white flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-16 h-16 rounded-full bg-white border border-[#4169e1] flex items-center justify-center mb-6 text-black animate-pulse">
             <BrainCircuit className="w-8 h-8" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-amber-400 mb-2">Maintenance Underway</h1>
-          <p className="text-xs text-white/60 leading-relaxed mb-6">
+          <h1 className="text-xl font-bold tracking-tight text-black mb-2">Maintenance Underway</h1>
+          <p className="text-xs text-black leading-relaxed mb-6">
             The Neuro NetWorks platform is currently undergoing scheduled system calibration. We apologize for the brief interruption.
           </p>
-          <div className="text-[10px] font-mono text-white/30">
+          <div className="text-[10px] font-mono text-black">
             SYSTEM ENGINE STATUS: CALIBRATING
           </div>
         </div>
@@ -162,8 +190,9 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-[#111827]">
+    <div className="min-h-screen bg-white text-black">
       <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col bg-white">
+        <AppHeader />
         <main className="min-h-0 flex-1 overflow-y-auto">
           <Routes>
             <Route path="/" element={<Dashboard />} />
@@ -207,7 +236,7 @@ export default function App() {
           <QueryClientProvider client={queryClient}>
             <Router>
               <AppContent />
-              <Toaster theme="dark" position="top-center" />
+              <Toaster theme="light" position="top-center" />
             </Router>
           </QueryClientProvider>
         </AdminStateProvider>
