@@ -6,6 +6,7 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import {
@@ -16,7 +17,11 @@ import {
   Zap,
   Radar,
   Bell,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  LogOut,
+  UserRound,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { UserProvider, useUser } from "./lib/UserContext";
 import { AdminStateProvider, useAdminState } from "./lib/AdminStateProvider";
@@ -64,8 +69,8 @@ function BottomNav() {
   ];
 
   return (
-    <nav className="sticky bottom-0 z-50 border-t border-gray-200 bg-white">
-      <div className="flex items-center justify-around p-2">
+    <nav className="sticky bottom-0 z-50 border-t border-slate-200/80 bg-white/85 backdrop-blur-xl dark:border-slate-700 dark:bg-slate-950/85">
+      <div className="flex items-center justify-around px-2 py-2.5">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = location.pathname === tab.path;
@@ -73,8 +78,8 @@ function BottomNav() {
             <Link
               key={tab.path}
               to={tab.path}
-              className={`flex flex-col items-center gap-1 text-xs font-medium ${
-                isActive ? "text-[#4169e1]" : "text-black hover:text-black"
+              className={`flex flex-col items-center gap-1 text-[11px] font-medium ${
+                isActive ? "text-[#4169e1]" : "text-black hover:text-[#4169e1] dark:text-white dark:hover:text-[#8da8ff]"
               }`}
             >
               <Icon className="h-5 w-5" />
@@ -89,25 +94,78 @@ function BottomNav() {
 
 /** A consistent top-right utility area keeps global actions discoverable on every page. */
 function AppHeader() {
-  return (
+  const { profile, logout } = useUser();
+  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem("color-theme") === "dark");
+  const displayName = profile?.full_name?.trim() || "Your profile";
+  const initials = displayName
+    .split(/\s+/)
+    .map((name) => name[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
-      <nav aria-label="Application utilities" className="flex items-center gap-2">
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDarkMode);
+    localStorage.setItem("color-theme", isDarkMode ? "dark" : "light");
+  }, [isDarkMode]);
+
+  return (
+    <header className="flex items-center justify-end border-b border-slate-200/80 px-4 py-3 sm:px-6 dark:border-slate-700">
+      <nav aria-label="Application utilities" className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => setIsDarkMode((value) => !value)}
+          aria-label={`Switch to ${isDarkMode ? "light" : "dark"} mode`}
+          title={`Switch to ${isDarkMode ? "light" : "dark"} mode`}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-slate-100 hover:text-[#3157c7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4169e1]/40 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
+        >
+          {isDarkMode ? <Sun className="h-[18px] w-[18px]" aria-hidden="true" /> : <Moon className="h-[18px] w-[18px]" aria-hidden="true" />}
+        </button>
         <Link
           to="/alerts"
           aria-label="Notifications"
           title="Notifications"
-          className="relative inline-flex h-10 w-10 items-center justify-center rounded-md border border-[#4169e1] bg-[#4169e1] text-black hover:bg-[#4169e1]"
+          className="relative inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-slate-100 hover:text-[#3157c7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4169e1]/40 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
         >
-          <Bell className="h-5 w-5" aria-hidden="true" />
+          <Bell className="h-[18px] w-[18px]" aria-hidden="true" />
         </Link>
         <Link
           to="/settings"
           aria-label="Settings"
           title="Settings"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-[#4169e1] bg-[#4169e1] text-black hover:bg-[#4169e1]"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-slate-100 hover:text-[#3157c7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4169e1]/40 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
         >
-          <SettingsIcon className="h-5 w-5" aria-hidden="true" />
+          <SettingsIcon className="h-[18px] w-[18px]" aria-hidden="true" />
         </Link>
+        <div className="mx-2 h-5 w-px bg-slate-200 dark:bg-slate-700" aria-hidden="true" />
+        <details className="group relative">
+          <summary
+            aria-label="Open profile menu"
+            className="flex h-9 w-9 cursor-pointer list-none items-center justify-center overflow-hidden rounded-full bg-[#4169e1] text-[11px] font-semibold text-white shadow-sm transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4169e1]/40 [&::-webkit-details-marker]:hidden"
+          >
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
+            ) : initials ? (
+              initials
+            ) : (
+              <UserRound className="h-[18px] w-[18px]" aria-hidden="true" />
+            )}
+          </summary>
+          <div className="absolute right-0 top-11 z-50 w-52 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg shadow-slate-900/10">
+            <div className="border-b border-slate-100 px-2.5 py-2">
+              <p className="truncate text-xs font-semibold text-slate-800">{displayName}</p>
+              {profile?.email && <p className="truncate text-[11px] text-slate-500">{profile.email}</p>}
+            </div>
+            <Link to="/settings" className="mt-1 flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs text-slate-600 hover:bg-slate-50">
+              <SettingsIcon className="h-3.5 w-3.5" aria-hidden="true" />
+              Account settings
+            </Link>
+            <button onClick={() => void logout()} className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs text-rose-600 hover:bg-rose-50">
+              <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
+              Log out
+            </button>
+          </div>
+        </details>
       </nav>
     </header>
   );
@@ -191,8 +249,8 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-black">
-      <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col bg-white">
+    <div className="app-shell min-h-screen text-slate-900">
+      <div className="app-surface mx-auto flex min-h-screen w-full max-w-5xl flex-col">
         <AppHeader />
         <main className="min-h-0 flex-1 overflow-y-auto">
           <Routes>
