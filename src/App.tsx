@@ -6,6 +6,7 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import {
@@ -19,6 +20,7 @@ import {
   Settings as SettingsIcon,
   LogOut,
   UserRound,
+
 } from "lucide-react";
 import { UserProvider, useUser } from "./lib/UserContext";
 import { AdminStateProvider, useAdminState } from "./lib/AdminStateProvider";
@@ -66,7 +68,7 @@ function BottomNav() {
   ];
 
   return (
-    <nav className="sticky bottom-0 z-50 border-t border-slate-200/80 bg-white/85 backdrop-blur-xl">
+
       <div className="flex items-center justify-around px-2 py-2.5">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -76,7 +78,7 @@ function BottomNav() {
               key={tab.path}
               to={tab.path}
               className={`flex flex-col items-center gap-1 text-[11px] font-medium ${
-                isActive ? "text-[#4169e1]" : "text-black hover:text-black"
+
               }`}
             >
               <Icon className="h-5 w-5" />
@@ -92,6 +94,7 @@ function BottomNav() {
 /** A consistent top-right utility area keeps global actions discoverable on every page. */
 function AppHeader() {
   const { profile, logout } = useUser();
+
   const displayName = profile?.full_name?.trim() || "Your profile";
   const initials = displayName
     .split(/\s+/)
@@ -100,14 +103,11 @@ function AppHeader() {
     .slice(0, 2)
     .toUpperCase();
 
-  return (
-    <header className="flex items-center justify-end border-b border-slate-200/80 px-4 py-3 sm:px-6">
-      <nav aria-label="Application utilities" className="flex items-center gap-1">
         <Link
           to="/alerts"
           aria-label="Notifications"
           title="Notifications"
-          className="relative inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-slate-100 hover:text-[#3157c7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4169e1]/40"
+
         >
           <Bell className="h-[18px] w-[18px]" aria-hidden="true" />
         </Link>
@@ -115,11 +115,7 @@ function AppHeader() {
           to="/settings"
           aria-label="Settings"
           title="Settings"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-slate-100 hover:text-[#3157c7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4169e1]/40"
-        >
-          <SettingsIcon className="h-[18px] w-[18px]" aria-hidden="true" />
-        </Link>
-        <div className="mx-2 h-5 w-px bg-slate-200" aria-hidden="true" />
+
         <details className="group relative">
           <summary
             aria-label="Open profile menu"
