@@ -188,58 +188,7 @@ body,
 .app-surface {
   background: rgb(255 255 255 / 0.8);
   box-shadow: 0 0 50px rgb(15 23 42 / 0.05);
-  color: #111827;
-}
 
-/* Keep copy readable against the platform's light content surfaces. */
-.app-surface :where(h1, h2, h3, h4, h5, h6, p, span, label, li, dt, dd, td, th, a, button, input, textarea, select) {
-  color: #111827 !important;
-}
-
-.app-surface :where(hr, [class*="border-"], [class~="border"]) {
-  border-color: rgb(17 24 39 / 0.18) !important;
-}
-
-.app-surface :where(input, textarea, select)::placeholder {
-  color: rgb(17 24 39 / 0.52) !important;
-}
-
-@media (min-width: 1024px) {
-  .app-surface {
-    border-inline: 1px solid rgb(17 24 39 / 0.18);
-  }
-}
-
-html.dark body,
-html.dark #root {
-  background-color: #0b1120;
-  background-image:
-    radial-gradient(circle at 8% 2%, rgb(65 105 225 / 0.2), transparent 28rem),
-    radial-gradient(circle at 92% 18%, rgb(14 165 233 / 0.1), transparent 23rem),
-    linear-gradient(rgb(148 163 184 / 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(148 163 184 / 0.055) 1px, transparent 1px);
-}
-
-html.dark .app-surface {
-  background: rgb(15 23 42 / 0.92);
-  box-shadow: 0 0 50px rgb(0 0 0 / 0.22);
-  color: #f8fafc;
-}
-
-html.dark .app-surface :where([class*="bg-white"], [class~="bg-white"]) {
-  background-color: #162033 !important;
-}
-
-html.dark .app-surface :where(h1, h2, h3, h4, h5, h6, p, span, label, li, dt, dd, td, th, a, button, input, textarea, select) {
-  color: #f8fafc !important;
-}
-
-html.dark .app-surface :where(hr, [class*="border-"], [class~="border"]) {
-  border-color: rgb(226 232 240 / 0.22) !important;
-}
-
-html.dark .app-surface :where(input, textarea, select)::placeholder {
-  color: rgb(226 232 240 / 0.58) !important;
 }
 
 
