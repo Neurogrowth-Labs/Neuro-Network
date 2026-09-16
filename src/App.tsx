@@ -20,7 +20,8 @@ import {
   Settings as SettingsIcon,
   LogOut,
   UserRound,
-
+  Moon,
+  Sun,
 } from "lucide-react";
 import { UserProvider, useUser } from "./lib/UserContext";
 import { AdminStateProvider, useAdminState } from "./lib/AdminStateProvider";
@@ -68,7 +69,7 @@ function BottomNav() {
   ];
 
   return (
-
+    <nav className="sticky bottom-0 z-50 border-t border-slate-200/80 bg-white/85 backdrop-blur-xl dark:border-slate-700 dark:bg-slate-950/85">
       <div className="flex items-center justify-around px-2 py-2.5">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -78,7 +79,7 @@ function BottomNav() {
               key={tab.path}
               to={tab.path}
               className={`flex flex-col items-center gap-1 text-[11px] font-medium ${
-
+                isActive ? "text-[#4169e1]" : "text-black hover:text-[#4169e1] dark:text-white dark:hover:text-[#8da8ff]"
               }`}
             >
               <Icon className="h-5 w-5" />
@@ -94,7 +95,7 @@ function BottomNav() {
 /** A consistent top-right utility area keeps global actions discoverable on every page. */
 function AppHeader() {
   const { profile, logout } = useUser();
-
+  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem("color-theme") === "dark");
   const displayName = profile?.full_name?.trim() || "Your profile";
   const initials = displayName
     .split(/\s+/)
@@ -103,11 +104,28 @@ function AppHeader() {
     .slice(0, 2)
     .toUpperCase();
 
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDarkMode);
+    localStorage.setItem("color-theme", isDarkMode ? "dark" : "light");
+  }, [isDarkMode]);
+
+  return (
+    <header className="flex items-center justify-end border-b border-slate-200/80 px-4 py-3 sm:px-6 dark:border-slate-700">
+      <nav aria-label="Application utilities" className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => setIsDarkMode((value) => !value)}
+          aria-label={`Switch to ${isDarkMode ? "light" : "dark"} mode`}
+          title={`Switch to ${isDarkMode ? "light" : "dark"} mode`}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-slate-100 hover:text-[#3157c7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4169e1]/40 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
+        >
+          {isDarkMode ? <Sun className="h-[18px] w-[18px]" aria-hidden="true" /> : <Moon className="h-[18px] w-[18px]" aria-hidden="true" />}
+        </button>
         <Link
           to="/alerts"
           aria-label="Notifications"
           title="Notifications"
-
+          className="relative inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-slate-100 hover:text-[#3157c7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4169e1]/40 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
         >
           <Bell className="h-[18px] w-[18px]" aria-hidden="true" />
         </Link>
@@ -115,7 +133,11 @@ function AppHeader() {
           to="/settings"
           aria-label="Settings"
           title="Settings"
-
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-slate-100 hover:text-[#3157c7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4169e1]/40 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
+        >
+          <SettingsIcon className="h-[18px] w-[18px]" aria-hidden="true" />
+        </Link>
+        <div className="mx-2 h-5 w-px bg-slate-200 dark:bg-slate-700" aria-hidden="true" />
         <details className="group relative">
           <summary
             aria-label="Open profile menu"
