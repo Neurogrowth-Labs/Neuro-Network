@@ -207,12 +207,7 @@ body,
   }
 }
 
-/* Feature views use near-black panels for controls, cards, and overlays. The
- * light-surface rule above deliberately sets the default copy colour, so reset
- * copy in those dark regions to white to retain readable contrast. */
-.app-surface :where([class*="bg-black"], [class*="bg-[#0"]) {
-  color: #ffffff !important;
-}
+
 
 .app-surface :where([class*="bg-black"], [class*="bg-[#0"]) :where(h1, h2, h3, h4, h5, h6, p, span, label, li, dt, dd, td, th, a, button, input, textarea, select) {
   color: #ffffff !important;
