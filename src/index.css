@@ -191,7 +191,7 @@ body,
   color: #111827;
 }
 
-/* Keep copy readable against the platform's light content surfaces. */
+/* Keep all copy black while the application is in light mode. */
 .app-surface :where(h1, h2, h3, h4, h5, h6, p, span, label, li, dt, dd, td, th, a, button, input, textarea, select) {
   color: #111827 !important;
 }
