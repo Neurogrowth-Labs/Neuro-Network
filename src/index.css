@@ -185,23 +185,36 @@ body,
   color: #0f172a;
 }
 
-.app-surface {
-  background: rgb(255 255 255 / 0.8);
-  box-shadow: 0 0 50px rgb(15 23 42 / 0.05);
-  color: #111827;
+@layer base {
+  .app-surface {
+    background: rgb(255 255 255 / 0.8);
+    box-shadow: 0 0 50px rgb(15 23 42 / 0.05);
+    color: #111827;
+  }
+
+  /* Keep default copy readable on light content surfaces while allowing
+   * Tailwind text utilities to set appropriate contrast on dark panels. */
+  .app-surface :where(h1, h2, h3, h4, h5, h6, p, span, label, li, dt, dd, td, th, a, button, input, textarea, select) {
+    color: #111827;
+  }
+
+  .app-surface :where(hr, [class*="border-"], [class~="border"]) {
+    border-color: rgb(17 24 39 / 0.18);
+  }
+
+  .app-surface :where(input, textarea, select)::placeholder {
+    color: rgb(17 24 39 / 0.52);
+  }
 }
 
-/* Keep all copy black while the application is in light mode. */
-.app-surface :where(h1, h2, h3, h4, h5, h6, p, span, label, li, dt, dd, td, th, a, button, input, textarea, select) {
-  color: #111827 !important;
+
+
+.app-surface :where([class*="bg-black"], [class*="bg-[#0"]) :where(h1, h2, h3, h4, h5, h6, p, span, label, li, dt, dd, td, th, a, button, input, textarea, select) {
+  color: #ffffff !important;
 }
 
-.app-surface :where(hr, [class*="border-"], [class~="border"]) {
-  border-color: rgb(17 24 39 / 0.18) !important;
-}
-
-.app-surface :where(input, textarea, select)::placeholder {
-  color: rgb(17 24 39 / 0.52) !important;
+.app-surface :where([class*="bg-black"], [class*="bg-[#0"]) :where(input, textarea)::placeholder {
+  color: rgb(255 255 255 / 0.65) !important;
 }
 
 @media (min-width: 1024px) {
