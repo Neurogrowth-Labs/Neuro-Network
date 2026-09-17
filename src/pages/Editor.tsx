@@ -122,7 +122,7 @@ interface ChatMessage {
 }
 
 export default function Editor() {
-  const { profile, setProfile, loading: userLoading, isSaving } = useUser();
+  const { profile, setProfile } = useUser();
   const [card, setCard] = useState({ ...MY_CARD, ...profile });
   
   // Synchronize card state with user profile once it loads or updates
@@ -461,29 +461,6 @@ export default function Editor() {
         </div>
       </div>
 
-      {/* Real-time database sync and loading/saving indicator */}
-      {(userLoading || isSaving) ? (
-        <div className="flex items-center gap-3 bg-cyan-950/40 border border-cyan-500/25 rounded-xl px-4 py-3 animate-pulse">
-          <div className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"></span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-cyan-300 uppercase tracking-wider">
-              {userLoading ? "Loading Secure Wallet Identity..." : "Persisting cryptographic changes to Supabase..."}
-            </p>
-            <p className="text-[9px] text-white/40 uppercase tracking-widest font-mono mt-0.5">
-              Secure Direct Connection • Validating digital credentials
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div className="flex items-center gap-2 bg-emerald-950/10 border border-emerald-500/10 rounded-xl px-4 py-2 text-[9px] text-emerald-400 font-mono">
-          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-          <span className="uppercase tracking-widest">Database Sync State: Securely Synced (Supabase Central Table Live)</span>
-        </div>
-      )}
-
       {primaryTab === "concepts" ? (
         /* TAB MODULE A: Traditional Design Concepts (Original Flow) */
         <div className="space-y-6 animate-scale-up" id="concepts-design-panel">
@@ -554,33 +531,6 @@ export default function Editor() {
               </div>
             </div>
 
-            {/* Active Telemetry Widget */}
-            <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-4 space-y-3">
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#06b6d4] flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                Real-Time Diagnostics
-              </span>
-              <p className="text-[10px] text-white/40 leading-relaxed">
-                Direct Node pipeline status checking against both Supabase tables and Firebase Auth tokens. No simulated caches.
-              </p>
-              
-              <div className="space-y-2 pt-2 text-[10px] font-mono text-white/70">
-                <div className="flex items-center justify-between border-b border-white/5 pb-1.5">
-                  <span className="text-white/40 uppercase">System Status</span>
-                  <span className="text-emerald-400 flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> ONLINE (SLA 99.982%)
-                  </span>
-                </div>
-                <div className="flex items-center justify-between border-b border-white/5 pb-1.5">
-                  <span className="text-white/40 uppercase">Durable Sync</span>
-                  <span className="text-cyan-400">FIRESTORE CORE</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-white/40 uppercase">Active Models</span>
-                  <span className="text-white">CHAT, IMAGE</span>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* MAIN COLUMN: Interactive Workspace Panel */}
