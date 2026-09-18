@@ -55,9 +55,9 @@ export default function Dashboard() {
     saves: 0,
     conversionRate: 0,
     businessCardsCount: 0,
-    businessCardsLimit: 3, // Default limit for free plan
+    businessCardsLimit: 3,
     contactsCount: 0,
-    contactsLimit: 1000, // Default limit
+    contactsLimit: 1000,
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const navigate = useNavigate();
@@ -66,7 +66,6 @@ export default function Dashboard() {
 
   const cardUrl = `${window.location.origin}/card-view`;
 
-  // Fetch real stats from Supabase
   useEffect(() => {
     if (!user?.id) {
       setIsLoadingStats(false);
@@ -75,19 +74,16 @@ export default function Dashboard() {
 
     const fetchStats = async () => {
       try {
-        // Fetch contacts count
         const { count: contactsCount } = await supabase
           .from("contacts")
           .select("*", { count: "exact", head: true })
           .eq("user_id", user.id);
 
-        // Fetch business cards count
         const { count: cardsCount } = await supabase
           .from("business_cards")
           .select("*", { count: "exact", head: true })
           .eq("user_id", user.id);
 
-        // Fetch profile views from analytics (last 30 days)
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -97,14 +93,12 @@ export default function Dashboard() {
           .eq("profile_id", user.id)
           .gte("viewed_at", thirtyDaysAgo.toISOString());
 
-        // Fetch saves count (contacts that saved this user's card)
         const { count: savesCount } = await supabase
           .from("card_saves")
           .select("*", { count: "exact", head: true })
           .eq("card_owner_id", user.id)
           .gte("saved_at", thirtyDaysAgo.toISOString());
 
-        // Calculate conversion rate
         const views = viewsCount || 0;
         const saves = savesCount || 0;
         const conversion = views > 0 ? Math.round((saves / views) * 100) : 0;
@@ -120,7 +114,6 @@ export default function Dashboard() {
         });
       } catch (error) {
         console.warn("Failed to fetch dashboard stats:", error);
-        // Keep default values on error
       } finally {
         setIsLoadingStats(false);
       }
@@ -128,7 +121,6 @@ export default function Dashboard() {
 
     fetchStats();
 
-    // Set up real-time subscription for contacts
     const channel = supabase
       .channel("dashboard-stats")
       .on(
@@ -200,14 +192,14 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8 p-6 text-[#111827]">
-     {/* Header section */}
+    <div className="mx-auto max-w-4xl space-y-8 p-6 text-[#111827] dark:text-slate-100">
+      {/* Header section */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="mb-2 text-3xl font-semibold tracking-tight text-[#111827]">My Profile</h1>
+          <h1 className="mb-2 text-3xl font-semibold tracking-tight text-[#111827] dark:text-slate-100">My Profile</h1>
           <div className="flex items-center gap-2">
             <PlanBadge plan="pro" />
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-[#64748b]">Active Card</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-[#64748b] dark:text-slate-400">Active Card</span>
           </div>
         </div>
       </div>
@@ -215,92 +207,88 @@ export default function Dashboard() {
       <div className="relative">
         <CardPreview card={cardData} />
       </div>
-      <div className="rounded-lg border border-[#c7dff4] bg-[#f0f7fd] p-4 flex items-center justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-[#0a66c2]">Subscription</p>
-          <h2 className="text-lg font-bold text-[#111827]">{subscriptionState.status === "trial" ? `${trialDays} trial day${trialDays === 1 ? "" : "s"} remaining` : subscriptionState.status}</h2>
-          <p className="text-[11px] text-[#475569]">{PREMIUM_PLAN.name} · {PREMIUM_PLAN.displayPrice}/month · Full premium access during the 7-day trial countdown.</p>
-        </div>
-        <button onClick={() => navigate("/checkout")} className="rounded-md bg-[#0a66c2] px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white">Manage</button>
-      </div>
 
+      {/* Subscription Card */}
+      <div className="rounded-lg border border-[#dbe3ec] bg-white p-4 flex items-center justify-between gap-3 dark:border-slate-800 dark:bg-slate-900">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#0a66c2] dark:text-blue-400">
+            Subscription
+          </p>
+          <h2 className="text-lg font-bold text-[#111827] dark:text-slate-100">
+            {subscriptionState.status === "trial"
+              ? `${trialDays} trial day${trialDays === 1 ? "" : "s"} remaining`
+              : subscriptionState.status}
+          </h2>
+          <p className="text-[11px] text-[#475569] dark:text-slate-400">
+            {PREMIUM_PLAN.name} · {PREMIUM_PLAN.displayPrice}/month · Full premium access during the 7-day trial countdown.
+          </p>
+        </div>
+        <button
+          onClick={() => navigate("/checkout")}
+          className="rounded-md bg-[#0a66c2] px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:bg-[#084e96] dark:bg-blue-600 dark:hover:bg-blue-500"
+        >
+          Manage
+        </button>
+      </div>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-3">
-        <button
-          onClick={copyLink}
-          className="group flex flex-col items-center justify-center py-6 bg-white border border-[#dbe3ec] hover:bg-[#f0f7fd] hover:border-[#9dc5e8] rounded-xl transition-all"
-        >
-          <Copy className="w-5 h-5 text-[#0a66c2] mb-2 group-hover:scale-110 transition-transform" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-[#475569] group-hover:text-[#111827] transition-colors">
-            Copy Link
-          </span>
-        </button>
-        <button 
-          onClick={() => setShowQRModal(true)}
-          className="group flex flex-col items-center justify-center py-6 bg-white border border-[#dbe3ec] hover:bg-[#f0f7fd] hover:border-[#9dc5e8] rounded-xl transition-all"
-        >
-          <QrCode className="w-5 h-5 text-[#0a66c2] mb-2 group-hover:scale-110 transition-transform" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-[#475569] group-hover:text-[#111827] transition-colors">
-            Show QR
-          </span>
-        </button>
-        <button 
-          onClick={() => setShowShareModal(true)}
-          className="group flex flex-col items-center justify-center py-6 bg-white border border-[#dbe3ec] hover:bg-[#f0f7fd] hover:border-[#9dc5e8] rounded-xl transition-all"
-        >
-          <Share2 className="w-5 h-5 text-[#0a66c2] mb-2 group-hover:scale-110 transition-transform" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-[#475569] group-hover:text-[#111827] transition-colors">
-            Share App
-          </span>
-        </button>
-        <button 
-          onClick={() => navigate("/alerts")}
-          className="group flex flex-col items-center justify-center py-6 bg-white border border-[#c7dff4] hover:bg-[#e1f0fc] hover:border-[#9dc5e8] rounded-xl transition-all">
-          <ScanLine className="w-5 h-5 text-[#0a66c2] mb-2 group-hover:scale-110 transition-transform" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-[#475569] group-hover:text-[#111827] transition-colors">
-            Proximity Share
-          </span>
-        </button>
+        {[
+          { label: "Copy Link", icon: Copy, action: copyLink },
+          { label: "Show QR", icon: QrCode, action: () => setShowQRModal(true) },
+          { label: "Share App", icon: Share2, action: () => setShowShareModal(true) },
+          { label: "Proximity Share", icon: ScanLine, action: () => navigate("/alerts") }
+        ].map((item, idx) => (
+          <button
+            key={idx}
+            onClick={item.action}
+            className="group flex flex-col items-center justify-center py-6 bg-white border border-[#dbe3ec] hover:bg-[#f0f7fd] hover:border-[#9dc5e8] rounded-xl transition-all dark:bg-slate-900 dark:border-slate-800 dark:hover:bg-slate-800/60 dark:hover:border-slate-700"
+          >
+            <item.icon className="w-5 h-5 text-[#0a66c2] mb-2 group-hover:scale-110 transition-transform dark:text-blue-400" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#475569] group-hover:text-[#111827] transition-colors dark:text-slate-400 dark:group-hover:text-slate-200">
+              {item.label}
+            </span>
+          </button>
+        ))}
       </div>
 
       <ProximityWidget />
 
-      {/* Stats */}
-      <div className="bg-white rounded-lg p-6 border border-[#dbe3ec] space-y-6">
-        <h2 className="text-[10px] font-black text-[#64748b] uppercase tracking-widest flex justify-between">
+      {/* Stats Card */}
+      <div className="bg-white rounded-lg p-6 border border-[#dbe3ec] space-y-6 dark:bg-slate-900 dark:border-slate-800">
+        <h2 className="text-[10px] font-black text-[#64748b] dark:text-slate-400 uppercase tracking-widest flex justify-between">
           30 Day Performance
-          <ArrowUpRight className="w-4 h-4 text-[#0a66c2]" />
+          <ArrowUpRight className="w-4 h-4 text-[#0a66c2] dark:text-blue-400" />
         </h2>
 
         <div className="grid grid-cols-3 gap-2">
-          <div className="border-r border-[#e7edf3] pr-2">
-            <p className="text-3xl font-light tracking-tighter text-[#0a66c2]">
+          <div className="border-r border-[#e7edf3] dark:border-slate-800 pr-2">
+            <p className="text-3xl font-light tracking-tighter text-[#0a66c2] dark:text-blue-400">
               {isLoadingStats ? "..." : stats.profileViews.toLocaleString()}
             </p>
-            <p className="text-[9px] font-black text-[#111827]/30 uppercase tracking-widest mt-1">
+            <p className="text-[9px] font-black text-[#111827]/30 dark:text-slate-500 uppercase tracking-widest mt-1">
               Profile Views
             </p>
           </div>
-          <div className="border-r border-[#e7edf3] px-2">
-            <p className="text-3xl font-light tracking-tighter text-[#111827]">
+          <div className="border-r border-[#e7edf3] dark:border-slate-800 px-2">
+            <p className="text-3xl font-light tracking-tighter text-[#111827] dark:text-slate-100">
               {isLoadingStats ? "..." : stats.saves.toLocaleString()}
             </p>
-            <p className="text-[9px] font-black text-[#111827]/30 uppercase tracking-widest mt-1">
+            <p className="text-[9px] font-black text-[#111827]/30 dark:text-slate-500 uppercase tracking-widest mt-1">
               Saves
             </p>
           </div>
           <div className="pl-2">
-            <p className="text-3xl font-light tracking-tighter text-[#0a66c2]">
+            <p className="text-3xl font-light tracking-tighter text-[#0a66c2] dark:text-blue-400">
               {isLoadingStats ? "..." : `${stats.conversionRate > 0 ? '+' : ''}${stats.conversionRate}%`}
             </p>
-            <p className="text-[9px] font-black text-[#111827]/30 uppercase tracking-widest mt-1">
+            <p className="text-[9px] font-black text-[#111827]/30 dark:text-slate-500 uppercase tracking-widest mt-1">
               Conversion
             </p>
           </div>
         </div>
 
-        <div className="pt-6 border-t border-[#e7edf3] space-y-4">
+        <div className="pt-6 border-t border-[#e7edf3] dark:border-slate-800 space-y-4">
           <UsageBar
             label="Business Cards"
             used={stats.businessCardsCount}
@@ -318,15 +306,15 @@ export default function Dashboard() {
 
       {/* QR Modal */}
       {showQRModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-          <div className="bg-white p-6 rounded-2xl w-full max-w-sm border border-[#dbe3ec] space-y-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl w-full max-w-sm border border-[#dbe3ec] dark:border-slate-800 space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-medium tracking-tight text-[#111827]">
+              <h2 className="text-xl font-medium tracking-tight text-[#111827] dark:text-slate-100">
                 Share via QR Code
               </h2>
               <button
                 onClick={() => setShowQRModal(false)}
-                className="text-[#64748b] hover:text-[#111827]"
+                className="text-[#64748b] hover:text-[#111827] dark:text-slate-400 dark:hover:text-slate-100"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -340,15 +328,15 @@ export default function Dashboard() {
 
       {/* Share Modal */}
       {showShareModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-          <div className="bg-white p-6 rounded-2xl w-full max-w-sm border border-[#dbe3ec] space-y-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl w-full max-w-sm border border-[#dbe3ec] dark:border-slate-800 space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-medium tracking-tight text-[#111827]">
+              <h2 className="text-xl font-medium tracking-tight text-[#111827] dark:text-slate-100">
                 Share App
               </h2>
               <button
                 onClick={() => setShowShareModal(false)}
-                className="text-[#64748b] hover:text-[#111827]"
+                className="text-[#64748b] hover:text-[#111827] dark:text-slate-400 dark:hover:text-slate-100"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -362,34 +350,34 @@ export default function Dashboard() {
                   <MessageCircle className="w-5 h-5 text-[#25D366]" />
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-[#111827]">WhatsApp</div>
-                  <div className="text-xs text-[#64748b]">Send to a contact directly</div>
+                  <div className="text-sm font-bold text-[#111827] dark:text-slate-100">WhatsApp</div>
+                  <div className="text-xs text-[#64748b] dark:text-slate-400">Send to a contact directly</div>
                 </div>
               </button>
               
               <button 
                 onClick={shareViaEmail}
-                className="flex items-center gap-3 p-4 rounded-xl border border-[#e7edf3] bg-white hover:bg-[#f6f9fc] transition-all text-left"
+                className="flex items-center gap-3 p-4 rounded-xl border border-[#e7edf3] bg-white hover:bg-[#f6f9fc] dark:bg-slate-800/50 dark:border-slate-700 dark:hover:bg-slate-800 transition-all text-left"
               >
                 <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center">
-                  <Mail className="w-5 h-5 text-[#0a66c2]" />
+                  <Mail className="w-5 h-5 text-[#0a66c2] dark:text-blue-400" />
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-[#111827]">Email</div>
-                  <div className="text-xs text-[#64748b]">Share via email client</div>
+                  <div className="text-sm font-bold text-[#111827] dark:text-slate-100">Email</div>
+                  <div className="text-xs text-[#64748b] dark:text-slate-400">Share via email client</div>
                 </div>
               </button>
 
               <button 
                 onClick={shareViaSMS}
-                className="flex items-center gap-3 p-4 rounded-xl border border-[#e7edf3] bg-white hover:bg-[#f6f9fc] transition-all text-left"
+                className="flex items-center gap-3 p-4 rounded-xl border border-[#e7edf3] bg-white hover:bg-[#f6f9fc] dark:bg-slate-800/50 dark:border-slate-700 dark:hover:bg-slate-800 transition-all text-left"
               >
                 <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
                   <MessageSquare className="w-5 h-5 text-blue-400" />
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-[#111827]">SMS</div>
-                  <div className="text-xs text-[#64748b]">Send a text message</div>
+                  <div className="text-sm font-bold text-[#111827] dark:text-slate-100">SMS</div>
+                  <div className="text-xs text-[#64748b] dark:text-slate-400">Send a text message</div>
                 </div>
               </button>
             </div>
