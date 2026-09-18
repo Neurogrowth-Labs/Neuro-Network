@@ -257,7 +257,7 @@ export default function Dashboard() {
       {/* Stats Card */}
       <div className="bg-white rounded-lg p-6 border border-[#dbe3ec] space-y-6 dark:bg-slate-900 dark:border-slate-800">
         <h2 className="text-[10px] font-black text-[#64748b] dark:text-slate-400 uppercase tracking-widest flex justify-between">
-          30 Day Performance
+          30 Days Performance
           <ArrowUpRight className="w-4 h-4 text-[#0a66c2] dark:text-blue-400" />
         </h2>
 
