@@ -256,9 +256,9 @@ export default function Dashboard() {
         </button>
         <button 
           onClick={() => navigate("/alerts")}
-          className="group flex flex-col items-center justify-center py-6 bg-[#f0f7fd] border border-[#c7dff4] hover:bg-[#e1f0fc] hover:border-[#0a66c2] rounded-xl transition-all">
+          className="group flex flex-col items-center justify-center py-6 bg-white border border-[#c7dff4] hover:bg-[#e1f0fc] hover:border-[#9dc5e8] rounded-xl transition-all">
           <ScanLine className="w-5 h-5 text-[#0a66c2] mb-2 group-hover:scale-110 transition-transform" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-[#0a66c2] group-hover:text-[#0a66c2] transition-colors">
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#475569] group-hover:text-[#111827] transition-colors">
             Proximity Share
           </span>
         </button>
