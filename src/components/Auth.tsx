@@ -89,7 +89,7 @@ export default function Auth() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center p-4 bg-[#f3f2ef]">
+    <div className="relative flex min-h-screen items-center justify-center p-4 bg-white">
       {introComplete && (
         <div className="relative z-20 w-full max-w-[432px] animate-auth-card-return">
           <section className="rounded-lg border border-[#d0d7de] bg-white p-6 shadow-sm sm:p-8">
