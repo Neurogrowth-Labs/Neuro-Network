@@ -565,7 +565,7 @@ export default function Editor() {
                     </div>
                   </div>
 
-                  {/* Multi-turn thread scroll box */}
+                 {/* Multi-turn thread scroll box */}
                   <div className="flex-1 overflow-y-auto max-h-[350px] space-y-4 pr-1 py-1 scrollbar-thin">
                     {messages.map((m, idx) => (
                       <div
@@ -574,30 +574,34 @@ export default function Editor() {
                           m.role === "user" ? "items-end" : "items-start"
                         } space-y-1`}
                       >
-                        <div className="flex items-center gap-1.5 text-[9px] uppercase font-black tracking-wider text-white/30">
-                          {m.role === "user" ? "Alexander (You)" : `${selectedRole.replace(/_/g, " ").toUpperCase()} bot`}
+                        {/* Header Info (Name + Timestamp) */}
+                        <div className="flex items-center gap-1.5 text-[9px] uppercase font-black tracking-wider text-slate-500 dark:text-white/30">
+                          {m.role === "user"
+                            ? "Alexander (You)"
+                            : `${selectedRole.replace(/_/g, " ").toUpperCase()} bot`}
                           <Clock className="w-2.5 h-2.5" />
                           {m.timestamp}
                         </div>
-                        
+                  
+                        {/* Message Bubble */}
                         <div
                           className={`p-3 md:p-4 rounded-2xl max-w-[85%] ${
                             m.role === "user"
-                              ? "bg-cyan-500/10 border border-cyan-500/35 text-white rounded-tr-none"
-                              : "bg-white/[0.03] border border-white/5 text-white/90 rounded-tl-none"
+                              ? "bg-[#0a66c2]/10 border border-[#0a66c2]/30 text-slate-900 rounded-tr-none dark:bg-cyan-500/10 dark:border-cyan-500/35 dark:text-white"
+                              : "bg-slate-100/80 border border-slate-200 text-slate-800 rounded-tl-none dark:bg-white/[0.03] dark:border-white/5 dark:text-white/90"
                           }`}
                         >
                           <FormattedMessage text={m.content} />
-                          
+                  
                           {/* Grounding Source metadata chips */}
                           {m.groundingChunks && m.groundingChunks.length > 0 && (
-                            <div className="mt-3 pt-2.5 border-t border-white/5 space-y-1.5">
-                              <span className="text-[9px] font-black uppercase text-cyan-400 flex items-center gap-1">
+                            <div className="mt-3 pt-2.5 border-t border-slate-200 dark:border-white/5 space-y-1.5">
+                              <span className="text-[9px] font-black uppercase text-[#0a66c2] dark:text-cyan-400 flex items-center gap-1">
                                 <Search className="w-2.5 h-2.5" />
                                 Verified Research Citations
                               </span>
                               <div className="flex flex-wrap gap-1.5">
-                                {m.groundingChunks.map((chunk: any, chunkIdx) => {
+                                {m.groundingChunks.map((chunk: any, chunkIdx: number) => {
                                   let title = "Reference Code";
                                   let uri = "#";
                                   if (chunk.web) {
@@ -613,9 +617,11 @@ export default function Editor() {
                                       href={uri}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="px-2 py-0.5 rounded bg-cyan-950/40 border border-cyan-800/30 hover:border-cyan-500 text-[9px] font-mono text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-all"
+                                      className="px-2 py-0.5 rounded bg-cyan-50 border border-cyan-200 text-[#0a66c2] hover:border-[#0a66c2] hover:text-[#084e96] dark:bg-cyan-950/40 dark:border-cyan-800/30 dark:hover:border-cyan-500 dark:text-cyan-400 dark:hover:text-cyan-300 text-[9px] font-mono flex items-center gap-1 transition-all"
                                     >
-                                      {title.length > 22 ? title.substring(0, 22) + "..." : title}
+                                      {title.length > 22
+                                        ? title.substring(0, 22) + "..."
+                                        : title}
                                       <ArrowUpRight className="w-2.5 h-2.5" />
                                     </a>
                                   );
@@ -626,9 +632,10 @@ export default function Editor() {
                         </div>
                       </div>
                     ))}
-                    
+                  
+                    {/* Loading Indicator */}
                     {chatLoading && (
-                      <div className="flex items-center gap-2 text-xs font-mono text-cyan-400 uppercase animate-pulse pl-1">
+                      <div className="flex items-center gap-2 text-xs font-mono text-[#0a66c2] dark:text-cyan-400 uppercase animate-pulse pl-1">
                         <Activity className="w-3.5 h-3.5 animate-spin" />
                         AI compute nodes resolving query...
                       </div>
