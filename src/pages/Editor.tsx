@@ -424,8 +424,8 @@ export default function Editor() {
       {/* Title block banner header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
         <div>
-          <h1 className="text-3xl font-light tracking-tighter text-white flex items-center gap-2">
-            <Brain className="w-8 h-8 text-cyan-400 animate-pulse" />
+          <h1 className="text-3xl font-light tracking-tighter text-slate-900 dark:text-white flex items-center gap-2">
+            <Brain className="w-8 h-8 text-[#0a66c2] dark:text-cyan-400 animate-pulse" />
             AI Design Studio
           </h1>
           <p className="text-[10px] font-black uppercase tracking-widest text-cyan-500/80 mt-1">
