@@ -128,7 +128,7 @@ export default function ProximityWidget({ user }: any) {
                 disabled={
                   checkInMutation.isPending || locating || !eventName.trim()
                 }
-                className="h-10 px-4 text-[10px] font-black uppercase tracking-widest text-white bg-[#0a66c2] hover:bg-[#084e96] dark:text-[#0a0a0c] dark:bg-slate-100 dark:hover:bg-cyan-400 flex-shrink-0 gap-1.5 transition-colors"
+                className="h-10 px-4 text-[10px] font-black uppercase tracking-widest text-white bg-[#0a66c2] hover:bg-[#084e96] dark:bg-white dark:text-[#0a0a0c] dark:hover:bg-cyan-400 dark:hover:text-[#0a0a0c] flex-shrink-0 gap-1.5 transition-colors"
               >
                 {checkInMutation.isPending || locating ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
