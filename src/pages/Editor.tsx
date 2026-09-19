@@ -480,57 +480,61 @@ export default function Editor() {
           
           {/* LEFT COLUMN: Sidebar controllers */}
           <div className="md:col-span-4 space-y-4">
-            <div className="bg-[#12121a] border border-white/10 rounded-2xl p-4 space-y-4">
-              <span className="text-[9px] font-black uppercase tracking-widest text-cyan-400">Sandbox Modules</span>
+            <div className="bg-white border border-[#dbe3ec] dark:bg-[#12121a] dark:border-white/10 rounded-2xl p-4 space-y-4 transition-colors">
+              <span className="text-[9px] font-black uppercase tracking-widest text-[#0a66c2] dark:text-cyan-400">
+                Sandbox Modules
+              </span>
               
               <div className="flex flex-col gap-2">
+                {/* Chatbot Button */}
                 <button
                   onClick={() => setPlaygroundTab("chatbot")}
                   className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all cursor-pointer ${
                     playgroundTab === "chatbot"
-                      ? "bg-cyan-500/10 border-cyan-400 text-white"
-                      : "bg-white/[0.02] border-white/5 text-white/55 hover:text-white"
+                      ? "bg-cyan-50 border-[#0a66c2] text-slate-900 dark:bg-cyan-500/10 dark:border-cyan-400 dark:text-white"
+                      : "bg-slate-50/80 border-slate-200/80 text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:bg-white/[0.02] dark:border-white/5 dark:text-white/55 dark:hover:text-white"
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 text-cyan-400" />
+                    <MessageSquare className="w-4 h-4 text-[#0a66c2] dark:text-cyan-400" />
                     <span className="text-xs font-bold uppercase tracking-wider">Chatbot</span>
                   </div>
-                  <Bot className="w-3.5 h-3.5 text-white/30" />
+                  <Bot className="w-3.5 h-3.5 text-slate-400 dark:text-white/30" />
                 </button>
-
+          
+                {/* AI Studio Image Button */}
                 <button
                   onClick={() => setPlaygroundTab("image")}
                   className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all cursor-pointer ${
                     playgroundTab === "image"
-                      ? "bg-cyan-500/10 border-cyan-400 text-white"
-                      : "bg-white/[0.02] border-white/5 text-white/55 hover:text-white"
+                      ? "bg-cyan-50 border-[#0a66c2] text-slate-900 dark:bg-cyan-500/10 dark:border-cyan-400 dark:text-white"
+                      : "bg-slate-50/80 border-slate-200/80 text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:bg-white/[0.02] dark:border-white/5 dark:text-white/55 dark:hover:text-white"
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <ImageIcon className="w-4 h-4 text-cyan-400" />
+                    <ImageIcon className="w-4 h-4 text-[#0a66c2] dark:text-cyan-400" />
                     <span className="text-xs font-bold uppercase tracking-wider">AI Studio Image</span>
                   </div>
-                  <Sparkles className="w-3.5 h-3.5 text-white/30" />
+                  <Sparkles className="w-3.5 h-3.5 text-slate-400 dark:text-white/30" />
                 </button>
-
+          
+                {/* Microphone STT Button */}
                 <button
                   onClick={() => setPlaygroundTab("transcribe")}
                   className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all cursor-pointer ${
                     playgroundTab === "transcribe"
-                      ? "bg-cyan-500/10 border-cyan-400 text-white"
-                      : "bg-white/[0.02] border-white/5 text-white/55 hover:text-white"
+                      ? "bg-cyan-50 border-[#0a66c2] text-slate-900 dark:bg-cyan-500/10 dark:border-cyan-400 dark:text-white"
+                      : "bg-slate-50/80 border-slate-200/80 text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:bg-white/[0.02] dark:border-white/5 dark:text-white/55 dark:hover:text-white"
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <Mic className="w-4 h-4 text-cyan-400" />
+                    <Mic className="w-4 h-4 text-[#0a66c2] dark:text-cyan-400" />
                     <span className="text-xs font-bold uppercase tracking-wider">Microphone STT</span>
                   </div>
-                  <Volume2 className="w-3.5 h-3.5 text-white/30" />
+                  <Volume2 className="w-3.5 h-3.5 text-slate-400 dark:text-white/30" />
                 </button>
               </div>
             </div>
-
           </div>
 
           {/* MAIN COLUMN: Interactive Workspace Panel */}
