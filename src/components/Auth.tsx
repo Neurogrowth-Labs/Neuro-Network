@@ -28,16 +28,18 @@ export default function Auth() {
       setShowSplash(false);
       return;
     }
-
+  
+    // 1. Start fading out slightly before removing the component
     const fadeTimer = setTimeout(() => {
       setSplashFading(true);
-    }, 2200);
-
+    }, 4200); // Changed from 2200ms to 4200ms (+2 seconds longer)
+  
+    // 2. Completely unmount/hide the splash screen
     const removeTimer = setTimeout(() => {
       setShowSplash(false);
       sessionStorage.setItem('has_seen_auth_splash', 'true');
-    }, 2700);
-
+    }, 4700); // Changed from 2700ms to 4700ms (+2 seconds longer)
+  
     return () => {
       clearTimeout(fadeTimer);
       clearTimeout(removeTimer);
