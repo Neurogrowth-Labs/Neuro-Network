@@ -87,17 +87,18 @@ export default function ProximityWidget({ user }: any) {
   });
 
   return (
-    <div className="rounded-xl border border-white/5 overflow-hidden bg-white/[0.02]">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+    <div className="rounded-xl border border-[#dbe3ec] bg-white overflow-hidden dark:border-slate-800 dark:bg-slate-900 transition-colors">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#e7edf3] dark:border-slate-800">
         <div className="flex items-center gap-2">
-          <Radar className="w-4 h-4 text-cyan-400" />
-          <h2 className="font-black text-[10px] uppercase tracking-widest text-white/50">
+          <Radar className="w-4 h-4 text-[#0a66c2] dark:text-cyan-400" />
+          <h2 className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-400">
             Proximity Share
           </h2>
         </div>
         <Link
           to="/alerts"
-          className="text-[10px] font-black uppercase tracking-widest text-cyan-400 hover:text-cyan-300"
+          className="text-[10px] font-black uppercase tracking-widest text-[#0a66c2] hover:text-[#084e96] dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors"
         >
           Full View →
         </Link>
@@ -106,7 +107,8 @@ export default function ProximityWidget({ user }: any) {
       <div className="p-4">
         {!mySession ? (
           <div className="space-y-3">
-            <p className="text-xs text-white/40 font-medium leading-relaxed">
+            {/* Description Text */}
+            <p className="text-xs text-slate-700 dark:text-slate-400 font-medium leading-relaxed">
               Check in at an event to detect nearby Neuro NetWorks users and
               share cards instantly.
             </p>
@@ -115,7 +117,7 @@ export default function ProximityWidget({ user }: any) {
                 value={eventName}
                 onChange={(e) => setEventName(e.target.value)}
                 placeholder="Event name…"
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/25 h-10 text-sm flex-1 min-w-0 font-medium"
+                className="bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 dark:bg-slate-800/50 dark:border-slate-700 dark:text-slate-100 dark:placeholder:text-slate-500 h-10 text-sm flex-1 min-w-0 font-medium"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && eventName.trim())
                     checkInMutation.mutate();
@@ -126,7 +128,7 @@ export default function ProximityWidget({ user }: any) {
                 disabled={
                   checkInMutation.isPending || locating || !eventName.trim()
                 }
-                className="h-10 px-4 text-[10px] font-black uppercase tracking-widest text-[#0a0a0c] bg-white hover:bg-cyan-400 flex-shrink-0 gap-1.5 transition-colors"
+                className="h-10 px-4 text-[10px] font-black uppercase tracking-widest text-white bg-[#0a66c2] hover:bg-[#084e96] dark:text-[#0a0a0c] dark:bg-slate-100 dark:hover:bg-cyan-400 flex-shrink-0 gap-1.5 transition-colors"
               >
                 {checkInMutation.isPending || locating ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -143,10 +145,10 @@ export default function ProximityWidget({ user }: any) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div
-                  className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"
-                  style={{ boxShadow: "0 0 6px rgba(34,211,238,0.8)" }}
+                  className="w-2 h-2 rounded-full bg-[#0a66c2] dark:bg-cyan-400 animate-pulse"
+                  style={{ boxShadow: "0 0 6px rgba(10,102,194,0.6)" }}
                 />
-                <span className="text-sm font-bold text-cyan-300 tracking-tight truncate max-w-[150px]">
+                <span className="text-sm font-bold text-[#0a66c2] dark:text-cyan-300 tracking-tight truncate max-w-[150px]">
                   {mySession.event_name}
                 </span>
               </div>
@@ -155,19 +157,20 @@ export default function ProximityWidget({ user }: any) {
                 size="icon"
                 onClick={() => checkOutMutation.mutate()}
                 disabled={checkOutMutation.isPending}
-                className="h-7 w-7 text-white/30 hover:text-red-400 flex-shrink-0"
+                className="h-7 w-7 text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 flex-shrink-0"
               >
                 <X className="w-3.5 h-3.5" />
               </Button>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5">
-              <Wifi className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+            {/* Code Display Container */}
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200 dark:bg-slate-800/40 dark:border-slate-800">
+              <Wifi className="w-4 h-4 text-[#0a66c2] dark:text-cyan-400 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/40">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Your code
                 </p>
-                <p className="text-xl font-light tracking-[0.2em] text-white leading-none mt-1">
+                <p className="text-xl font-light tracking-[0.2em] text-slate-900 dark:text-slate-100 leading-none mt-1">
                   {mySession.proximity_code}
                 </p>
               </div>
@@ -178,14 +181,14 @@ export default function ProximityWidget({ user }: any) {
                   navigator.clipboard.writeText(mySession.proximity_code);
                   toast.success("Code copied!");
                 }}
-                className="border-white/10 text-white/60 hover:bg-white/10 hover:text-white text-[10px] font-black uppercase tracking-widest h-8 px-3 flex-shrink-0"
+                className="border-slate-200 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 text-[10px] font-black uppercase tracking-widest h-8 px-3 flex-shrink-0"
               >
                 Copy
               </Button>
             </div>
 
-            <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
-              <p className="text-[10px] font-bold text-white/30 uppercase">
+            <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">
                 Expires{" "}
                 {formatDistanceToNow(new Date(mySession.expires_at), {
                   addSuffix: true,
@@ -193,7 +196,7 @@ export default function ProximityWidget({ user }: any) {
               </p>
               <button
                 onClick={() => navigate("/alerts")}
-                className="text-[10px] uppercase font-black tracking-widest text-cyan-400 hover:text-cyan-300"
+                className="text-[10px] uppercase font-black tracking-widest text-[#0a66c2] hover:text-[#084e96] dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors"
               >
                 Quick Connect →
               </button>
