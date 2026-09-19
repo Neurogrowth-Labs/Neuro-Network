@@ -116,7 +116,7 @@ export default function Auth() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center p-4 bg-slate-50 dark:bg-[#0a0a0c] transition-colors">
+    <div className="relative flex min-h-screen items-center justify-center p-4 bg-white dark:bg-[#0a0a0c] transition-colors">
       {/* Animated Splash Screen Overlay */}
       {showSplash && <SplashScreen isFading={splashFading} />}
 
@@ -269,36 +269,36 @@ export default function Auth() {
   );
 }
 
-/* Splash Screen Component */
+/* Splash Screen Component (Light / White Minimalist Variant) */
 function SplashScreen({ isFading }: { isFading: boolean }) {
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950 transition-opacity duration-500 ease-out ${
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-white transition-opacity duration-500 ease-out ${
         isFading ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
     >
-      <div className="relative flex flex-col items-center animate-fade-in space-y-6">
-        {/* Pulsing ring around logo */}
+      <div className="relative flex flex-col items-center space-y-6">
+        {/* Transparent Logo with Subtle Pulse Ring */}
         <div className="relative flex items-center justify-center">
-          <div className="absolute h-28 w-28 animate-ping rounded-full bg-cyan-500/20 opacity-75"></div>
-          <div className="relative rounded-2xl bg-slate-900/80 p-5 backdrop-blur-md border border-white/10 shadow-2xl">
-            <NeuralLogo className="h-16 w-20 animate-pulse" />
+          <div className="absolute h-28 w-28 animate-ping rounded-full bg-[#0a66c2]/10 opacity-75"></div>
+          <div className="relative p-2">
+            <NeuralLogo className="h-20 w-24 animate-pulse text-[#0a66c2]" />
           </div>
         </div>
 
-        {/* Text branding */}
+        {/* Text Branding */}
         <div className="text-center space-y-1.5">
-          <h1 className="text-xl font-black tracking-[0.25em] text-white uppercase">
+          <h1 className="text-xl font-black tracking-[0.25em] text-[#1d2226] uppercase">
             NEURO NETWORKS
           </h1>
-          <p className="text-[11px] font-semibold tracking-widest text-cyan-400/80 uppercase">
+          <p className="text-[11px] font-bold tracking-widest text-[#0a66c2] uppercase">
             Neural Intelligence Platform
           </p>
         </div>
 
         {/* Loading Progress Bar */}
-        <div className="w-36 h-1 bg-white/10 rounded-full overflow-hidden mt-4">
-          <div className="h-full bg-gradient-to-r from-cyan-500 to-[#0a66c2] animate-pulse w-full origin-left duration-1000"></div>
+        <div className="w-36 h-1 bg-slate-100 rounded-full overflow-hidden mt-4">
+          <div className="h-full bg-gradient-to-r from-[#0a66c2] to-cyan-500 animate-pulse w-full origin-left duration-1000"></div>
         </div>
       </div>
     </div>
