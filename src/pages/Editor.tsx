@@ -519,8 +519,8 @@ export default function Editor() {
                 </button>
           
                 {/* Microphone STT Button */}
-                <button
-                  onClick={() => setPlaygroundTab("transcribe")}
+                { /* <button 
+                   onClick={() => setPlaygroundTab("transcribe")}
                   className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all cursor-pointer ${
                     playgroundTab === "transcribe"
                       ? "bg-cyan-50 border-[#0a66c2] text-slate-900 dark:bg-cyan-500/10 dark:border-cyan-400 dark:text-white"
@@ -532,7 +532,7 @@ export default function Editor() {
                     <span className="text-xs font-bold uppercase tracking-wider">Microphone STT</span>
                   </div>
                   <Volume2 className="w-3.5 h-3.5 text-slate-400 dark:text-white/30" />
-                </button>
+                </button> */}
               </div>
             </div>
           </div>
